@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sign Up - Sun Devil Circle">
+    <title>Sign Up - Sun Devil Circle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>Sun Devil Circle</h1>
+    </header>
+
+    <div class="container">
+        <div class="auth-container">
+            <div class="card auth-card">
+                <h2>Create Your Account</h2>
+                <p>Join Sun Devil Circle to connect with peers.</p>
+
+                {% if error %}
+                <div class="error-message">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('signup') }}">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required maxlength="50"
+                        placeholder="Choose a username" autocomplete="username">
+
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Create a password"
+                        autocomplete="new-password">
+
+                    <label for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required
+                        placeholder="Confirm your password" autocomplete="new-password">
+
+                    <button type="submit" class="btn-full">Sign Up</button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="transparency-note">
+            <strong>Privacy Notice:</strong> Only your username and password are stored on our servers. Your personal
+            issue history is stored locally in your browser via IndexedDB and is never sent to our servers. AI
+            suggestions are informational, not professional or medical advice.
+        </div>
+    </div>
+</body>
+
+</html>

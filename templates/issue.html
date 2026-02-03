@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Share your challenge - Sun Devil Circle">
+    <title>Share Your Challenge - Sun Devil Circle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>Sun Devil Circle</h1>
+    </header>
+
+    <div class="container">
+        {% if username %}
+        <div class="user-header">
+            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+        </div>
+        {% endif %}
+
+        <div class="transparency-note">
+            <strong>Your Privacy:</strong> Your issue text is stored locally in your browser using IndexedDB. It is not
+            saved on our servers except when you submit the form. You can delete all local data at any time.
+        </div>
+
+        <div class="card">
+            <h2>What is on your mind?</h2>
+            <p>Describe your current challenge or situation. This will help us suggest relevant resources and peer
+                groups.</p>
+
+            <form method="POST" action="{{ url_for('issue') }}" id="issueForm">
+                <label for="issue_text">Your Challenge</label>
+                <textarea id="issue_text" name="issue_text" required
+                    placeholder="Write about what you are experiencing. Take your time. Your draft is automatically saved locally."></textarea>
+
+                <button type="submit">Get Support Suggestions</button>
+            </form>
+        </div>
+
+        <div class="card issue-history">
+            <h3>Your Recent Issues (stored locally)</h3>
+            <div id="historyList">
+                <p>No previous issues stored.</p>
+            </div>
+            <button type="button" id="deleteDataBtn" class="btn-danger btn-small" style="margin-top: 1rem;">Delete My
+                Local Data</button>
+        </div>
+    </div>
+
+    <script>
+        const DB_NAME = 'SunDevilCircleDB';
+        const DB_VERSION = 1;
+        const DRAFT_STORE = 'drafts';
+        const HISTORY_STORE = 'issueHistory';
+
+        let db;
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+
+                    if (!database.objectStoreNames.contains(DRAFT_STORE)) {
+                        database.createObjectStore(DRAFT_STORE, { keyPath: 'id' });
+                    }
+
+                    if (!database.objectStoreNames.contains(HISTORY_STORE)) {
+                        const historyStore = database.createObjectStore(HISTORY_STORE, { keyPath: 'id', autoIncrement: true });
+                        historyStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                };
+            });
+        }
+
+        function saveDraft(text) {
+            if (!db) return;
+            const tx = db.transaction(DRAFT_STORE, 'readwrite');
+            const store = tx.objectStore(DRAFT_STORE);
+            store.put({ id: 'currentDraft', text: text, timestamp: new Date().toISOString() });
+        }
+
+        function loadDraft() {
+            return new Promise((resolve) => {
+                if (!db) { resolve(null); return; }
+                const tx = db.transaction(DRAFT_STORE, 'readonly');
+                const store = tx.objectStore(DRAFT_STORE);
+                const request = store.get('currentDraft');
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => resolve(null);
+            });
+        }
+
+        function saveToHistory(text) {
+            return new Promise((resolve) => {
+                if (!db) { resolve(); return; }
+                const tx = db.transaction(HISTORY_STORE, 'readwrite');
+                const store = tx.objectStore(HISTORY_STORE);
+                store.add({ text: text, timestamp: new Date().toISOString() });
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        function loadHistory() {
+            return new Promise((resolve) => {
+                if (!db) { resolve([]); return; }
+                const tx = db.transaction(HISTORY_STORE, 'readonly');
+                const store = tx.objectStore(HISTORY_STORE);
+                const request = store.getAll();
+                request.onsuccess = () => {
+                    const items = request.result || [];
+                    items.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    resolve(items.slice(0, 5));
+                };
+                request.onerror = () => resolve([]);
+            });
+        }
+
+        function clearDraft() {
+            if (!db) return;
+            const tx = db.transaction(DRAFT_STORE, 'readwrite');
+            const store = tx.objectStore(DRAFT_STORE);
+            store.delete('currentDraft');
+        }
+
+        function deleteAllData() {
+            return new Promise((resolve) => {
+                if (!db) { resolve(); return; }
+                const tx = db.transaction([DRAFT_STORE, HISTORY_STORE], 'readwrite');
+                tx.objectStore(DRAFT_STORE).clear();
+                tx.objectStore(HISTORY_STORE).clear();
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        function renderHistory(items) {
+            const container = document.getElementById('historyList');
+            if (items.length === 0) {
+                container.innerHTML = '<p>No previous issues stored.</p>';
+                return;
+            }
+
+            let html = '';
+            items.forEach(item => {
+                const date = new Date(item.timestamp);
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                const preview = item.text.length > 100 ? item.text.substring(0, 100) + '...' : item.text;
+                html += '<div class="history-item"><span class="time">' + dateStr + '</span>' + escapeHtml(preview) + '</div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function init() {
+            try {
+                await openDB();
+
+                const textarea = document.getElementById('issue_text');
+                const form = document.getElementById('issueForm');
+                const deleteBtn = document.getElementById('deleteDataBtn');
+
+                const draft = await loadDraft();
+                if (draft && draft.text) {
+                    textarea.value = draft.text;
+                }
+
+                const history = await loadHistory();
+                renderHistory(history);
+
+                let saveTimeout;
+                textarea.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => {
+                        saveDraft(textarea.value);
+                    }, 3000);
+                });
+
+                form.addEventListener('submit', async (e) => {
+                    const issueText = textarea.value.trim();
+                    if (issueText) {
+                        await saveToHistory(issueText);
+                        clearDraft();
+                    }
+                });
+
+                deleteBtn.addEventListener('click', async () => {
+                    if (confirm('Are you sure you want to delete all your local data? This action cannot be undone.')) {
+                        await deleteAllData();
+                        textarea.value = '';
+                        renderHistory([]);
+                        alert('All local data has been deleted.');
+                    }
+                });
+
+            } catch (error) {
+                console.error('IndexedDB error:', error);
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

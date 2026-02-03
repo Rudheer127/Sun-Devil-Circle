@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Sun Devil Circle - Peer support platform for international freshman students at ASU">
+    <title>Profile Setup - Sun Devil Circle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>Sun Devil Circle</h1>
+    </header>
+
+    <div class="container">
+        {% if username %}
+        <div class="user-header">
+            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h2>Welcome to Sun Devil Circle</h2>
+            <p>This platform connects international freshman students at ASU for peer support and resource navigation.
+            </p>
+        </div>
+
+        <div class="transparency-note">
+            <strong>Privacy Notice:</strong> Your display name and preferences are used only to personalize your
+            experience. Personal issue history is stored locally in your browser via IndexedDB and never sent to our
+            servers. AI is used only for suggestions and safety monitoring. These suggestions are informational, not
+            professional or medical advice.
+        </div>
+
+        <div class="card">
+            <h2>Set Up Your Profile</h2>
+            <form method="POST" action="{{ url_for('profile') }}">
+                <label for="display_name">Display Name or Alias</label>
+                <input type="text" id="display_name" name="display_name" required maxlength="50"
+                    placeholder="Enter a name or alias">
+
+                <label>Are you an international freshman at ASU?</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="is_international_freshman" value="yes" required> Yes
+                    </label>
+                    <label>
+                        <input type="radio" name="is_international_freshman" value="no"> No
+                    </label>
+                </div>
+
+                <label for="preferred_language">Preferred Language (optional)</label>
+                <input type="text" id="preferred_language" name="preferred_language" maxlength="30"
+                    placeholder="e.g., English, Spanish, Mandarin">
+
+                <label>Primary Challenge (select up to two, optional)</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" name="primary_challenge" value="homesickness"> Homesickness
+                    </label>
+                    <label>
+                        <input type="checkbox" name="primary_challenge" value="academic"> Academic Pressure
+                    </label>
+                    <label>
+                        <input type="checkbox" name="primary_challenge" value="social"> Making Friends
+                    </label>
+                    <label>
+                        <input type="checkbox" name="primary_challenge" value="cultural"> Cultural Adjustment
+                    </label>
+                    <label>
+                        <input type="checkbox" name="primary_challenge" value="language"> Language Barriers
+                    </label>
+                    <label>
+                        <input type="checkbox" name="primary_challenge" value="financial"> Financial Stress
+                    </label>
+                </div>
+
+                <label>Support Style Preference</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="support_style" value="listening" required> Listening (I prefer to
+                        listen)
+                    </label>
+                    <label>
+                        <input type="radio" name="support_style" value="sharing"> Sharing (I prefer to share)
+                    </label>
+                    <label>
+                        <input type="radio" name="support_style" value="mixed" checked> Mixed (Both)
+                    </label>
+                </div>
+
+                <button type="submit">Continue</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore Peers - Sun Devil Circle">
+    <title>Explore Peers - Sun Devil Circle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>Sun Devil Circle</h1>
+    </header>
+
+    <div class="container">
+        {% if username %}
+        <div class="user-header">
+            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+        </div>
+        {% endif %}
+
+        <div class="transparency-note">
+            <strong>About Peer Matching:</strong> We suggest peers based on shared experiences and challenges.
+            Connection requests are moderated for safety. This is a peer support space, not a replacement for
+            professional help.
+        </div>
+
+        {% if incoming_requests %}
+        <div class="card">
+            <h2>Connection Requests</h2>
+            <div class="requests-list">
+                {% for req in incoming_requests %}
+                <div class="request-item" id="request-{{ req.sender_id }}">
+                    <div class="request-info">
+                        <span class="request-sender">{{ req.sender_display_name }}</span>
+                        <span class="request-time">{{ req.timestamp }}</span>
+                    </div>
+                    {% if req.message %}
+                    <p class="request-message">{{ req.message }}</p>
+                    {% endif %}
+                    <div class="request-actions">
+                        <button type="button" class="btn btn-small"
+                            onclick="acceptRequest({{ req.sender_id }}, 'group')">Accept and Invite to Group</button>
+                        <button type="button" class="btn-secondary btn-small"
+                            onclick="ignoreRequest({{ req.sender_id }})">Ignore</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h2>Recommended Peers</h2>
+            <p>These students share similar experiences with you.</p>
+
+            {% if recommended_peers %}
+            <div class="peers-list">
+                {% for peer in recommended_peers %}
+                <div class="peer-card" id="peer-{{ peer.user_id }}">
+                    <div class="peer-info">
+                        <span class="peer-name">{{ peer.display_name }}</span>
+                        <span class="peer-match">{{ peer.match_score }}% match</span>
+                    </div>
+                    <p class="peer-summary">{{ peer.profile_summary }}</p>
+                    <div class="peer-actions">
+                        <button type="button" class="btn btn-small"
+                            onclick="showConnectForm({{ peer.user_id }}, '{{ peer.display_name }}')">Send Connection
+                            Request</button>
+                    </div>
+                    <div class="connect-form" id="connect-form-{{ peer.user_id }}" style="display: none;">
+                        <textarea id="message-{{ peer.user_id }}"
+                            placeholder="Add an optional message (max 200 characters)" maxlength="200"></textarea>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-small"
+                                onclick="sendRequest({{ peer.user_id }})">Send</button>
+                            <button type="button" class="btn-secondary btn-small"
+                                onclick="hideConnectForm({{ peer.user_id }})">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-peers-message">No peer recommendations available yet. As more students join and set up their
+                profiles, you will see suggestions here.</p>
+            {% endif %}
+        </div>
+
+        <div class="nav-links">
+            <a href="{{ url_for('decision') }}" class="btn btn-secondary">Browse Groups</a>
+            <a href="{{ url_for('resources') }}" class="btn btn-secondary">Back to Resources</a>
+        </div>
+    </div>
+
+    <script>
+        function showConnectForm(userId, displayName) {
+            document.getElementById('connect-form-' + userId).style.display = 'block';
+        }
+
+        function hideConnectForm(userId) {
+            document.getElementById('connect-form-' + userId).style.display = 'none';
+        }
+
+        function sendRequest(recipientId) {
+            const sendBtn = event.target;
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+
+            const message = document.getElementById('message-' + recipientId).value;
+            const formData = new FormData();
+            formData.append('recipient_id', recipientId);
+            formData.append('message', message);
+
+            fetch('{{ url_for("connect") }}', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const peerCard = document.getElementById('peer-' + recipientId);
+                    if (data.success) {
+                        peerCard.innerHTML = '<p class="success-message">Connection request sent!</p>';
+                        if (data.distress_detected) {
+                            alert('We noticed some concerning language in your message. If you are struggling, please consider reaching out to professional support.');
+                        }
+                    } else if (data.error === 'Request already sent') {
+                        peerCard.innerHTML = '<p class="success-message">Request already sent</p>';
+                    } else {
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = 'Send';
+                        alert(data.error || 'Failed to send request');
+                    }
+                })
+                .catch(error => {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send';
+                    alert('Error sending request');
+                });
+        }
+
+        function acceptRequest(senderId, action) {
+            const formData = new FormData();
+            formData.append('sender_id', senderId);
+            formData.append('action', action);
+
+            fetch('{{ url_for("connect_accept") }}', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const requestItem = document.getElementById('request-' + senderId);
+                        requestItem.innerHTML = '<p class="success-message">' + data.message + '</p>';
+                        if (data.redirect) {
+                            setTimeout(() => {
+                                window.location.href = data.redirect;
+                            }, 1500);
+                        }
+                    } else {
+                        alert(data.error || 'Failed to accept request');
+                    }
+                })
+                .catch(error => {
+                    alert('Error accepting request');
+                });
+        }
+
+        function ignoreRequest(senderId) {
+            const formData = new FormData();
+            formData.append('sender_id', senderId);
+
+            fetch('{{ url_for("connect_ignore") }}', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const requestItem = document.getElementById('request-' + senderId);
+                        requestItem.remove();
+                    }
+                })
+                .catch(error => {
+                    alert('Error removing request');
+                });
+        }
+    </script>
+</body>
+
+</html>

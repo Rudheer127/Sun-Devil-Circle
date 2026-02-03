@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Login - Sun Devil Circle">
+    <title>Login - Sun Devil Circle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>Sun Devil Circle</h1>
+    </header>
+
+    <div class="container">
+        <div class="auth-container">
+            <div class="card auth-card">
+                <h2>Welcome Back</h2>
+                <p>Log in to continue to Sun Devil Circle.</p>
+
+                {% if error %}
+                <div class="error-message">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('login') }}">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required maxlength="50"
+                        placeholder="Enter your username" autocomplete="username">
+
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter your password"
+                        autocomplete="current-password">
+
+                    <button type="submit" class="btn-full">Log In</button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Do not have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="transparency-note">
+            <strong>About This Platform:</strong> Sun Devil Circle is a peer support platform for international freshman
+            students at ASU. AI is used only for suggestions and safety monitoring. Your personal issue history is
+            stored locally in your browser.
+        </div>
+    </div>
+</body>
+
+</html>

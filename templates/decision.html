@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Connect with Peers - Sun Devil Circle">
+    <title>Connect with Peers - Sun Devil Circle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>Sun Devil Circle</h1>
+    </header>
+
+    <div class="container">
+        {% if username %}
+        <div class="user-header">
+            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+        </div>
+        {% endif %}
+
+        <div class="transparency-note">
+            <strong>About Peer Groups:</strong> Group chats are topic-based and temporary. Messages are stored in memory
+            only and are not permanently saved. AI monitors messages for safety. This is a peer support space, not a
+            replacement for professional help.
+        </div>
+
+        <div class="card">
+            <h2>Connect with Peers</h2>
+            <p>Join a group to connect with other students who understand what you are going through.</p>
+        </div>
+
+        {% if recommended_groups %}
+        <div class="card">
+            <h3>Recommended for You</h3>
+            <p class="card-description">Groups ranked by how well they match your profile and challenges.</p>
+            <div class="group-list">
+                {% for group in recommended_groups %}
+                <form method="POST" action="{{ url_for('join_group') }}" style="display: inline;" class="join-form">
+                    <input type="hidden" name="group_topic" value="{{ group }}">
+                    <button type="submit" class="group-tag-btn">{{ group }}</button>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if similar_users %}
+        <div class="card">
+            <h3>People You May Want to Connect With</h3>
+            <p class="card-description">Students with similar experiences. Send a connection request to connect.</p>
+            <div class="peers-list">
+                {% for user_id, score in similar_users %}
+                <div class="peer-card-inline" id="peer-{{ user_id }}">
+                    <span class="peer-match-small">{{ (score * 100)|int }}% match</span>
+                    <button type="button" class="btn btn-small" onclick="showMessageForm({{ user_id }})">Send
+                        Request</button>
+                    <div class="connect-form-inline" id="form-{{ user_id }}" style="display: none;">
+                        <textarea id="msg-{{ user_id }}" placeholder="Add a message (optional)"
+                            maxlength="200"></textarea>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-small"
+                                onclick="sendQuickRequest({{ user_id }})">Send</button>
+                            <button type="button" class="btn-secondary btn-small"
+                                onclick="hideMessageForm({{ user_id }})">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+
+        <div class="card">
+            <h3>All Available Groups</h3>
+            {% if available_groups %}
+            <div class="group-list">
+                {% for group in available_groups %}
+                <form method="POST" action="{{ url_for('join_group') }}" style="display: inline;" class="join-form">
+                    <input type="hidden" name="group_topic" value="{{ group }}">
+                    <button type="submit" class="btn-secondary btn-small">{{ group }}</button>
+                </form>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">No groups available at this time.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3>Create a New Group</h3>
+            <p>If no existing group fits your needs, you can create a new one. A new group will only be created if no
+                similar group already exists.</p>
+
+            {% if suggested_users_for_group %}
+            <div class="suggested-invites">
+                <h4>Suggested peers to invite:</h4>
+                <div class="suggested-peers">
+                    {% for uid, uname, score in suggested_users_for_group %}
+                    <span class="suggested-peer">{{ uname }} ({{ (score * 100)|int }}% match)</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('create_group') }}" id="createGroupForm">
+                <div class="form-row">
+                    <input type="text" name="new_topic" id="newTopicInput"
+                        placeholder="Enter a topic (max 40 characters)" maxlength="40" required>
+                    <button type="submit" id="createGroupBtn">Create Group</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="nav-links">
+            <a href="{{ url_for('people') }}" class="btn">Explore Peers</a>
+            <a href="{{ url_for('resources') }}" class="btn btn-secondary">Back to Resources</a>
+        </div>
+    </div>
+
+    <script>
+        // Disable buttons on form submit
+        document.querySelectorAll('.join-form').forEach(form => {
+            form.addEventListener('submit', function () {
+                const btn = this.querySelector('button');
+                btn.disabled = true;
+                btn.textContent = 'Joining...';
+            });
+        });
+
+        document.getElementById('createGroupForm').addEventListener('submit', function () {
+            document.getElementById('createGroupBtn').disabled = true;
+            document.getElementById('createGroupBtn').textContent = 'Creating...';
+        });
+
+        // Message form functions
+        function showMessageForm(userId) {
+            document.getElementById('form-' + userId).style.display = 'block';
+        }
+
+        function hideMessageForm(userId) {
+            document.getElementById('form-' + userId).style.display = 'none';
+        }
+
+        // Quick connection request
+        async function sendQuickRequest(recipientId) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            const messageEl = document.getElementById('msg-' + recipientId);
+            const message = messageEl ? messageEl.value : '';
+
+            const formData = new FormData();
+            formData.append('recipient_id', recipientId);
+            formData.append('message', message);
+
+            try {
+                const response = await fetch('{{ url_for("connect") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                const peerCard = document.getElementById('peer-' + recipientId);
+                if (data.success) {
+                    peerCard.innerHTML = '<span class="success-message">Request sent!</span>';
+                } else if (data.error === 'Request already sent') {
+                    peerCard.innerHTML = '<span class="success-message">Already sent</span>';
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Send';
+                    alert(data.error || 'Failed to send request');
+                }
+            } catch (error) {
+                btn.disabled = false;
+                btn.textContent = 'Send';
+                alert('Error sending request');
+            }
+        }
+
+    </script>
+</body>
+
+</html>

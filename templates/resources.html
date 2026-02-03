@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Support Resources - Sun Devil Circle">
+    <title>Support Resources - Sun Devil Circle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>Sun Devil Circle</h1>
+    </header>
+
+    <div class="container">
+        {% if username %}
+        <div class="user-header">
+            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+        </div>
+        {% endif %}
+
+        <div class="transparency-note">
+            <strong>About These Suggestions:</strong> AI is used only to generate resource suggestions and safety
+            monitoring. These suggestions are informational only and do not constitute professional or medical advice.
+            Your personal issue history remains stored locally in your browser.
+        </div>
+
+        <div class="card">
+            <h2>We Hear You</h2>
+            <p>Based on what you shared, here are some options that might help.</p>
+        </div>
+
+        <div class="card">
+            <h3>Support Options</h3>
+            {% if support_options %}
+            <ul class="resource-list">
+                {% for option in support_options %}
+                <li>{{ option }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="empty-state">No specific support options available at this time.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3>ASU Resources</h3>
+            {% if asu_resources %}
+            <ul class="resource-list">
+                {% for resource in asu_resources %}
+                <li><a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer">{{ resource.name }}</a></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="empty-state">No resources available at this time.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3>Recommended Peer Groups</h3>
+            <p class="card-description">Click a group to join. Groups are ranked by how well they match your profile.
+            </p>
+            {% if recommended_groups %}
+            <div class="group-list clickable-groups">
+                {% for group in recommended_groups %}
+                <button type="button" class="group-tag-btn" onclick="confirmJoinGroup('{{ group }}')">{{ group
+                    }}</button>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">No group recommendations at this time.</p>
+            {% endif %}
+        </div>
+
+        {% if disclaimer %}
+        <div class="disclaimer">
+            {{ disclaimer }}
+        </div>
+        {% endif %}
+
+        <div class="card followup-section">
+            <h3>Have a Follow-up Question?</h3>
+            <p>You can ask up to 5 follow-up questions about resources and support options ({{ followup_count }}/5
+                used).</p>
+
+            {% if followup_history %}
+            <div class="followup-history">
+                <h4>Previous Questions</h4>
+                {% for item in followup_history %}
+                <div class="followup-item">
+                    <div class="followup-question"><strong>Q:</strong> {{ item.question }}</div>
+                    <div class="followup-answer"><strong>A:</strong> {{ item.answer }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if followup_response and followup_question %}
+            <div class="followup-response">
+                <div class="followup-question"><strong>Q:</strong> {{ followup_question }}</div>
+                <div class="followup-answer"><strong>A:</strong> {{ followup_response }}</div>
+            </div>
+            {% endif %}
+
+            {% if limit_reached %}
+            <p class="limit-message">You have reached the follow-up question limit for this session. You can continue by
+                joining a peer group or returning later.</p>
+            {% else %}
+            <form method="POST" action="{{ url_for('resources') }}" id="followupForm">
+                <div class="form-row">
+                    <input type="text" name="followup_question" id="followupInput"
+                        placeholder="Ask a follow-up question about resources or support options" required>
+                    <button type="submit" id="followupBtn">Ask</button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="nav-links">
+            <a href="{{ url_for('decision') }}" class="btn">Connect with Peers</a>
+            <a href="{{ url_for('people') }}" class="btn">Explore Peers</a>
+            <a href="{{ url_for('issue') }}" class="btn btn-secondary">Share Another Challenge</a>
+        </div>
+    </div>
+
+    <!-- Join Group Confirmation Modal -->
+    <div id="joinModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Join Group</h3>
+            <p id="modalMessage">This group matches your profile. Do you want to join?</p>
+            <div class="modal-actions">
+                <form method="POST" action="{{ url_for('join_group') }}" id="joinForm">
+                    <input type="hidden" name="group_topic" id="groupTopicInput">
+                    <button type="submit" class="btn" id="confirmJoinBtn">Yes, Join Group</button>
+                </form>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmJoinGroup(groupName) {
+            document.getElementById('groupTopicInput').value = groupName;
+            document.getElementById('modalMessage').textContent =
+                '"' + groupName + '" matches your profile. Do you want to join?';
+            document.getElementById('joinModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('joinModal').style.display = 'none';
+        }
+
+        // Close modal on outside click
+        document.getElementById('joinModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Disable button on form submit
+        document.getElementById('followupForm')?.addEventListener('submit', function () {
+            document.getElementById('followupBtn').disabled = true;
+            document.getElementById('followupBtn').textContent = 'Sending...';
+        });
+    </script>
+</body>
+
+</html>
