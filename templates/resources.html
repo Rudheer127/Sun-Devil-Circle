@@ -15,34 +15,63 @@
     </header>
 
     <div class="container">
-        {% if username %}
-        <div class="user-header">
-            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
-            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
-        </div>
-        {% endif %}
-
-        <div class="transparency-note">
-            <strong>About These Suggestions:</strong> AI is used only to generate resource suggestions and safety
-            monitoring. These suggestions are informational only and do not constitute professional or medical advice.
-            Your personal issue history remains stored locally in your browser.
-        </div>
-
-        <div class="card">
+        <div class="card ai-response-card">
             <h2>We Hear You</h2>
-            <p>Based on what you shared, here are some options that might help.</p>
+
+            {% if empathetic_message %}
+            <div class="empathetic-message">
+                <p>{{ empathetic_message }}</p>
+            </div>
+            {% endif %}
+
+            <h3>Personalized Suggestions</h3>
+            {% if support_options %}
+            <div class="ai-suggestions">
+                {% for option in support_options %}
+                <div class="ai-suggestion-item">
+                    <span class="ai-icon">💡</span>
+                    <span class="suggestion-text">{{ option }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">No personalized suggestions available.</p>
+            {% endif %}
         </div>
 
-        <div class="card">
-            <h3>Support Options</h3>
-            {% if support_options %}
-            <ul class="resource-list">
-                {% for option in support_options %}
-                <li>{{ option }}</li>
+
+        <div class="card followup-section">
+            <h3>Have a Follow-up Question?</h3>
+            <p>Ask the AI for more specific guidance ({{ followup_count }}/5 questions used).</p>
+
+            {% if followup_history %}
+            <div class="followup-history">
+                {% for item in followup_history %}
+                <div class="followup-item">
+                    <div class="followup-question"><strong>Q:</strong> {{ item.question }}</div>
+                    <div class="followup-answer"><strong>A:</strong> {{ item.answer }}</div>
+                </div>
                 {% endfor %}
-            </ul>
+            </div>
+            {% endif %}
+
+            {% if followup_response and followup_question %}
+            <div class="followup-response">
+                <div class="followup-question"><strong>Q:</strong> {{ followup_question }}</div>
+                <div class="followup-answer"><strong>A:</strong> {{ followup_response }}</div>
+            </div>
+            {% endif %}
+
+            {% if limit_reached %}
+            <p class="limit-message">You have reached the follow-up question limit. Join a peer group to continue.</p>
             {% else %}
-            <p class="empty-state">No specific support options available at this time.</p>
+            <form method="POST" action="{{ url_for('resources') }}" id="followupForm">
+                <div class="form-row">
+                    <input type="text" name="followup_question" id="followupInput"
+                        placeholder="Ask the AI a follow-up question..." required>
+                    <button type="submit" id="followupBtn">Ask</button>
+                </div>
+            </form>
             {% endif %}
         </div>
 
@@ -75,54 +104,23 @@
             {% endif %}
         </div>
 
-        {% if disclaimer %}
-        <div class="disclaimer">
-            {{ disclaimer }}
-        </div>
-        {% endif %}
-
-        <div class="card followup-section">
-            <h3>Have a Follow-up Question?</h3>
-            <p>You can ask up to 5 follow-up questions about resources and support options ({{ followup_count }}/5
-                used).</p>
-
-            {% if followup_history %}
-            <div class="followup-history">
-                <h4>Previous Questions</h4>
-                {% for item in followup_history %}
-                <div class="followup-item">
-                    <div class="followup-question"><strong>Q:</strong> {{ item.question }}</div>
-                    <div class="followup-answer"><strong>A:</strong> {{ item.answer }}</div>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            {% if followup_response and followup_question %}
-            <div class="followup-response">
-                <div class="followup-question"><strong>Q:</strong> {{ followup_question }}</div>
-                <div class="followup-answer"><strong>A:</strong> {{ followup_response }}</div>
-            </div>
-            {% endif %}
-
-            {% if limit_reached %}
-            <p class="limit-message">You have reached the follow-up question limit for this session. You can continue by
-                joining a peer group or returning later.</p>
-            {% else %}
-            <form method="POST" action="{{ url_for('resources') }}" id="followupForm">
-                <div class="form-row">
-                    <input type="text" name="followup_question" id="followupInput"
-                        placeholder="Ask a follow-up question about resources or support options" required>
-                    <button type="submit" id="followupBtn">Ask</button>
-                </div>
-            </form>
-            {% endif %}
-        </div>
-
         <div class="nav-links">
             <a href="{{ url_for('decision') }}" class="btn">Connect with Peers</a>
             <a href="{{ url_for('people') }}" class="btn">Explore Peers</a>
             <a href="{{ url_for('issue') }}" class="btn btn-secondary">Share Another Challenge</a>
+        </div>
+
+        {% if username %}
+        <div class="user-footer">
+            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+        </div>
+        {% endif %}
+
+        <div class="transparency-note disclaimer-bottom">
+            <strong>About These Suggestions:</strong> AI is used to generate personalized suggestions and safety
+            monitoring. These suggestions are informational only and do not constitute professional or medical advice.
+            {% if disclaimer %}{{ disclaimer }}{% endif %}
         </div>
     </div>
 
@@ -163,7 +161,7 @@
         // Disable button on form submit
         document.getElementById('followupForm')?.addEventListener('submit', function () {
             document.getElementById('followupBtn').disabled = true;
-            document.getElementById('followupBtn').textContent = 'Sending...';
+            document.getElementById('followupBtn').textContent = 'Asking AI...';
         });
     </script>
 </body>

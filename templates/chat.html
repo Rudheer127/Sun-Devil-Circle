@@ -55,19 +55,25 @@
                 {% if messages %}
                 {% for msg in messages %}
                 <div class="message {% if msg.is_system %}system-message{% endif %}"
-                    data-timestamp="{{ msg.timestamp }}">
+                    data-timestamp="{{ msg.timestamp }}" data-msg-id="{{ msg.id }}" data-user-id="{{ msg.user_id }}">
                     <div class="message-header">
                         <span class="message-author">{{ msg.display_name }}</span>
                         <span class="message-time" data-raw="{{ msg.timestamp }}">{{ msg.timestamp }}</span>
+                        {% if msg.edited %}<span class="edited-tag">(edited)</span>{% endif %}
                     </div>
-                    <div class="message-text">{{ msg.text }}</div>
+                    <div class="message-text" id="text-{{ msg.id }}">{{ msg.text }}</div>
                     {% if not msg.is_system %}
                     <div class="message-actions">
+                        {% if msg.user_id == current_user_id %}
+                        <button type="button" class="edit-btn" onclick="editMessage('{{ msg.id }}')">Edit</button>
+                        <button type="button" class="delete-btn" onclick="deleteMessage('{{ msg.id }}')">Delete</button>
+                        {% endif %}
                         <button type="button" class="report-btn"
                             onclick="alert('Report submitted. Thank you for helping keep this space safe.')">Report</button>
                     </div>
                     {% endif %}
                 </div>
+
                 {% endfor %}
                 {% else %}
                 <p class="empty-state">No messages yet. Be the first to share.</p>
@@ -214,7 +220,100 @@
             isPolling = !document.hidden;
             if (isPolling) pollMessages();
         });
+
+        // Edit message
+        function editMessage(msgId) {
+            const textEl = document.getElementById('text-' + msgId);
+            if (!textEl) return;
+
+            const currentText = textEl.textContent;
+            const msgDiv = textEl.closest('.message');
+
+            // Create edit form
+            const form = document.createElement('div');
+            form.className = 'edit-form';
+            form.innerHTML = `
+                <input type="text" value="${currentText}" maxlength="500" id="edit-input-${msgId}">
+                <button type="button" class="btn btn-small" onclick="saveEdit('${msgId}')">Save</button>
+                <button type="button" class="btn-secondary btn-small" onclick="cancelEdit('${msgId}', '${currentText.replace(/'/g, "\\'")}')">Cancel</button>
+            `;
+
+            textEl.style.display = 'none';
+            textEl.insertAdjacentElement('afterend', form);
+
+            // Hide action buttons
+            const actions = msgDiv.querySelector('.message-actions');
+            if (actions) actions.style.display = 'none';
+        }
+
+        async function saveEdit(msgId) {
+            const input = document.getElementById('edit-input-' + msgId);
+            const newText = input.value.trim();
+            if (!newText) return;
+
+            try {
+                const response = await fetch('/api/message/edit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message_id: msgId, text: newText })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const textEl = document.getElementById('text-' + msgId);
+                    textEl.textContent = data.text;
+                    cancelEdit(msgId, data.text);
+
+                    // Add edited tag if not present
+                    const header = textEl.closest('.message').querySelector('.message-header');
+                    if (!header.querySelector('.edited-tag')) {
+                        header.insertAdjacentHTML('beforeend', '<span class="edited-tag">(edited)</span>');
+                    }
+                } else {
+                    alert(data.error || 'Failed to edit message');
+                }
+            } catch (e) {
+                alert('Error editing message');
+            }
+        }
+
+        function cancelEdit(msgId, originalText) {
+            const textEl = document.getElementById('text-' + msgId);
+            const form = textEl.nextElementSibling;
+            if (form && form.classList.contains('edit-form')) {
+                form.remove();
+            }
+            textEl.style.display = '';
+
+            // Show action buttons
+            const actions = textEl.closest('.message').querySelector('.message-actions');
+            if (actions) actions.style.display = '';
+        }
+
+        // Delete message
+        async function deleteMessage(msgId) {
+            if (!confirm('Are you sure you want to delete this message?')) return;
+
+            try {
+                const response = await fetch('/api/message/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message_id: msgId })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const msgDiv = document.querySelector(`[data-msg-id="${msgId}"]`);
+                    if (msgDiv) msgDiv.remove();
+                } else {
+                    alert(data.error || 'Failed to delete message');
+                }
+            } catch (e) {
+                alert('Error deleting message');
+            }
+        }
     </script>
+
 </body>
 
 </html>

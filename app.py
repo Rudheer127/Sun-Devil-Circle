@@ -517,7 +517,7 @@ def get_mock_recommended_groups(issue_text, profile_dict):
     issue_lower = issue_text.lower()
 
     keyword_map = {
-        "Homesickness and Family": ["home", "family", "miss", "lonely", "alone"],
+        "Homesickness and Family": ["home", "homesick", "family", "miss", "lonely", "alone"],
         "Academic Pressure": ["exam", "grade", "study", "stress", "class", "professor"],
         "Making Friends": ["friend", "social", "connect", "people", "meet"],
         "Cultural Adjustment": ["culture", "different", "adjust", "custom", "food"],
@@ -606,73 +606,96 @@ def call_live_ai(endpoint, payload):
     return None
 
 
-def call_qwen_api(prompt, max_tokens=300):
-    """Call Qwen model via HuggingFace Inference API."""
+def call_ai_api(prompt, max_tokens=300):
+    """Call Cerebras AI API for text generation."""
     if os.environ.get("LIVE_AI") != "1":
         return None
 
-    hf_token = os.environ.get("HF_TOKEN")
-    if not hf_token:
+    api_key = os.environ.get("CEREBRAS_API_KEY")
+    if not api_key:
         return None
 
     try:
-        from huggingface_hub import InferenceClient
+        from cerebras.cloud.sdk import Cerebras
 
-        client = InferenceClient(api_key=hf_token, provider="together")
+        client = Cerebras(api_key=api_key)
 
         completion = client.chat.completions.create(
-            model="Qwen/Qwen2.5-7B-Instruct",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_tokens
+            model="llama-3.3-70b",
+            max_completion_tokens=max_tokens,
+            temperature=0.7,
+            top_p=1,
+            stream=False
         )
 
         return completion.choices[0].message.content.strip()
     except Exception as e:
-        print(f"AI API error: {e}")
+        print(f"Cerebras API error: {e}")
         return None
 
 
 
 
 
-def generate_support_suggestions(issue_text, profile_dict):
-    """Generate personalized support suggestions using AI."""
+
+def generate_support_response(issue_text, profile_dict):
+    """Generate personalized support response with empathetic message and suggestions."""
     profile_summary = build_profile_text(profile_dict)
 
-    prompt = f"""You are a supportive counselor at ASU helping an international freshman student.
+    prompt = f"""You are a caring, supportive counselor at ASU helping an international freshman student who is struggling.
 
 Student Profile: {profile_summary}
 
 Student's Issue: {issue_text}
 
-Based on their profile and issue, provide 3-5 specific, actionable support suggestions. Be warm, understanding, and practical. Each suggestion should be a single sentence.
+First, write a warm, empathetic message (2-3 sentences) that:
+- Acknowledges their feelings and validates their experience
+- Mentions that many international students face similar challenges
+- Reassures them that they're not alone and support is available
 
-Format your response as a numbered list:
+Then, provide 5 specific, actionable suggestions to help them. Be practical and reference ASU resources when relevant.
+
+Format your response EXACTLY like this:
+MESSAGE: [Your empathetic message here]
+
+SUGGESTIONS:
 1. [First suggestion]
-2. [Second suggestion]
+2. [Second suggestion]  
 3. [Third suggestion]
+4. [Fourth suggestion]
+5. [Fifth suggestion]"""
 
-Suggestions:"""
-
-    response = call_qwen_api(prompt, max_tokens=250)
+    response = call_ai_api(prompt, max_tokens=400)
 
     if response:
-        # Parse numbered list from response
+        # Parse message and suggestions
+        empathetic_message = ""
         suggestions = []
-        lines = response.split('\n')
-        for line in lines:
-            line = line.strip()
-            # Remove numbering and clean up
-            if line and len(line) > 3:
-                # Remove leading numbers like "1.", "2.", etc.
-                if line[0].isdigit() and '.' in line[:3]:
-                    line = line.split('.', 1)[1].strip()
-                if line and not line.startswith('Suggestions'):
-                    suggestions.append(line)
-        if suggestions:
-            return suggestions[:5]
+        
+        if "MESSAGE:" in response:
+            parts = response.split("SUGGESTIONS:")
+            if len(parts) >= 2:
+                empathetic_message = parts[0].replace("MESSAGE:", "").strip()
+                suggestion_text = parts[1]
+                
+                lines = suggestion_text.split('\n')
+                for line in lines:
+                    line = line.strip()
+                    if line and len(line) > 3:
+                        if line[0].isdigit() and '.' in line[:3]:
+                            line = line.split('.', 1)[1].strip()
+                        if line:
+                            suggestions.append(line)
+        
+        if empathetic_message or suggestions:
+            return {
+                "message": empathetic_message,
+                "suggestions": suggestions[:5] if suggestions else []
+            }
 
     return None
+
 
 
 def generate_followup_answer(issue_text, followup_question, profile_dict, history=None):
@@ -696,7 +719,7 @@ Provide a helpful, specific answer to the student's question. Be warm, practical
 
 Answer:"""
 
-    response = call_qwen_api(prompt, max_tokens=150)
+    response = call_ai_api(prompt, max_tokens=150)
 
     if response:
         # Clean up the response
@@ -711,15 +734,20 @@ Answer:"""
 
 def ai_suggest_resources_and_options(issue_text, profile_dict, followup_count, followup_question=None):
     """AI abstraction for resource suggestions. Falls back to mock if live AI unavailable."""
-    # Try to get AI-generated suggestions
-    ai_suggestions = None
-    if os.environ.get("LIVE_AI") == "1":
-        ai_suggestions = generate_support_suggestions(issue_text, profile_dict)
+    # Try to get AI-generated response
+    ai_response = None
+    empathetic_message = ""
+    support_options = []
 
-    # Use AI suggestions or fall back to mock
-    if ai_suggestions:
-        support_options = ai_suggestions
-    else:
+    if os.environ.get("LIVE_AI") == "1":
+        ai_response = generate_support_response(issue_text, profile_dict)
+
+    if ai_response:
+        empathetic_message = ai_response.get("message", "")
+        support_options = ai_response.get("suggestions", [])
+
+    # Fall back to mock if AI didn't provide suggestions
+    if not support_options:
         support_options = get_mock_support_options(issue_text, profile_dict)
 
     # Get recommended groups
@@ -736,11 +764,13 @@ def ai_suggest_resources_and_options(issue_text, profile_dict, followup_count, f
     )
 
     return {
+        "empathetic_message": empathetic_message,
         "support_options": support_options,
         "asu_resources": resources,
         "recommended_groups": recommended_groups,
         "safe_disclaimer": disclaimer
     }
+
 
 
 def ai_generate_followup_response(issue_text, followup_question, profile_dict, history=None):
@@ -1023,6 +1053,7 @@ def resources():
 
     return render_template(
         "resources.html",
+        empathetic_message=ai_result.get("empathetic_message", ""),
         support_options=ai_result.get("support_options", []),
         asu_resources=ai_result.get("asu_resources", []),
         recommended_groups=combined_groups,
@@ -1033,6 +1064,7 @@ def resources():
         followup_response=followup_response,
         followup_history=session.get("followup_history", [])[:-1] if followup_question else session.get("followup_history", []),
         username=session.get("username")
+
     )
 
 
@@ -1144,7 +1176,11 @@ def chat():
             if not moderation["allowed"]:
                 warning = moderation["user_message"]
             else:
+                # Generate unique message ID
+                msg_id = f"{session.get('user_id')}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
                 groups[current_group].append({
+                    "id": msg_id,
+                    "user_id": session.get("user_id"),
                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "display_name": session.get("display_name", "Anonymous"),
                     "text": moderation["user_message"]
@@ -1160,8 +1196,10 @@ def chat():
         messages=messages,
         warning=warning,
         distress_banner=distress_banner,
-        username=session.get("username")
+        username=session.get("username"),
+        current_user_id=session.get("user_id")
     )
+
 
 
 @app.route("/api/messages", methods=["GET"])
@@ -1215,6 +1253,63 @@ def leave_group():
 
     session["current_group"] = None
     return redirect(url_for("decision"))
+
+
+@app.route("/api/message/edit", methods=["POST"])
+@login_required
+def edit_message():
+    """Edit a user's own message."""
+    data = request.get_json()
+    msg_id = data.get("message_id")
+    new_text = data.get("text", "").strip()
+    
+    if not msg_id or not new_text:
+        return jsonify({"success": False, "error": "Missing message ID or text"})
+    
+    current_group = session.get("current_group")
+    user_id = session.get("user_id")
+    
+    if not current_group or current_group not in groups:
+        return jsonify({"success": False, "error": "No active group"})
+    
+    # Find and edit the message
+    for msg in groups[current_group]:
+        if msg.get("id") == msg_id and msg.get("user_id") == user_id:
+            # Moderate the new text
+            moderation = ai_moderate_message(new_text)
+            if not moderation["allowed"]:
+                return jsonify({"success": False, "error": moderation["user_message"]})
+            
+            msg["text"] = moderation["user_message"]
+            msg["edited"] = True
+            return jsonify({"success": True, "text": msg["text"]})
+    
+    return jsonify({"success": False, "error": "Message not found or not authorized"})
+
+
+@app.route("/api/message/delete", methods=["POST"])
+@login_required
+def delete_message():
+    """Delete a user's own message."""
+    data = request.get_json()
+    msg_id = data.get("message_id")
+    
+    if not msg_id:
+        return jsonify({"success": False, "error": "Missing message ID"})
+    
+    current_group = session.get("current_group")
+    user_id = session.get("user_id")
+    
+    if not current_group or current_group not in groups:
+        return jsonify({"success": False, "error": "No active group"})
+    
+    # Find and delete the message
+    for i, msg in enumerate(groups[current_group]):
+        if msg.get("id") == msg_id and msg.get("user_id") == user_id:
+            groups[current_group].pop(i)
+            return jsonify({"success": True})
+    
+    return jsonify({"success": False, "error": "Message not found or not authorized"})
 
 
 # -----------------------------------------------------------------------------
