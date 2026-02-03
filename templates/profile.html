@@ -1,138 +1,336 @@
 {% extends "base.html" %}
 
-{% block title %}Your Profile - SunDevil Circle{% endblock %}
+{% block title %}Profile Settings - SunDevil Circle{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 180px; padding-bottom: 80px; max-width: 700px;">
+<div class="container" style="padding-top: 140px; padding-bottom: 80px; max-width: 800px;">
 
-    <div class="card">
-        <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px; color: var(--primary-maroon);">Complete Your
-            Profile</h1>
-        <p style="color: var(--text-secondary); margin-bottom: 32px;">Help us match you with the right peers and
-            resources.</p>
+    <!-- Breadcrumb -->
+    <nav style="margin-bottom: 24px;">
+        <a href="{{ url_for('decision') }}" style="color: var(--text-secondary); font-size: 14px;">← Dashboard</a>
+        <span style="color: var(--text-light); margin: 0 8px;">›</span>
+        <span style="color: var(--text-primary); font-size: 14px; font-weight: 500;">Profile Settings</span>
+    </nav>
 
-        <form method="POST" action="{{ url_for('profile') }}">
-            <div class="form-group">
-                <label class="form-label" for="display_name">Display Name</label>
-                <input type="text" id="display_name" name="display_name" class="form-input"
-                    placeholder="Choose a display name (can be anonymous)" required
-                    value="{{ profile.display_name if profile else '' }}">
-                <p style="font-size: 12px; color: var(--text-light); margin-top: 4px;">This is how others will see you.
-                    You can use any name you'd like.</p>
-            </div>
+    <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Profile Settings</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 32px;">Manage your profile and preferences</p>
 
-            <div class="form-group">
-                <label class="form-label">Are you an international freshman?</label>
-                <div style="display: flex; gap: 16px; margin-top: 8px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="is_international_freshman" value="yes" {{ 'checked' if profile and
-                            profile.is_international_freshman else '' }}>
-                        <span>Yes</span>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="is_international_freshman" value="no" {{ 'checked' if profile and not
-                            profile.is_international_freshman else '' }}>
-                        <span>No</span>
-                    </label>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}"
+        style="margin-bottom: 24px; padding: 16px 20px; border-radius: 12px; background: {{ '#D1FAE5' if category == 'success' else '#FEE2E2' }}; color: {{ '#065F46' if category == 'success' else '#991B1B' }};">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('profile') }}" id="profileForm">
+        <!-- Profile Avatar Section -->
+        <div class="card" style="margin-bottom: 24px;">
+            <h2
+                style="font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">👤</span> Your Identity
+            </h2>
+
+            <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 24px;">
+                <div id="avatarPreview"
+                    style="width: 80px; height: 80px; background: linear-gradient(135deg, #8B1538, #A91D3A); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 700;">
+                    {{ profile.display_name[0].upper() if profile and profile.display_name else '?' }}
+                </div>
+                <div>
+                    <p style="font-weight: 500; color: var(--text-primary); margin-bottom: 4px;">{{ profile.display_name
+                        if profile else 'Anonymous' }}</p>
+                    <p style="font-size: 14px; color: var(--text-secondary);">Member since {{ session.get('created_at',
+                        'recently') | default('recently') }}</p>
+                    <span
+                        style="font-size: 12px; background: var(--pink-light); color: var(--primary-maroon); padding: 4px 12px; border-radius: 16px; font-weight: 500;">seeker</span>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="preferred_language">Preferred Language</label>
-                <select id="preferred_language" name="preferred_language" class="form-input">
-                    <option value="">Select a language...</option>
-                    <option value="English" {{ 'selected' if profile and profile.preferred_language=='English' else ''
-                        }}>English</option>
-                    <option value="Spanish" {{ 'selected' if profile and profile.preferred_language=='Spanish' else ''
-                        }}>Spanish</option>
-                    <option value="Mandarin" {{ 'selected' if profile and profile.preferred_language=='Mandarin' else ''
-                        }}>Mandarin Chinese</option>
-                    <option value="Hindi" {{ 'selected' if profile and profile.preferred_language=='Hindi' else '' }}>
-                        Hindi</option>
-                    <option value="Arabic" {{ 'selected' if profile and profile.preferred_language=='Arabic' else '' }}>
-                        Arabic</option>
-                    <option value="Portuguese" {{ 'selected' if profile and profile.preferred_language=='Portuguese'
-                        else '' }}>Portuguese</option>
-                    <option value="French" {{ 'selected' if profile and profile.preferred_language=='French' else '' }}>
-                        French</option>
-                    <option value="Korean" {{ 'selected' if profile and profile.preferred_language=='Korean' else '' }}>
-                        Korean</option>
-                    <option value="Japanese" {{ 'selected' if profile and profile.preferred_language=='Japanese' else ''
-                        }}>Japanese</option>
-                    <option value="Vietnamese" {{ 'selected' if profile and profile.preferred_language=='Vietnamese'
-                        else '' }}>Vietnamese</option>
-                    <option value="Other" {{ 'selected' if profile and profile.preferred_language=='Other' else '' }}>
-                        Other</option>
-                </select>
+                <label class="form-label" for="display_name">Display Name</label>
+                <div style="display: flex; gap: 12px;">
+                    <input type="text" id="display_name" name="display_name" class="form-input" style="flex: 1;"
+                        placeholder="Choose a display name" required maxlength="30"
+                        value="{{ profile.display_name if profile else '' }}">
+                    <button type="button" onclick="generateRandomName()" class="btn btn-outline"
+                        style="white-space: nowrap;">
+                        ✨ Random
+                    </button>
+                </div>
+                <p class="sticky-note" style="margin-top: 12px;">
+                    💡 Your display name is how others will see you. You can use any name to protect your privacy.
+                </p>
             </div>
+        </div>
+
+        <!-- Account Info Section -->
+        <div class="card" style="margin-bottom: 24px;">
+            <h2
+                style="font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">📧</span> Account Information
+            </h2>
 
             <div class="form-group">
-                <label class="form-label">What challenges are you facing? (Select all that apply)</label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
-                    {% set challenges = ['homesickness', 'academic', 'social', 'cultural', 'language', 'financial',
-                    'health', 'career'] %}
-                    {% set challenge_labels = {
-                    'homesickness': '🏠 Homesickness',
-                    'academic': '📚 Academic Pressure',
-                    'social': '👥 Making Friends',
-                    'cultural': '🌍 Cultural Adjustment',
-                    'language': '💬 Language Barriers',
-                    'financial': '💰 Financial Stress',
-                    'health': '❤️ Health & Wellness',
-                    'career': '💼 Career & Internships'
-                    } %}
-                    {% for challenge in challenges %}
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px; background: #FAFAFA; border-radius: 8px; transition: all 200ms;">
-                        <input type="checkbox" name="primary_challenge" value="{{ challenge }}" {{ 'checked' if profile
-                            and challenge in profile.primary_challenge else '' }}>
-                        <span>{{ challenge_labels[challenge] }}</span>
+                <label class="form-label">Username</label>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <input type="text" class="form-input" value="{{ session.get('username', '') }}" disabled
+                        style="flex: 1; background: #F9FAFB;">
+                    <span style="font-size: 12px; color: var(--text-light);">Cannot be changed</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Support Preferences Section -->
+        <div class="card" style="margin-bottom: 24px;">
+            <h2
+                style="font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">🎯</span> Support Topics
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">What would you like to
+                discuss? Select all that apply.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                {% set topics = [
+                ('homesickness', '🏠', 'Homesickness'),
+                ('loneliness', '💭', 'Loneliness'),
+                ('anxiety', '😰', 'Anxiety'),
+                ('culture_shock', '🌍', 'Culture Shock'),
+                ('academics', '📚', 'Academics'),
+                ('relationships', '💕', 'Relationships'),
+                ('identity', '🪪', 'Identity'),
+                ('finances', '💰', 'Finances')
+                ] %}
+                {% for value, icon, label in topics %}
+                <label class="checkbox-card"
+                    style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 14px 16px; background: #FAFAFA; border-radius: 12px; border: 2px solid transparent; transition: all 200ms;">
+                    <input type="checkbox" name="support_topics" value="{{ value }}" {{ 'checked' if profile and value
+                        in (profile.support_topics or []) else '' }}
+                        style="width: 18px; height: 18px; accent-color: var(--primary-maroon);">
+                    <span style="font-size: 20px;">{{ icon }}</span>
+                    <span style="font-weight: 500;">{{ label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Language Section -->
+        <div class="card" style="margin-bottom: 24px;">
+            <h2
+                style="font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">🌐</span> Language & Communication
+            </h2>
+
+            <div class="form-group">
+                <label class="form-label">Languages you speak</label>
+                <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 14px;">Select all languages
+                    you're comfortable chatting in.</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    {% set languages = ['English', 'Spanish', 'Mandarin', 'Hindi', 'Arabic', 'Portuguese', 'French',
+                    'Korean', 'Japanese', 'Vietnamese', 'Tagalog', 'Other'] %}
+                    {% for lang in languages %}
+                    <label class="language-pill"
+                        style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 2px solid #E5E7EB; border-radius: 20px; cursor: pointer; transition: all 200ms; background: white;">
+                        <input type="checkbox" name="languages" value="{{ lang }}" {{ 'checked' if profile and lang in
+                            (profile.languages or []) else '' }} style="display: none;">
+                        <span>{{ lang }}</span>
                     </label>
                     {% endfor %}
                 </div>
             </div>
 
+            <div class="form-group" style="margin-top: 24px;">
+                <label class="form-label">Support Style</label>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    {% set styles = [
+                    ('listening', 'Just listening', 'I prefer someone who listens without giving advice'),
+                    ('advice', 'Advice welcome', 'I appreciate suggestions and guidance'),
+                    ('mixed', 'Mixed approach', 'Sometimes listening, sometimes advice')
+                    ] %}
+                    {% for value, title, desc in styles %}
+                    <label class="radio-card-input"
+                        style="display: flex; align-items: center; gap: 16px; cursor: pointer; padding: 16px; background: #FAFAFA; border-radius: 12px; border: 2px solid transparent; transition: all 200ms;">
+                        <input type="radio" name="support_style" value="{{ value }}" {{ 'checked' if (profile and
+                            profile.support_style==value) or (not profile and value=='mixed' ) else '' }}
+                            style="width: 20px; height: 20px; accent-color: var(--primary-maroon);">
+                        <div>
+                            <strong style="display: block; margin-bottom: 2px;">{{ title }}</strong>
+                            <span style="font-size: 14px; color: var(--text-secondary);">{{ desc }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Cultural Background Section -->
+        <div class="card" style="margin-bottom: 24px;">
+            <h2
+                style="font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">🌏</span> Cultural Background
+                <span style="font-size: 12px; color: var(--text-light); font-weight: 400;">(Optional)</span>
+            </h2>
+
             <div class="form-group">
-                <label class="form-label">Support Style Preference</label>
-                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
-                    <label
-                        style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; background: #FAFAFA; border-radius: 8px;">
-                        <input type="radio" name="support_style" value="listening" {{ 'checked' if profile and
-                            profile.support_style=='listening' else '' }}>
-                        <div>
-                            <strong>Listener</strong>
-                            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 2px;">I prefer to
-                                listen and receive support</p>
-                        </div>
+                <label class="form-label">Region</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    {% set cultures = ['East Asia', 'South Asia', 'Southeast Asia', 'Middle East', 'Africa', 'Europe',
+                    'Latin America', 'North America', 'Pacific Islands'] %}
+                    {% for culture in cultures %}
+                    <label class="culture-pill"
+                        style="display: inline-flex; align-items: center; padding: 8px 16px; border: 2px solid #E5E7EB; border-radius: 20px; cursor: pointer; transition: all 200ms; background: white;">
+                        <input type="checkbox" name="cultural_background" value="{{ culture }}" {{ 'checked' if profile
+                            and culture in (profile.cultural_background or []) else '' }} style="display: none;">
+                        <span>{{ culture }}</span>
                     </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; background: #FAFAFA; border-radius: 8px;">
-                        <input type="radio" name="support_style" value="sharing" {{ 'checked' if profile and
-                            profile.support_style=='sharing' else '' }}>
-                        <div>
-                            <strong>Sharer</strong>
-                            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 2px;">I prefer to share
-                                my experiences with others</p>
-                        </div>
-                    </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; background: #FAFAFA; border-radius: 8px;">
-                        <input type="radio" name="support_style" value="mixed" {{ 'checked' if (not profile) or (profile
-                            and profile.support_style=='mixed' ) else '' }}>
-                        <div>
-                            <strong>Both</strong>
-                            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 2px;">I'm open to both
-                                listening and sharing</p>
-                        </div>
-                    </label>
+                    {% endfor %}
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-maroon"
-                style="width: 100%; padding: 16px; font-size: 18px; margin-top: 16px;">
-                Save & Continue
+            <div class="form-group" style="margin-top: 24px;">
+                <label class="form-label">Are you an international freshman?</label>
+                <div style="display: flex; gap: 16px; margin-top: 8px;">
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 20px; background: #FAFAFA; border-radius: 8px;">
+                        <input type="radio" name="is_international_freshman" value="yes" {{ 'checked' if profile and
+                            profile.is_international_freshman else '' }} style="accent-color: var(--primary-maroon);">
+                        <span>Yes</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 20px; background: #FAFAFA; border-radius: 8px;">
+                        <input type="radio" name="is_international_freshman" value="no" {{ 'checked' if profile and not
+                            profile.is_international_freshman else '' }} style="accent-color: var(--primary-maroon);">
+                        <span>No</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saved Resources Section -->
+        <div class="card" style="margin-bottom: 24px;">
+            <h2
+                style="font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">📚</span> Resources
+            </h2>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="{{ url_for('resources') }}" class="btn btn-outline">View All Resources</a>
+            </div>
+        </div>
+
+        <!-- Account Actions -->
+        <div class="card" style="margin-bottom: 24px; border: 2px solid #FEE2E2;">
+            <h2
+                style="font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: #991B1B;">
+                <span style="font-size: 24px;">⚙️</span> Account Actions
+            </h2>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="{{ url_for('logout') }}" class="btn"
+                    style="background: #FEE2E2; color: #991B1B; border: none;">Sign Out</a>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div
+            style="position: sticky; bottom: 24px; background: white; padding: 16px; border-radius: 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); display: flex; gap: 16px; justify-content: flex-end;">
+            <a href="{{ url_for('decision') }}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-maroon" style="padding: 14px 32px; font-size: 16px;">
+                💾 Save Changes
             </button>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
+
+<style>
+    .sticky-note {
+        background: #FEF3C7;
+        border: 2px solid #FBBF24;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #92400E;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .checkbox-card:has(input:checked) {
+        background: #FFF1F2;
+        border-color: var(--primary-maroon);
+    }
+
+    .language-pill:has(input:checked),
+    .culture-pill:has(input:checked) {
+        background: var(--primary-maroon);
+        color: white;
+        border-color: var(--primary-maroon);
+    }
+
+    .radio-card-input:has(input:checked) {
+        background: #FFF1F2;
+        border-color: var(--primary-maroon);
+    }
+
+    /* Fallback for browsers without :has() */
+    .language-pill.selected,
+    .culture-pill.selected {
+        background: var(--primary-maroon);
+        color: white;
+        border-color: var(--primary-maroon);
+    }
+</style>
+
+<script>
+    // Random name generator
+    const adjectives = ['Sunny', 'Happy', 'Brave', 'Kind', 'Wise', 'Calm', 'Bold', 'Cool', 'Swift', 'Bright'];
+    const nouns = ['Phoenix', 'Cactus', 'Desert', 'Star', 'Moon', 'Sun', 'Eagle', 'Hawk', 'Fox', 'Wolf'];
+
+    function generateRandomName() {
+        const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+        const noun = nouns[Math.floor(Math.random() * nouns.length)];
+        const num = Math.floor(Math.random() * 100);
+        document.getElementById('display_name').value = adj + noun + num;
+        updateAvatarPreview();
+    }
+
+    function updateAvatarPreview() {
+        const name = document.getElementById('display_name').value;
+        const preview = document.getElementById('avatarPreview');
+        preview.textContent = name ? name[0].toUpperCase() : '?';
+    }
+
+    document.getElementById('display_name').addEventListener('input', updateAvatarPreview);
+
+    // Toggle pills for fallback
+    document.querySelectorAll('.language-pill input, .culture-pill input').forEach(input => {
+        input.addEventListener('change', function () {
+            this.closest('label').classList.toggle('selected', this.checked);
+        });
+        // Initialize
+        if (input.checked) {
+            input.closest('label').classList.add('selected');
+        }
+    });
+
+    // Warn on unsaved changes
+    let formChanged = false;
+    document.getElementById('profileForm').addEventListener('change', () => {
+        formChanged = true;
+    });
+
+    window.addEventListener('beforeunload', (e) => {
+        if (formChanged) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    document.getElementById('profileForm').addEventListener('submit', () => {
+        formChanged = false;
+    });
+</script>
 {% endblock %}

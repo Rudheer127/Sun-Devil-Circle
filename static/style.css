@@ -1804,3 +1804,184 @@ textarea.form-input {
     left: 50%;
     transform: translateX(-50%);
 }
+
+/* Footer Consent Section */
+.footer-consent {
+    max-width: 800px;
+    margin: 32px auto 0;
+    padding: 24px;
+    background: #FFF5F5;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    border: 1px solid #FDE2E4;
+}
+
+.footer-consent p {
+    font-size: var(--text-sm);
+    color: #6B7280;
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.footer-consent p:last-child {
+    margin-bottom: 0;
+}
+
+.footer-consent strong {
+    color: var(--text-primary);
+}
+
+/* Sticky Notes / Tooltips */
+.sticky-note {
+    background: #FEF3C7;
+    border: 2px solid #FBBF24;
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    font-size: var(--text-sm);
+    color: #92400E;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    animation: stickyBounce 0.3s ease-out;
+}
+
+@keyframes stickyBounce {
+    0% {
+        transform: translateY(-5px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.sticky-note-dismissible {
+    position: relative;
+    padding-right: 32px;
+}
+
+.sticky-note-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #92400E;
+    opacity: 0.6;
+    transition: opacity 200ms;
+}
+
+.sticky-note-close:hover {
+    opacity: 1;
+}
+
+/* Tooltip Trigger */
+.tooltip-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    background: #E5E7EB;
+    border-radius: 50%;
+    font-size: 10px;
+    color: #6B7280;
+    cursor: help;
+    margin-left: 4px;
+}
+
+.tooltip-trigger:hover {
+    background: var(--primary-maroon);
+    color: white;
+}
+
+/* Info Popover */
+.info-popover {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    padding: 12px 16px;
+    background: #FEF3C7;
+    border: 2px solid #FBBF24;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: #92400E;
+    white-space: nowrap;
+    max-width: 280px;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 200ms ease;
+}
+
+.info-popover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-bottom-color: #FBBF24;
+}
+
+.tooltip-trigger:hover+.info-popover,
+.info-popover:hover {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Dashboard Sticky Notes */
+.dashboard-tip {
+    background: #FEF3C7;
+    border: 2px solid #FBBF24;
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dashboard-tip-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.dashboard-tip-content {
+    flex: 1;
+}
+
+.dashboard-tip-content strong {
+    display: block;
+    color: #92400E;
+    margin-bottom: 4px;
+}
+
+.dashboard-tip-content p {
+    font-size: var(--text-sm);
+    color: #B45309;
+    margin: 0;
+}
+
+.dashboard-tip-dismiss {
+    background: transparent;
+    border: none;
+    color: #92400E;
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.6;
+    transition: opacity 200ms;
+}
+
+.dashboard-tip-dismiss:hover {
+    opacity: 1;
+}

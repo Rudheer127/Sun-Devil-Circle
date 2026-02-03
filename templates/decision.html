@@ -6,11 +6,21 @@
 <div class="container" style="padding-top: 180px; padding-bottom: 80px;">
 
     <!-- Welcome Header -->
-    <div style="margin-bottom: 40px;">
+    <div style="margin-bottom: 24px;">
         <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary);">
             Welcome back{% if display_name %}, {{ display_name }}{% endif %} 👋
         </h1>
         <p style="color: var(--text-secondary); margin-top: 8px; font-size: 18px;">What would you like to do today?</p>
+    </div>
+
+    <!-- Sticky Note Tip (dismissible) -->
+    <div class="dashboard-tip" id="dashboardTip" style="display: none;">
+        <span class="dashboard-tip-icon">💡</span>
+        <div class="dashboard-tip-content">
+            <strong>Tip: Keep your profile updated!</strong>
+            <p>Better profile info helps us match you with the right peers and resources.</p>
+        </div>
+        <button class="dashboard-tip-dismiss" onclick="dismissTip()" aria-label="Dismiss tip">✕</button>
     </div>
 
     <!-- Action Cards Grid -->
@@ -34,7 +44,7 @@
         <a href="{{ url_for('people') }}" class="step-card" style="text-decoration: none;">
             <div class="step-icon" style="background: #FEF3C7; color: #F59E0B;">👥</div>
             <h3 class="step-title">Explore Peer Supporters</h3>
-            <p class="step-desc">Browse and connect with trained peers who understand your experiences.</p>
+            <p class="step-desc">Browse and connect with fellow students who understand your experiences.</p>
         </a>
     </div>
 
@@ -45,7 +55,8 @@
             <div>
                 <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary);">🎉 You're in a group!</h3>
                 <p style="color: var(--text-secondary); margin-top: 4px;">Continue chatting with your peers in
-                    <strong>{{ current_group }}</strong></p>
+                    <strong>{{ current_group }}</strong>
+                </p>
             </div>
             <a href="{{ url_for('chat') }}" class="btn btn-maroon">Go to Chat →</a>
         </div>
@@ -89,4 +100,23 @@
         </a>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Sticky note functionality
+    const TIP_DISMISSED_KEY = 'dashboard_tip_dismissed';
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Show tip if not dismissed before
+        if (!localStorage.getItem(TIP_DISMISSED_KEY)) {
+            document.getElementById('dashboardTip').style.display = 'flex';
+        }
+    });
+
+    function dismissTip() {
+        document.getElementById('dashboardTip').style.display = 'none';
+        localStorage.setItem(TIP_DISMISSED_KEY, 'true');
+    }
+</script>
 {% endblock %}

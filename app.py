@@ -1123,41 +1123,73 @@ def onboarding_submit():
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
-    """Profile setup page."""
-    # If profile already exists, skip to issue page
-    if request.method == "GET" and session.get("display_name"):
-        return redirect(url_for("issue"))
-
+    """Profile settings page - full edit capabilities."""
+    user_id = session.get("user_id")
+    
     if request.method == "POST":
-
-        session["display_name"] = request.form.get("display_name", "").strip()[:50]
-        session["is_international_freshman"] = request.form.get("is_international_freshman") == "yes"
-        session["preferred_language"] = request.form.get("preferred_language", "").strip()[:30]
-
-        challenges = request.form.getlist("primary_challenge")
-        session["primary_challenge"] = challenges[:2]
-
+        # Get form data
+        display_name = request.form.get("display_name", "").strip()[:30]
+        is_freshman = request.form.get("is_international_freshman") == "yes"
         support_style = request.form.get("support_style", "mixed")
-        if support_style not in ["listening", "sharing", "mixed"]:
+        if support_style not in ["listening", "advice", "mixed"]:
             support_style = "mixed"
+        
+        # Get multi-select fields
+        support_topics = request.form.getlist("support_topics")
+        languages = request.form.getlist("languages")
+        cultural_background = request.form.getlist("cultural_background")
+        
+        # Update session
+        session["display_name"] = display_name
+        session["is_international_freshman"] = is_freshman
         session["support_style"] = support_style
-
-        session["followup_count"] = 0
-        session["followup_history"] = []
-        session["current_group"] = None
-
-        # Store user embedding for semantic matching and save to DB
-        user_id = session.get("user_id")
+        session["support_topics"] = support_topics
+        session["languages"] = languages
+        session["preferred_language"] = languages[0] if languages else ""
+        session["cultural_background"] = cultural_background
+        session["primary_challenge"] = support_topics  # For compatibility
+        
+        # Build profile dict
+        profile_dict = {
+            "display_name": display_name,
+            "is_international_freshman": is_freshman,
+            "preferred_language": languages[0] if languages else "",
+            "primary_challenge": support_topics,
+            "support_style": support_style,
+            "support_topics": support_topics,
+            "languages": languages,
+            "cultural_background": cultural_background,
+            "onboarding_complete": True
+        }
+        
+        # Save to database
         if user_id:
-            profile_dict = get_profile_dict()
-            store_user_embedding(user_id, profile_dict)
-            cache_user_profile(user_id, session.get("display_name"), profile_dict)
             save_profile_to_db(user_id, profile_dict)
+            store_user_embedding(user_id, profile_dict)
+            cache_user_profile(user_id, display_name, profile_dict)
+        
+        flash("Profile saved successfully!", "success")
+        return redirect(url_for("profile"))
 
-        return redirect(url_for("issue"))
-
-
-    return render_template("profile.html", username=session.get("username"))
+    # GET - Load existing profile
+    existing_profile = load_profile_from_db(user_id) if user_id else None
+    
+    # Fallback to session data if no DB profile
+    if not existing_profile:
+        existing_profile = {
+            "display_name": session.get("display_name", ""),
+            "is_international_freshman": session.get("is_international_freshman", False),
+            "preferred_language": session.get("preferred_language", ""),
+            "primary_challenge": session.get("primary_challenge", []),
+            "support_style": session.get("support_style", "mixed"),
+            "support_topics": session.get("support_topics", []),
+            "languages": session.get("languages", []),
+            "cultural_background": session.get("cultural_background", [])
+        }
+    
+    return render_template("profile.html", 
+                         profile=existing_profile,
+                         username=session.get("username"))
 
 
 @app.route("/issue", methods=["GET", "POST"])
