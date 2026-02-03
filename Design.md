@@ -26,6 +26,20 @@ Secondary users (future expansion):
 Other student transition groups (transfer students, first-generation students, etc.)
 
 Core User Flow
+0. Authentication (Login/Signup)
+
+The user must log in or sign up before accessing the platform.
+
+Signup Requirements:
+
+Unique username
+
+Password (cannot be empty)
+
+Password confirmation
+
+This authentication is for demo continuity only (so a user can return to their session). There is no email verification or password recovery.
+
 1. Profile Setup
 
 The user:
@@ -159,7 +173,9 @@ Active groups and messages
 
 Properties:
 
-No database
+No database for chat/issue data
+
+SQLite used ONLY for user credentials
 
 No long-term persistence
 
