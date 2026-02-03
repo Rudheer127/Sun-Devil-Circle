@@ -4,54 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Sign Up - Sun Devil Circle">
-    <title>Sign Up - Sun Devil Circle</title>
+    <meta name="description" content="Create your SunDevil Circle account">
+    <title>Get Started - SunDevil Circle</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
-    <header>
-        <h1>Sun Devil Circle</h1>
-    </header>
-
-    <div class="container">
-        <div class="auth-container">
-            <div class="card auth-card">
-                <h2>Create Your Account</h2>
-                <p>Join Sun Devil Circle to connect with peers.</p>
-
-                {% if error %}
-                <div class="error-message">
-                    {{ error }}
+    <div class="auth-container">
+        <div class="auth-card">
+            <a href="{{ url_for('index') }}" class="logo" style="justify-content: center; margin-bottom: 32px;">
+                <div class="logo-icon">☀</div>
+                <div class="logo-text">
+                    <span class="sun">SunDevil</span><span class="circle">Circle</span>
                 </div>
-                {% endif %}
+            </a>
 
-                <form method="POST" action="{{ url_for('signup') }}">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required maxlength="50"
-                        placeholder="Choose a username" autocomplete="username">
+            <h1>Create your account</h1>
+            <p class="subtitle">Join the SunDevil Circle community</p>
 
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Create a password"
-                        autocomplete="new-password">
-
-                    <label for="confirm_password">Confirm Password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" required
-                        placeholder="Confirm your password" autocomplete="new-password">
-
-                    <button type="submit" class="btn-full">Sign Up</button>
-                </form>
-
-                <div class="auth-footer">
-                    <p>Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
-                </div>
+            {% if error %}
+            <div class="warning-message">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                </svg>
+                {{ error }}
             </div>
-        </div>
+            {% endif %}
 
-        <div class="transparency-note">
-            <strong>Privacy Notice:</strong> Only your username and password are stored on our servers. Your personal
-            issue history is stored locally in your browser via IndexedDB and is never sent to our servers. AI
-            suggestions are informational, not professional or medical advice.
+            <form method="POST" action="{{ url_for('signup') }}">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-input" placeholder="Choose a username"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-input"
+                        placeholder="Create a password (min 6 characters)" required minlength="6">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-input"
+                        placeholder="Confirm your password" required>
+                </div>
+
+                <button type="submit" class="btn btn-maroon">Create Account</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
+            </div>
         </div>
     </div>
 </body>

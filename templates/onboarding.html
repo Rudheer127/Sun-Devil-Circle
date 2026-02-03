@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Complete your profile - SunDevil Circle">
+    <title>Find Your Support - SunDevil Circle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Onboarding specific styles */
+        .onboarding-container {
+            min-height: 100vh;
+            background: #FFFFFF;
+            padding: 80px 40px 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #E5E7EB;
+            z-index: 100;
+        }
+
+        .progress-fill {
+            background: #8B1538;
+            height: 100%;
+            width: 25%;
+            transition: width 400ms ease-out;
+        }
+
+        .step-indicator {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            font-size: 14px;
+            color: #6B7280;
+            font-weight: 500;
+            z-index: 101;
+        }
+
+        /* Step Container */
+        .step {
+            display: none;
+            width: 100%;
+            max-width: 640px;
+            animation: fadeIn 300ms ease-out;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Step Header */
+        .step-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .step-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1A1A1A;
+            margin-bottom: 12px;
+        }
+
+        .step-header p {
+            font-size: 18px;
+            color: #6B7280;
+        }
+
+        /* Topic Cards Grid */
+        .topics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            width: 100%;
+        }
+
+        @media (max-width: 500px) {
+            .topics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Topic Card */
+        .topic-card {
+            background: #FFFFFF;
+            border: 2px solid #E5E7EB;
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 250ms ease;
+            min-height: 120px;
+            justify-content: center;
+        }
+
+        .topic-card:hover {
+            border-color: #D1D5DB;
+            background: #F9FAFB;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .topic-card.selected {
+            border-color: #8B1538;
+            border-width: 3px;
+            background: #FFF1F2;
+            box-shadow: 0 4px 16px rgba(139, 21, 56, 0.15);
+            transform: scale(1.02);
+        }
+
+        .topic-card .icon {
+            font-size: 32px;
+        }
+
+        .topic-card .label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1A1A1A;
+            text-align: center;
+        }
+
+        /* Language Pills */
+        .pills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .pill {
+            padding: 10px 20px;
+            border: 2px solid #E5E7EB;
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #4B5563;
+            background: #FFFFFF;
+            cursor: pointer;
+            transition: all 200ms ease;
+        }
+
+        .pill:hover {
+            border-color: #D1D5DB;
+            background: #F9FAFB;
+        }
+
+        .pill.selected {
+            background: #8B1538;
+            color: #FFFFFF;
+            border-color: #8B1538;
+            font-weight: 600;
+        }
+
+        /* Radio Cards */
+        .radio-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .radio-card {
+            background: #FFFFFF;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 250ms ease;
+        }
+
+        .radio-card:hover {
+            border-color: #D1D5DB;
+            background: #F9FAFB;
+        }
+
+        .radio-card.selected {
+            border-color: #8B1538;
+            border-width: 3px;
+            background: #FFF1F2;
+        }
+
+        .radio-card h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1A1A1A;
+            margin-bottom: 4px;
+        }
+
+        .radio-card p {
+            font-size: 14px;
+            color: #6B7280;
+            line-height: 1.5;
+        }
+
+        /* Section Label */
+        .section-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1A1A1A;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 80px);
+            max-width: 600px;
+            display: flex;
+            gap: 16px;
+            z-index: 50;
+        }
+
+        .btn-back {
+            width: 30%;
+            height: 56px;
+            background: #FFFFFF;
+            color: #4B5563;
+            font-size: 16px;
+            font-weight: 600;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 250ms ease;
+        }
+
+        .btn-back:hover {
+            border-color: #8B1538;
+            color: #8B1538;
+            background: #FFF1F2;
+        }
+
+        .btn-continue {
+            flex: 1;
+            height: 56px;
+            background: linear-gradient(135deg, #8B1538, #A91D3A);
+            color: #FFFFFF;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(139, 21, 56, 0.3);
+            transition: all 250ms ease;
+        }
+
+        .btn-continue:hover {
+            background: linear-gradient(135deg, #A91D3A, #C02446);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(139, 21, 56, 0.4);
+        }
+
+        .btn-continue:disabled {
+            background: #D1D5DB;
+            color: #9CA3AF;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .btn-continue:disabled:hover {
+            transform: none;
+        }
+
+        /* Display Name Input */
+        .display-name-input {
+            width: 100%;
+            height: 56px;
+            padding: 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            font-size: 18px;
+            margin-bottom: 16px;
+            transition: all 200ms ease;
+        }
+
+        .display-name-input:focus {
+            border-color: #8B1538;
+            box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
+            outline: none;
+        }
+
+        /* Success Animation */
+        .success-animation {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            text-align: center;
+        }
+
+        .success-checkmark {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            margin-bottom: 24px;
+            animation: scaleIn 400ms ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="step-indicator" id="stepIndicator">Step 1 of 4</div>
+
+    <div class="onboarding-container">
+        <!-- Step 1: Support Topics -->
+        <div class="step active" id="step1">
+            <div class="step-header">
+                <h1>What would you like support with?</h1>
+                <p>Select all that apply</p>
+            </div>
+            <div class="topics-grid" id="topicsGrid">
+                <div class="topic-card" data-topic="homesickness">
+                    <span class="icon">🏠</span>
+                    <span class="label">Homesickness</span>
+                </div>
+                <div class="topic-card" data-topic="loneliness">
+                    <span class="icon">💭</span>
+                    <span class="label">Loneliness</span>
+                </div>
+                <div class="topic-card" data-topic="anxiety">
+                    <span class="icon">😰</span>
+                    <span class="label">Anxiety</span>
+                </div>
+                <div class="topic-card" data-topic="culture_shock">
+                    <span class="icon">🌍</span>
+                    <span class="label">Culture Shock</span>
+                </div>
+                <div class="topic-card" data-topic="academics">
+                    <span class="icon">📚</span>
+                    <span class="label">Academics</span>
+                </div>
+                <div class="topic-card" data-topic="relationships">
+                    <span class="icon">💕</span>
+                    <span class="label">Relationships</span>
+                </div>
+                <div class="topic-card" data-topic="identity">
+                    <span class="icon">🪪</span>
+                    <span class="label">Identity</span>
+                </div>
+                <div class="topic-card" data-topic="finances">
+                    <span class="icon">💰</span>
+                    <span class="label">Finances</span>
+                </div>
+                <div class="topic-card" data-topic="time_management">
+                    <span class="icon">⏰</span>
+                    <span class="label">Time Management</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Language & Communication -->
+        <div class="step" id="step2">
+            <div class="step-header">
+                <h1>Language & Communication</h1>
+                <p>Help us find the right match</p>
+            </div>
+
+            <label class="section-label">Languages you're comfortable with</label>
+            <div class="pills-container" id="languagesPills">
+                <div class="pill" data-lang="English">English</div>
+                <div class="pill" data-lang="Spanish">Spanish</div>
+                <div class="pill" data-lang="Mandarin">Mandarin</div>
+                <div class="pill" data-lang="Hindi">Hindi</div>
+                <div class="pill" data-lang="Arabic">Arabic</div>
+                <div class="pill" data-lang="Portuguese">Portuguese</div>
+                <div class="pill" data-lang="French">French</div>
+                <div class="pill" data-lang="Korean">Korean</div>
+                <div class="pill" data-lang="Japanese">Japanese</div>
+                <div class="pill" data-lang="Vietnamese">Vietnamese</div>
+                <div class="pill" data-lang="Tagalog">Tagalog</div>
+                <div class="pill" data-lang="Other">Other</div>
+            </div>
+
+            <label class="section-label">How do you prefer to receive support?</label>
+            <div class="radio-cards" id="supportStyleCards">
+                <div class="radio-card" data-style="listening">
+                    <h4>Just listening</h4>
+                    <p>I prefer someone who listens without giving advice</p>
+                </div>
+                <div class="radio-card" data-style="advice">
+                    <h4>Advice welcome</h4>
+                    <p>I appreciate suggestions and guidance</p>
+                </div>
+                <div class="radio-card" data-style="mixed">
+                    <h4>Mixed approach</h4>
+                    <p>Sometimes listening, sometimes advice</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Cultural Background -->
+        <div class="step" id="step3">
+            <div class="step-header">
+                <h1>Your preferences</h1>
+                <p style="font-style: italic;">Optional - skip any you're unsure about</p>
+            </div>
+
+            <label class="section-label">Cultural background (optional)</label>
+            <div class="pills-container" id="culturePills">
+                <div class="pill" data-culture="East Asia">East Asia</div>
+                <div class="pill" data-culture="South Asia">South Asia</div>
+                <div class="pill" data-culture="Southeast Asia">Southeast Asia</div>
+                <div class="pill" data-culture="Middle East">Middle East</div>
+                <div class="pill" data-culture="Africa">Africa</div>
+                <div class="pill" data-culture="Europe">Europe</div>
+                <div class="pill" data-culture="Latin America">Latin America</div>
+                <div class="pill" data-culture="North America">North America</div>
+                <div class="pill" data-culture="Pacific Islands">Pacific Islands</div>
+            </div>
+
+            <label class="section-label">Are you an international freshman?</label>
+            <div class="radio-cards" id="freshmanCards">
+                <div class="radio-card" data-freshman="yes">
+                    <h4>Yes, I am</h4>
+                    <p>I'm a first-year international student</p>
+                </div>
+                <div class="radio-card" data-freshman="no">
+                    <h4>No</h4>
+                    <p>I'm not an international freshman</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Display Name -->
+        <div class="step" id="step4">
+            <div class="step-header">
+                <h1>What should we call you?</h1>
+                <p>Choose a display name (can be anonymous)</p>
+            </div>
+
+            <input type="text" class="display-name-input" id="displayNameInput" placeholder="Enter your display name..."
+                maxlength="30">
+            <p style="font-size: 14px; color: #6B7280; margin-bottom: 24px;">
+                🔒 This is how others will see you. You can use any name you'd like to protect your privacy.
+            </p>
+
+            <div class="transparency-note">
+                <strong>🎉 Almost done!</strong>
+                Your preferences help us match you with the right peers and resources. You can update these anytime from
+                your profile.
+            </div>
+        </div>
+
+        <!-- Step 5: Complete -->
+        <div class="step" id="step5">
+            <div class="success-animation">
+                <div class="success-checkmark">✓</div>
+                <h1 style="font-size: 32px; font-weight: 700; color: #1A1A1A; margin-bottom: 12px;">You're all set!</h1>
+                <p style="font-size: 18px; color: #6B7280; margin-bottom: 32px;">We've saved your preferences and you're
+                    ready to find support.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="nav-buttons" id="navButtons">
+        <button class="btn-back" id="btnBack" style="display: none;">
+            <span>←</span> Back
+        </button>
+        <button class="btn-continue" id="btnContinue" disabled>
+            Continue <span>→</span>
+        </button>
+    </div>
+
+    <form id="onboardingForm" method="POST" action="{{ url_for('onboarding_submit') }}" style="display: none;">
+        <input type="hidden" name="support_topics" id="formTopics">
+        <input type="hidden" name="languages" id="formLanguages">
+        <input type="hidden" name="support_style" id="formSupportStyle">
+        <input type="hidden" name="cultural_background" id="formCulture">
+        <input type="hidden" name="is_international_freshman" id="formFreshman">
+        <input type="hidden" name="display_name" id="formDisplayName">
+    </form>
+
+    <script>
+        // State
+        let currentStep = 1;
+        const totalSteps = 4;
+        let selectedTopics = [];
+        let selectedLanguages = [];
+        let selectedStyle = '';
+        let selectedCultures = [];
+        let isFreshman = '';
+        let displayName = '';
+
+        // Elements
+        const steps = document.querySelectorAll('.step');
+        const progressFill = document.getElementById('progressFill');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const btnBack = document.getElementById('btnBack');
+        const btnContinue = document.getElementById('btnContinue');
+        const navButtons = document.getElementById('navButtons');
+
+        // Initialize
+        updateProgress();
+        validateStep();
+
+        // Topic cards
+        document.querySelectorAll('.topic-card').forEach(card => {
+            card.addEventListener('click', () => {
+                card.classList.toggle('selected');
+                const topic = card.dataset.topic;
+                if (selectedTopics.includes(topic)) {
+                    selectedTopics = selectedTopics.filter(t => t !== topic);
+                } else {
+                    selectedTopics.push(topic);
+                }
+                validateStep();
+            });
+        });
+
+        // Language pills
+        document.querySelectorAll('#languagesPills .pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                pill.classList.toggle('selected');
+                const lang = pill.dataset.lang;
+                if (selectedLanguages.includes(lang)) {
+                    selectedLanguages = selectedLanguages.filter(l => l !== lang);
+                } else {
+                    selectedLanguages.push(lang);
+                }
+                validateStep();
+            });
+        });
+
+        // Support style cards
+        document.querySelectorAll('#supportStyleCards .radio-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('#supportStyleCards .radio-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedStyle = card.dataset.style;
+                validateStep();
+            });
+        });
+
+        // Culture pills
+        document.querySelectorAll('#culturePills .pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                pill.classList.toggle('selected');
+                const culture = pill.dataset.culture;
+                if (selectedCultures.includes(culture)) {
+                    selectedCultures = selectedCultures.filter(c => c !== culture);
+                } else {
+                    selectedCultures.push(culture);
+                }
+            });
+        });
+
+        // Freshman cards
+        document.querySelectorAll('#freshmanCards .radio-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('#freshmanCards .radio-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                isFreshman = card.dataset.freshman;
+            });
+        });
+
+        // Display name input
+        document.getElementById('displayNameInput').addEventListener('input', (e) => {
+            displayName = e.target.value.trim();
+            validateStep();
+        });
+
+        // Navigation
+        btnBack.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
+
+        btnContinue.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                showStep(currentStep);
+            } else {
+                submitForm();
+            }
+        });
+
+        function showStep(step) {
+            steps.forEach((s, i) => {
+                s.classList.remove('active');
+                if (i === step - 1) {
+                    s.classList.add('active');
+                }
+            });
+            updateProgress();
+            validateStep();
+
+            // Show/hide back button
+            btnBack.style.display = step > 1 ? 'flex' : 'none';
+
+            // Update continue button text
+            if (step === totalSteps) {
+                btnContinue.innerHTML = 'Complete <span>✓</span>';
+            } else {
+                btnContinue.innerHTML = 'Continue <span>→</span>';
+            }
+        }
+
+        function updateProgress() {
+            const percent = (currentStep / totalSteps) * 100;
+            progressFill.style.width = percent + '%';
+            stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+
+        function validateStep() {
+            let valid = false;
+
+            switch (currentStep) {
+                case 1:
+                    valid = selectedTopics.length > 0;
+                    break;
+                case 2:
+                    valid = selectedLanguages.length > 0 && selectedStyle !== '';
+                    break;
+                case 3:
+                    valid = true; // Optional step
+                    break;
+                case 4:
+                    valid = displayName.length >= 2;
+                    break;
+            }
+
+            btnContinue.disabled = !valid;
+        }
+
+        function submitForm() {
+            // Fill form fields
+            document.getElementById('formTopics').value = selectedTopics.join(',');
+            document.getElementById('formLanguages').value = selectedLanguages.join(',');
+            document.getElementById('formSupportStyle').value = selectedStyle;
+            document.getElementById('formCulture').value = selectedCultures.join(',');
+            document.getElementById('formFreshman').value = isFreshman === 'yes' ? '1' : '0';
+            document.getElementById('formDisplayName').value = displayName;
+
+            // Show success step
+            currentStep = 5;
+            steps.forEach(s => s.classList.remove('active'));
+            document.getElementById('step5').classList.add('active');
+            navButtons.style.display = 'none';
+            progressFill.style.width = '100%';
+            stepIndicator.textContent = 'Complete!';
+
+            // Submit after animation
+            setTimeout(() => {
+                document.getElementById('onboardingForm').submit();
+            }, 1500);
+        }
+    </script>
+</body>
+
+</html>

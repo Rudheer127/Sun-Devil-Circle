@@ -68,9 +68,30 @@ def init_db():
                 preferred_language TEXT DEFAULT '',
                 primary_challenge TEXT DEFAULT '',
                 support_style TEXT DEFAULT 'mixed',
+                support_topics TEXT DEFAULT '',
+                languages TEXT DEFAULT '',
+                cultural_background TEXT DEFAULT '',
+                onboarding_complete INTEGER DEFAULT 0,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         ''')
+        # Migrate existing tables to add new columns if they don't exist
+        try:
+            db.execute('ALTER TABLE profiles ADD COLUMN support_topics TEXT DEFAULT ""')
+        except:
+            pass
+        try:
+            db.execute('ALTER TABLE profiles ADD COLUMN languages TEXT DEFAULT ""')
+        except:
+            pass
+        try:
+            db.execute('ALTER TABLE profiles ADD COLUMN cultural_background TEXT DEFAULT ""')
+        except:
+            pass
+        try:
+            db.execute('ALTER TABLE profiles ADD COLUMN onboarding_complete INTEGER DEFAULT 0')
+        except:
+            pass
         db.commit()
 
 
@@ -78,17 +99,24 @@ def save_profile_to_db(user_id, profile_dict):
     """Save profile to database."""
     db = get_db()
     challenges = ','.join(profile_dict.get('primary_challenge', []))
+    support_topics = ','.join(profile_dict.get('support_topics', []))
+    languages = ','.join(profile_dict.get('languages', []))
+    cultural_background = ','.join(profile_dict.get('cultural_background', []))
     db.execute('''
         INSERT OR REPLACE INTO profiles 
-        (user_id, display_name, is_international_freshman, preferred_language, primary_challenge, support_style)
-        VALUES (?, ?, ?, ?, ?, ?)
+        (user_id, display_name, is_international_freshman, preferred_language, primary_challenge, support_style, support_topics, languages, cultural_background, onboarding_complete)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         user_id,
         profile_dict.get('display_name', ''),
         1 if profile_dict.get('is_international_freshman') else 0,
         profile_dict.get('preferred_language', ''),
         challenges,
-        profile_dict.get('support_style', 'mixed')
+        profile_dict.get('support_style', 'mixed'),
+        support_topics,
+        languages,
+        cultural_background,
+        1 if profile_dict.get('onboarding_complete') else 0
     ))
     db.commit()
 
@@ -99,12 +127,28 @@ def load_profile_from_db(user_id):
     row = db.execute('SELECT * FROM profiles WHERE user_id = ?', (user_id,)).fetchone()
     if row:
         challenges = row['primary_challenge'].split(',') if row['primary_challenge'] else []
+        # Handle new columns that might not exist in older databases
+        support_topics = []
+        languages = []
+        cultural_background = []
+        onboarding_complete = False
+        try:
+            support_topics = row['support_topics'].split(',') if row['support_topics'] else []
+            languages = row['languages'].split(',') if row['languages'] else []
+            cultural_background = row['cultural_background'].split(',') if row['cultural_background'] else []
+            onboarding_complete = bool(row['onboarding_complete'])
+        except:
+            pass
         return {
             'display_name': row['display_name'] or '',
             'is_international_freshman': bool(row['is_international_freshman']),
             'preferred_language': row['preferred_language'] or '',
             'primary_challenge': challenges,
-            'support_style': row['support_style'] or 'mixed'
+            'support_style': row['support_style'] or 'mixed',
+            'support_topics': support_topics,
+            'languages': languages,
+            'cultural_background': cultural_background,
+            'onboarding_complete': onboarding_complete
         }
     return None
 
@@ -647,8 +691,11 @@ def call_ai_api(prompt, max_tokens=300):
 
 
 def generate_support_response(issue_text, profile_dict):
-    """Generate personalized support response with empathetic message and suggestions."""
+    """Generate personalized support response with empathetic message, suggestions, and relevant resources."""
     profile_summary = build_profile_text(profile_dict)
+    
+    # Format available resources for the prompt
+    resources_list = "\n".join([f"{i+1}. {r['name']}" for i, r in enumerate(ASU_RESOURCES)])
 
     prompt = f"""You are a caring, supportive counselor at ASU helping an international freshman student who is struggling.
 
@@ -656,12 +703,13 @@ Student Profile: {profile_summary}
 
 Student's Issue: {issue_text}
 
-First, write a warm, empathetic message (2-3 sentences) that:
-- Acknowledges their feelings and validates their experience
-- Mentions that many international students face similar challenges
-- Reassures them that they're not alone and support is available
+Available ASU Resources:
+{resources_list}
 
-Then, provide 5 specific, actionable suggestions to help them. Be practical and reference ASU resources when relevant.
+Task:
+1. Write a warm, empathetic message (2-3 sentences) acknowledging their feelings and validating their experience.
+2. Provide 5 specific, actionable suggestions.
+3. Select the 3 most relevant ASU Resources from the list above by their number (e.g., 1, 4, 7).
 
 Format your response EXACTLY like this:
 MESSAGE: [Your empathetic message here]
@@ -671,37 +719,61 @@ SUGGESTIONS:
 2. [Second suggestion]  
 3. [Third suggestion]
 4. [Fourth suggestion]
-5. [Fifth suggestion]"""
+5. [Fifth suggestion]
 
-    response = call_ai_api(prompt, max_tokens=400)
+RESOURCES: [comma separated numbers, e.g. 1, 5, 8]"""
+
+    response = call_ai_api(prompt, max_tokens=500)
 
     if response:
-        # Parse message and suggestions
+        # Parse message, suggestions, and resources
         empathetic_message = ""
         suggestions = []
+        resource_indices = []
         
+        # Extract Message
         if "MESSAGE:" in response:
             parts = response.split("SUGGESTIONS:")
             if len(parts) >= 2:
                 empathetic_message = parts[0].replace("MESSAGE:", "").strip()
-                suggestion_text = parts[1]
+                remaining = parts[1]
                 
-                lines = suggestion_text.split('\n')
-                for line in lines:
-                    line = line.strip()
-                    if line and len(line) > 3:
-                        if line[0].isdigit() and '.' in line[:3]:
-                            line = line.split('.', 1)[1].strip()
-                        if line:
-                            suggestions.append(line)
+                # Extract Suggestions and Resources
+                if "RESOURCES:" in remaining:
+                    sugg_parts = remaining.split("RESOURCES:")
+                    suggestion_text = sugg_parts[0]
+                    resource_text = sugg_parts[1].strip()
+                    
+                    # Parse Suggestions
+                    lines = suggestion_text.split('\n')
+                    for line in lines:
+                        line = line.strip()
+                        if line and len(line) > 3:
+                            if line[0].isdigit() and '.' in line[:3]:
+                                line = line.split('.', 1)[1].strip()
+                            if line:
+                                suggestions.append(line)
+
+                    # Parse Resource Indices
+                    try:
+                        # Extract numbers using regex to handle various formats
+                        import re
+                        numbers = re.findall(r'\d+', resource_text)
+                        resource_indices = [int(n) - 1 for n in numbers if n.isdigit()] # Convert 1-based to 0-based
+                        # Filter valid indices
+                        resource_indices = [idx for idx in resource_indices if 0 <= idx < len(ASU_RESOURCES)]
+                    except Exception:
+                        pass
         
         if empathetic_message or suggestions:
             return {
                 "message": empathetic_message,
-                "suggestions": suggestions[:5] if suggestions else []
+                "suggestions": suggestions[:5] if suggestions else [],
+                "resource_indices": resource_indices
             }
 
     return None
+
 
 
 
@@ -752,6 +824,23 @@ def ai_suggest_resources_and_options(issue_text, profile_dict, followup_count, f
     if ai_response:
         empathetic_message = ai_response.get("message", "")
         support_options = ai_response.get("suggestions", [])
+        
+    # Get resources
+    resources = []
+    
+    # Use AI-selected resources if available
+    if ai_response and ai_response.get("resource_indices"):
+        for idx in ai_response["resource_indices"]:
+            if 0 <= idx < len(ASU_RESOURCES):
+                resources.append(ASU_RESOURCES[idx])
+    
+    # If no valid AI resources, use default fallback (first 8)
+    if not resources:
+        resources = ASU_RESOURCES[:8].copy()
+
+    # Always add emergency resource if distress detected
+    if detect_severe_distress(issue_text):
+        resources.insert(0, EMERGENCY_RESOURCE)
 
     # Fall back to mock if AI didn't provide suggestions
     if not support_options:
@@ -760,12 +849,8 @@ def ai_suggest_resources_and_options(issue_text, profile_dict, followup_count, f
     # Get recommended groups
     recommended_groups = get_mock_recommended_groups(issue_text, profile_dict)
 
-    # Get resources
-    resources = ASU_RESOURCES[:8].copy()
-    if detect_severe_distress(issue_text):
-        resources.insert(0, EMERGENCY_RESOURCE)
-
     disclaimer = (
+
         "These suggestions are informational only and do not constitute professional "
         "or medical advice. If you are in crisis, please contact a professional immediately."
     )
@@ -840,6 +925,16 @@ def find_relevant_group(topic_text):
 
 
 # -----------------------------------------------------------------------------
+# Landing Page Route
+# -----------------------------------------------------------------------------
+
+@app.route("/")
+def index():
+    """Landing page with hero section."""
+    return render_template("index.html")
+
+
+# -----------------------------------------------------------------------------
 # Authentication Routes
 # -----------------------------------------------------------------------------
 
@@ -847,7 +942,11 @@ def find_relevant_group(topic_text):
 def login():
     """Login page."""
     if session.get("user_id"):
-        return redirect(url_for("profile"))
+        # Check if onboarding is complete
+        profile = load_profile_from_db(session.get("user_id"))
+        if profile and profile.get("onboarding_complete"):
+            return redirect(url_for("decision"))
+        return redirect(url_for("onboarding"))
 
     error = None
     if request.method == "POST":
@@ -874,8 +973,18 @@ def login():
                     session["preferred_language"] = profile["preferred_language"]
                     session["primary_challenge"] = profile["primary_challenge"]
                     session["support_style"] = profile["support_style"]
-
-                return redirect(url_for("profile"))
+                    session["support_topics"] = profile.get("support_topics", [])
+                    session["languages"] = profile.get("languages", [])
+                    session["cultural_background"] = profile.get("cultural_background", [])
+                    session["onboarding_complete"] = profile.get("onboarding_complete", False)
+                    
+                    # Redirect based on onboarding status
+                    if profile.get("onboarding_complete"):
+                        return redirect(url_for("decision"))
+                    else:
+                        return redirect(url_for("onboarding"))
+                else:
+                    return redirect(url_for("onboarding"))
             else:
                 error = "Invalid username or password."
 
@@ -925,7 +1034,7 @@ def signup():
                 ).fetchone()
                 session["user_id"] = user["id"]
                 session["username"] = user["username"]
-                return redirect(url_for("profile"))
+                return redirect(url_for("onboarding"))
 
     return render_template("signup.html", error=error)
 
@@ -934,14 +1043,84 @@ def signup():
 def logout():
     """Logout and clear session."""
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("index"))
+
+
+# -----------------------------------------------------------------------------
+# Onboarding Routes
+# -----------------------------------------------------------------------------
+
+@app.route("/onboarding")
+@login_required
+def onboarding():
+    """Multi-step onboarding wizard."""
+    # If onboarding already complete, redirect to dashboard
+    user_id = session.get("user_id")
+    profile = load_profile_from_db(user_id)
+    if profile and profile.get("onboarding_complete"):
+        return redirect(url_for("decision"))
+    return render_template("onboarding.html")
+
+
+@app.route("/onboarding/submit", methods=["POST"])
+@login_required
+def onboarding_submit():
+    """Process onboarding form submission."""
+    user_id = session.get("user_id")
+    
+    # Parse form data
+    support_topics = request.form.get("support_topics", "").split(",")
+    support_topics = [t.strip() for t in support_topics if t.strip()]
+    
+    languages = request.form.get("languages", "").split(",")
+    languages = [l.strip() for l in languages if l.strip()]
+    
+    support_style = request.form.get("support_style", "mixed")
+    
+    cultural_background = request.form.get("cultural_background", "").split(",")
+    cultural_background = [c.strip() for c in cultural_background if c.strip()]
+    
+    is_freshman = request.form.get("is_international_freshman") == "1"
+    display_name = request.form.get("display_name", "").strip()[:50]
+    
+    # Build profile dict
+    profile_dict = {
+        "display_name": display_name,
+        "is_international_freshman": is_freshman,
+        "preferred_language": languages[0] if languages else "",
+        "primary_challenge": support_topics,
+        "support_style": support_style,
+        "support_topics": support_topics,
+        "languages": languages,
+        "cultural_background": cultural_background,
+        "onboarding_complete": True
+    }
+    
+    # Save to database
+    save_profile_to_db(user_id, profile_dict)
+    
+    # Store in session for quick access
+    session["display_name"] = display_name
+    session["is_international_freshman"] = is_freshman
+    session["preferred_language"] = languages[0] if languages else ""
+    session["primary_challenge"] = support_topics
+    session["support_style"] = support_style
+    session["support_topics"] = support_topics
+    session["languages"] = languages
+    session["cultural_background"] = cultural_background
+    session["onboarding_complete"] = True
+    
+    # Store user embedding for semantic matching
+    store_user_embedding(user_id, profile_dict)
+    
+    return redirect(url_for("decision"))
 
 
 # -----------------------------------------------------------------------------
 # Routes
 # -----------------------------------------------------------------------------
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
     """Profile setup page."""
@@ -1116,7 +1295,9 @@ def decision():
         recommended_groups=recommended,
         available_groups=available_groups,
         similar_users=similar_users,
-        username=session.get("username")
+        username=session.get("username"),
+        display_name=session.get("display_name"),
+        current_group=session.get("current_group")
     )
 
 

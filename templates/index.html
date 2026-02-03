@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}SunDevil Circle - Peer Support for ASU Students{% endblock %}
+{% block meta_description %}Connect with trained peer supporters who understand your journey. Safe, confidential, and
+culturally-aware support for ASU international students.{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            <span class="hero-badge-text">Peer Support for ASU Students</span>
+        </div>
+
+        <h1 class="hero-headline">
+            <span class="line1">You're not alone.</span>
+            <span class="line2">Find your circle.</span>
+        </h1>
+
+        <p class="hero-subheadline">
+            Connect with trained peer supporters who understand your journey. Safe, confidential, and culturally-aware
+            support — made for international students.
+        </p>
+
+        <div class="hero-cta">
+            <a href="{{ url_for('signup') }}" class="btn-hero-primary">
+                Find Support
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+            </a>
+            <a href="#for-supporters" class="btn-hero-secondary">Become a Supporter</a>
+        </div>
+
+        <div class="feature-pills">
+            <div class="feature-pill">
+                <svg class="feature-pill-icon green" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>Privacy-First</span>
+            </div>
+            <div class="feature-pill">
+                <svg class="feature-pill-icon maroon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                </svg>
+                <span>Trained Peers</span>
+            </div>
+            <div class="feature-pill">
+                <svg class="feature-pill-icon green" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path
+                        d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                </svg>
+                <span>Culturally Aware</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="section" id="how-it-works">
+    <div class="section-header">
+        <div class="section-badge">
+            <span>Simple Process</span>
+        </div>
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">Get connected with peer support in three simple steps</p>
+    </div>
+
+    <div class="steps-grid">
+        <div class="step-card">
+            <span class="step-number">1</span>
+            <div class="step-icon">📝</div>
+            <h3 class="step-title">Share Your Story</h3>
+            <p class="step-desc">Tell us about what you're going through. Your information is kept private and is only
+                used to match you with the right supporter.</p>
+        </div>
+
+        <div class="step-card">
+            <span class="step-number">2</span>
+            <div class="step-icon">🤝</div>
+            <h3 class="step-title">Get Matched</h3>
+            <p class="step-desc">Our AI matches you with trained peer supporters who understand your background and can
+                relate to your experiences.</p>
+        </div>
+
+        <div class="step-card">
+            <span class="step-number">3</span>
+            <div class="step-icon">💬</div>
+            <h3 class="step-title">Connect & Chat</h3>
+            <p class="step-desc">Join group chats with peers facing similar challenges, or connect one-on-one with a
+                supporter who gets you.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Safety Section -->
+<section class="section" id="safety"
+    style="background: white; margin: 0 -40px; padding-left: 80px; padding-right: 80px;">
+    <div class="section-header">
+        <div class="section-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B1538" stroke-width="2"
+                style="margin-right: 4px;">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <span>Your Safety Matters</span>
+        </div>
+        <h2 class="section-title">Built with Safety First</h2>
+        <p class="section-subtitle">We take your privacy and wellbeing seriously</p>
+    </div>
+
+    <div class="steps-grid">
+        <div class="step-card">
+            <div class="step-icon" style="background: #D1FAE5; color: #10B981;">🔒</div>
+            <h3 class="step-title">Anonymous by Default</h3>
+            <p class="step-desc">Use a display name of your choice. Your real identity is never shared with other users.
+            </p>
+        </div>
+
+        <div class="step-card">
+            <div class="step-icon" style="background: #FDE2E4; color: #E11D48;">🛡️</div>
+            <h3 class="step-title">AI Moderation</h3>
+            <p class="step-desc">Our AI monitors conversations for harmful content and provides crisis resources when
+                needed.</p>
+        </div>
+
+        <div class="step-card">
+            <div class="step-icon" style="background: #FEF3C7; color: #F59E0B;">👥</div>
+            <h3 class="step-title">Trained Supporters</h3>
+            <p class="step-desc">All peer supporters receive training on active listening, cultural sensitivity, and
+                crisis response.</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="section text-center" style="padding-top: 100px; padding-bottom: 100px;">
+    <h2 class="section-title">Ready to find your circle?</h2>
+    <p class="section-subtitle mb-8">Join hundreds of ASU students who've found support through SunDevil Circle.</p>
+    <div class="hero-cta">
+        <a href="{{ url_for('signup') }}" class="btn-hero-primary">
+            Get Started Today
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+        </a>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer style="background: #1A1A1A; color: white; padding: 48px 40px; margin-top: 0;">
+    <div
+        style="max-width: 1280px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px;">
+        <div class="logo" style="color: white;">
+            <div class="logo-icon" style="background: white; color: #8B1538;">☀</div>
+            <div class="logo-text">
+                <span style="color: white;">SunDevil</span><span class="circle">Circle</span>
+            </div>
+        </div>
+        <div style="display: flex; gap: 32px; font-size: 14px; color: #9CA3AF;">
+            <a href="#" style="color: #9CA3AF; transition: color 200ms;">Privacy Policy</a>
+            <a href="#" style="color: #9CA3AF; transition: color 200ms;">Terms of Service</a>
+            <a href="#" style="color: #9CA3AF; transition: color 200ms;">Contact</a>
+        </div>
+        <p style="font-size: 14px; color: #6B7280;">© 2024 SunDevil Circle. Not affiliated with ASU official services.
+        </p>
+    </div>
+</footer>
+{% endblock %}

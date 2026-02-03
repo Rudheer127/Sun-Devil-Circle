@@ -1,102 +1,138 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Sun Devil Circle - Peer support platform for international freshman students at ASU">
-    <title>Profile Setup - Sun Devil Circle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+{% block title %}Your Profile - SunDevil Circle{% endblock %}
 
-<body>
-    <header>
-        <h1>Sun Devil Circle</h1>
-    </header>
+{% block content %}
+<div class="container" style="padding-top: 180px; padding-bottom: 80px; max-width: 700px;">
 
-    <div class="container">
-        {% if username %}
-        <div class="user-header">
-            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
-            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
-        </div>
-        {% endif %}
+    <div class="card">
+        <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px; color: var(--primary-maroon);">Complete Your
+            Profile</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 32px;">Help us match you with the right peers and
+            resources.</p>
 
-        <div class="card">
-            <h2>Welcome to Sun Devil Circle</h2>
-            <p>This platform connects international freshman students at ASU for peer support and resource navigation.
-            </p>
-        </div>
+        <form method="POST" action="{{ url_for('profile') }}">
+            <div class="form-group">
+                <label class="form-label" for="display_name">Display Name</label>
+                <input type="text" id="display_name" name="display_name" class="form-input"
+                    placeholder="Choose a display name (can be anonymous)" required
+                    value="{{ profile.display_name if profile else '' }}">
+                <p style="font-size: 12px; color: var(--text-light); margin-top: 4px;">This is how others will see you.
+                    You can use any name you'd like.</p>
+            </div>
 
-        <div class="transparency-note">
-            <strong>Privacy Notice:</strong> Your display name and preferences are used only to personalize your
-            experience. Personal issue history is stored locally in your browser via IndexedDB and never sent to our
-            servers. AI is used only for suggestions and safety monitoring. These suggestions are informational, not
-            professional or medical advice.
-        </div>
-
-        <div class="card">
-            <h2>Set Up Your Profile</h2>
-            <form method="POST" action="{{ url_for('profile') }}">
-                <label for="display_name">Display Name or Alias</label>
-                <input type="text" id="display_name" name="display_name" required maxlength="50"
-                    placeholder="Enter a name or alias">
-
-                <label>Are you an international freshman at ASU?</label>
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="is_international_freshman" value="yes" required> Yes
+            <div class="form-group">
+                <label class="form-label">Are you an international freshman?</label>
+                <div style="display: flex; gap: 16px; margin-top: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="radio" name="is_international_freshman" value="yes" {{ 'checked' if profile and
+                            profile.is_international_freshman else '' }}>
+                        <span>Yes</span>
                     </label>
-                    <label>
-                        <input type="radio" name="is_international_freshman" value="no"> No
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="radio" name="is_international_freshman" value="no" {{ 'checked' if profile and not
+                            profile.is_international_freshman else '' }}>
+                        <span>No</span>
                     </label>
                 </div>
+            </div>
 
-                <label for="preferred_language">Preferred Language (optional)</label>
-                <input type="text" id="preferred_language" name="preferred_language" maxlength="30"
-                    placeholder="e.g., English, Spanish, Mandarin">
+            <div class="form-group">
+                <label class="form-label" for="preferred_language">Preferred Language</label>
+                <select id="preferred_language" name="preferred_language" class="form-input">
+                    <option value="">Select a language...</option>
+                    <option value="English" {{ 'selected' if profile and profile.preferred_language=='English' else ''
+                        }}>English</option>
+                    <option value="Spanish" {{ 'selected' if profile and profile.preferred_language=='Spanish' else ''
+                        }}>Spanish</option>
+                    <option value="Mandarin" {{ 'selected' if profile and profile.preferred_language=='Mandarin' else ''
+                        }}>Mandarin Chinese</option>
+                    <option value="Hindi" {{ 'selected' if profile and profile.preferred_language=='Hindi' else '' }}>
+                        Hindi</option>
+                    <option value="Arabic" {{ 'selected' if profile and profile.preferred_language=='Arabic' else '' }}>
+                        Arabic</option>
+                    <option value="Portuguese" {{ 'selected' if profile and profile.preferred_language=='Portuguese'
+                        else '' }}>Portuguese</option>
+                    <option value="French" {{ 'selected' if profile and profile.preferred_language=='French' else '' }}>
+                        French</option>
+                    <option value="Korean" {{ 'selected' if profile and profile.preferred_language=='Korean' else '' }}>
+                        Korean</option>
+                    <option value="Japanese" {{ 'selected' if profile and profile.preferred_language=='Japanese' else ''
+                        }}>Japanese</option>
+                    <option value="Vietnamese" {{ 'selected' if profile and profile.preferred_language=='Vietnamese'
+                        else '' }}>Vietnamese</option>
+                    <option value="Other" {{ 'selected' if profile and profile.preferred_language=='Other' else '' }}>
+                        Other</option>
+                </select>
+            </div>
 
-                <label>Primary Challenge (select up to two, optional)</label>
-                <div class="checkbox-group">
-                    <label>
-                        <input type="checkbox" name="primary_challenge" value="homesickness"> Homesickness
+            <div class="form-group">
+                <label class="form-label">What challenges are you facing? (Select all that apply)</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
+                    {% set challenges = ['homesickness', 'academic', 'social', 'cultural', 'language', 'financial',
+                    'health', 'career'] %}
+                    {% set challenge_labels = {
+                    'homesickness': '🏠 Homesickness',
+                    'academic': '📚 Academic Pressure',
+                    'social': '👥 Making Friends',
+                    'cultural': '🌍 Cultural Adjustment',
+                    'language': '💬 Language Barriers',
+                    'financial': '💰 Financial Stress',
+                    'health': '❤️ Health & Wellness',
+                    'career': '💼 Career & Internships'
+                    } %}
+                    {% for challenge in challenges %}
+                    <label
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px; background: #FAFAFA; border-radius: 8px; transition: all 200ms;">
+                        <input type="checkbox" name="primary_challenge" value="{{ challenge }}" {{ 'checked' if profile
+                            and challenge in profile.primary_challenge else '' }}>
+                        <span>{{ challenge_labels[challenge] }}</span>
                     </label>
-                    <label>
-                        <input type="checkbox" name="primary_challenge" value="academic"> Academic Pressure
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Support Style Preference</label>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+                    <label
+                        style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; background: #FAFAFA; border-radius: 8px;">
+                        <input type="radio" name="support_style" value="listening" {{ 'checked' if profile and
+                            profile.support_style=='listening' else '' }}>
+                        <div>
+                            <strong>Listener</strong>
+                            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 2px;">I prefer to
+                                listen and receive support</p>
+                        </div>
                     </label>
-                    <label>
-                        <input type="checkbox" name="primary_challenge" value="social"> Making Friends
+                    <label
+                        style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; background: #FAFAFA; border-radius: 8px;">
+                        <input type="radio" name="support_style" value="sharing" {{ 'checked' if profile and
+                            profile.support_style=='sharing' else '' }}>
+                        <div>
+                            <strong>Sharer</strong>
+                            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 2px;">I prefer to share
+                                my experiences with others</p>
+                        </div>
                     </label>
-                    <label>
-                        <input type="checkbox" name="primary_challenge" value="cultural"> Cultural Adjustment
-                    </label>
-                    <label>
-                        <input type="checkbox" name="primary_challenge" value="language"> Language Barriers
-                    </label>
-                    <label>
-                        <input type="checkbox" name="primary_challenge" value="financial"> Financial Stress
+                    <label
+                        style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; background: #FAFAFA; border-radius: 8px;">
+                        <input type="radio" name="support_style" value="mixed" {{ 'checked' if (not profile) or (profile
+                            and profile.support_style=='mixed' ) else '' }}>
+                        <div>
+                            <strong>Both</strong>
+                            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 2px;">I'm open to both
+                                listening and sharing</p>
+                        </div>
                     </label>
                 </div>
+            </div>
 
-                <label>Support Style Preference</label>
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="support_style" value="listening" required> Listening (I prefer to
-                        listen)
-                    </label>
-                    <label>
-                        <input type="radio" name="support_style" value="sharing"> Sharing (I prefer to share)
-                    </label>
-                    <label>
-                        <input type="radio" name="support_style" value="mixed" checked> Mixed (Both)
-                    </label>
-                </div>
-
-                <button type="submit">Continue</button>
-            </form>
-        </div>
+            <button type="submit" class="btn btn-maroon"
+                style="width: 100%; padding: 16px; font-size: 18px; margin-top: 16px;">
+                Save & Continue
+            </button>
+        </form>
     </div>
-</body>
-
-</html>
+</div>
+{% endblock %}

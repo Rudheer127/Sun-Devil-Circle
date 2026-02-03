@@ -4,50 +4,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Login - Sun Devil Circle">
-    <title>Login - Sun Devil Circle</title>
+    <meta name="description" content="Sign in to SunDevil Circle">
+    <title>Sign In - SunDevil Circle</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
-    <header>
-        <h1>Sun Devil Circle</h1>
-    </header>
-
-    <div class="container">
-        <div class="auth-container">
-            <div class="card auth-card">
-                <h2>Welcome Back</h2>
-                <p>Log in to continue to Sun Devil Circle.</p>
-
-                {% if error %}
-                <div class="error-message">
-                    {{ error }}
+    <div class="auth-container">
+        <div class="auth-card">
+            <a href="{{ url_for('index') }}" class="logo" style="justify-content: center; margin-bottom: 32px;">
+                <div class="logo-icon">☀</div>
+                <div class="logo-text">
+                    <span class="sun">SunDevil</span><span class="circle">Circle</span>
                 </div>
-                {% endif %}
+            </a>
 
-                <form method="POST" action="{{ url_for('login') }}">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required maxlength="50"
-                        placeholder="Enter your username" autocomplete="username">
+            <h1>Welcome back</h1>
+            <p class="subtitle">Sign in to continue to your dashboard</p>
 
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password"
-                        autocomplete="current-password">
-
-                    <button type="submit" class="btn-full">Log In</button>
-                </form>
-
-                <div class="auth-footer">
-                    <p>Do not have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
-                </div>
+            {% if error %}
+            <div class="warning-message">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                </svg>
+                {{ error }}
             </div>
-        </div>
+            {% endif %}
 
-        <div class="transparency-note">
-            <strong>About This Platform:</strong> Sun Devil Circle is a peer support platform for international freshman
-            students at ASU. AI is used only for suggestions and safety monitoring. Your personal issue history is
-            stored locally in your browser.
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-input"
+                        placeholder="Enter your username" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-input"
+                        placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="btn btn-maroon">Sign In</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="{{ url_for('signup') }}">Create one</a></p>
+            </div>
         </div>
     </div>
 </body>

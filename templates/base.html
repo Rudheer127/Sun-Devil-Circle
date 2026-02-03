@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="{% block meta_description %}SunDevil Circle - Peer support for ASU international students{% endblock %}">
+    <title>{% block title %}SunDevil Circle{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <!-- Crisis Alert Banner -->
+    <div class="crisis-banner" id="crisisBanner">
+        <div class="crisis-banner-content" onclick="toggleCrisisPanel()">
+            <svg class="crisis-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <div class="crisis-banner-text">
+                <strong>Need immediate support?</strong>
+                <span>Tap to see crisis resources available 24/7</span>
+            </div>
+        </div>
+        <svg class="crisis-banner-close" onclick="closeCrisisBanner(event)" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+    </div>
+
+    <!-- Crisis Resources Panel -->
+    <div class="crisis-panel" id="crisisPanel">
+        <div class="crisis-grid">
+            <div class="crisis-card pink">
+                <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2">
+                    <path
+                        d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+                </svg>
+                <h4 class="crisis-card-title">988 Suicide & Crisis Lifeline</h4>
+                <p class="crisis-card-desc">Free, confidential 24/7 support</p>
+                <a href="tel:988" class="crisis-card-action">Call or text 988 →</a>
+            </div>
+            <div class="crisis-card green">
+                <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+                <h4 class="crisis-card-title">ASU Counseling Services</h4>
+                <p class="crisis-card-desc">Free mental health support for students</p>
+                <a href="tel:4809656146" class="crisis-card-action">Call (480) 965-6146 →</a>
+            </div>
+            <div class="crisis-card pink">
+                <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2">
+                    <path
+                        d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+                </svg>
+                <h4 class="crisis-card-title">Crisis Text Line</h4>
+                <p class="crisis-card-desc">Text-based crisis support</p>
+                <a href="sms:741741?body=HOME" class="crisis-card-action">Text HOME to 741741 →</a>
+            </div>
+            <div class="crisis-card pink">
+                <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2">
+                    <path
+                        d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+                </svg>
+                <h4 class="crisis-card-title">ASU Campus Police</h4>
+                <p class="crisis-card-desc">For immediate safety concerns</p>
+                <a href="tel:4809653456" class="crisis-card-action">Call (480) 965-3456 →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <div class="logo-icon">☀</div>
+                <div class="logo-text">
+                    <span class="sun">SunDevil</span><span class="circle">Circle</span>
+                </div>
+            </a>
+
+            <div class="nav-links">
+                <a href="#how-it-works">How It Works</a>
+                <a href="#safety">Safety</a>
+                <a href="{{ url_for('resources') if session.get('user_id') else '#' }}">Resources</a>
+            </div>
+
+            <div class="nav-actions">
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('logout') }}" class="btn-signin">Log Out</a>
+                <a href="{{ url_for('decision') }}" class="btn-primary">Dashboard</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn-signin">Sign In</a>
+                <a href="{{ url_for('signup') }}" class="btn-primary">Get Started</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Crisis Banner & Panel JavaScript -->
+    <script>
+        let crisisPanelOpen = false;
+
+        function toggleCrisisPanel() {
+            const panel = document.getElementById('crisisPanel');
+            crisisPanelOpen = !crisisPanelOpen;
+            if (crisisPanelOpen) {
+                panel.classList.add('active');
+            } else {
+                panel.classList.remove('active');
+            }
+        }
+
+        function closeCrisisBanner(event) {
+            event.stopPropagation();
+            const banner = document.getElementById('crisisBanner');
+            const panel = document.getElementById('crisisPanel');
+            const navbar = document.getElementById('navbar');
+
+            banner.classList.add('hidden');
+            panel.classList.remove('active');
+            navbar.classList.add('no-banner');
+
+            // Store preference
+            sessionStorage.setItem('crisisBannerClosed', 'true');
+        }
+
+        // Check if banner was previously closed
+        document.addEventListener('DOMContentLoaded', function () {
+            if (sessionStorage.getItem('crisisBannerClosed') === 'true') {
+                document.getElementById('crisisBanner').classList.add('hidden');
+                document.getElementById('navbar').classList.add('no-banner');
+            }
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

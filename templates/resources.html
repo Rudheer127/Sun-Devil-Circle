@@ -1,169 +1,167 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Support Resources - Sun Devil Circle">
-    <title>Support Resources - Sun Devil Circle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+{% block title %}Your Support Resources - SunDevil Circle{% endblock %}
 
-<body>
-    <header>
-        <h1>Sun Devil Circle</h1>
-    </header>
+{% block content %}
+<div class="container" style="padding-top: 180px; padding-bottom: 80px;">
 
-    <div class="container">
-        <div class="card ai-response-card">
-            <h2>We Hear You</h2>
+    <!-- AI Response Card -->
+    <div class="ai-response-card">
+        <h2>💜 We Hear You</h2>
 
-            {% if empathetic_message %}
-            <div class="empathetic-message">
-                <p>{{ empathetic_message }}</p>
-            </div>
-            {% endif %}
-
-            <h3>Personalized Suggestions</h3>
-            {% if support_options %}
-            <div class="ai-suggestions">
-                {% for option in support_options %}
-                <div class="ai-suggestion-item">
-                    <span class="ai-icon">💡</span>
-                    <span class="suggestion-text">{{ option }}</span>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="empty-state">No personalized suggestions available.</p>
-            {% endif %}
-        </div>
-
-
-        <div class="card followup-section">
-            <h3>Have a Follow-up Question?</h3>
-            <p>Ask the AI for more specific guidance ({{ followup_count }}/5 questions used).</p>
-
-            {% if followup_history %}
-            <div class="followup-history">
-                {% for item in followup_history %}
-                <div class="followup-item">
-                    <div class="followup-question"><strong>Q:</strong> {{ item.question }}</div>
-                    <div class="followup-answer"><strong>A:</strong> {{ item.answer }}</div>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            {% if followup_response and followup_question %}
-            <div class="followup-response">
-                <div class="followup-question"><strong>Q:</strong> {{ followup_question }}</div>
-                <div class="followup-answer"><strong>A:</strong> {{ followup_response }}</div>
-            </div>
-            {% endif %}
-
-            {% if limit_reached %}
-            <p class="limit-message">You have reached the follow-up question limit. Join a peer group to continue.</p>
-            {% else %}
-            <form method="POST" action="{{ url_for('resources') }}" id="followupForm">
-                <div class="form-row">
-                    <input type="text" name="followup_question" id="followupInput"
-                        placeholder="Ask the AI a follow-up question..." required>
-                    <button type="submit" id="followupBtn">Ask</button>
-                </div>
-            </form>
-            {% endif %}
-        </div>
-
-        <div class="card">
-            <h3>ASU Resources</h3>
-            {% if asu_resources %}
-            <ul class="resource-list">
-                {% for resource in asu_resources %}
-                <li><a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer">{{ resource.name }}</a></li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="empty-state">No resources available at this time.</p>
-            {% endif %}
-        </div>
-
-        <div class="card">
-            <h3>Recommended Peer Groups</h3>
-            <p class="card-description">Click a group to join. Groups are ranked by how well they match your profile.
-            </p>
-            {% if recommended_groups %}
-            <div class="group-list clickable-groups">
-                {% for group in recommended_groups %}
-                <button type="button" class="group-tag-btn" onclick="confirmJoinGroup('{{ group }}')">{{ group
-                    }}</button>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="empty-state">No group recommendations at this time.</p>
-            {% endif %}
-        </div>
-
-        <div class="nav-links">
-            <a href="{{ url_for('decision') }}" class="btn">Connect with Peers</a>
-            <a href="{{ url_for('people') }}" class="btn">Explore Peers</a>
-            <a href="{{ url_for('issue') }}" class="btn btn-secondary">Share Another Challenge</a>
-        </div>
-
-        {% if username %}
-        <div class="user-footer">
-            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
-            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+        {% if empathetic_message %}
+        <div class="empathetic-message">
+            <p>{{ empathetic_message }}</p>
         </div>
         {% endif %}
 
-        <div class="transparency-note disclaimer-bottom">
-            <strong>About These Suggestions:</strong> AI is used to generate personalized suggestions and safety
-            monitoring. These suggestions are informational only and do not constitute professional or medical advice.
-            {% if disclaimer %}{{ disclaimer }}{% endif %}
-        </div>
-    </div>
-
-    <!-- Join Group Confirmation Modal -->
-    <div id="joinModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h3>Join Group</h3>
-            <p id="modalMessage">This group matches your profile. Do you want to join?</p>
-            <div class="modal-actions">
-                <form method="POST" action="{{ url_for('join_group') }}" id="joinForm">
-                    <input type="hidden" name="group_topic" id="groupTopicInput">
-                    <button type="submit" class="btn" id="confirmJoinBtn">Yes, Join Group</button>
-                </form>
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary);">Personalized
+            Suggestions</h3>
+        {% if support_options %}
+        <div class="ai-suggestions">
+            {% for option in support_options %}
+            <div class="ai-suggestion-item">
+                <span class="ai-icon">💡</span>
+                <span class="suggestion-text">{{ option }}</span>
             </div>
+            {% endfor %}
         </div>
+        {% else %}
+        <p style="color: var(--text-secondary);">No personalized suggestions available at this time.</p>
+        {% endif %}
     </div>
 
-    <script>
-        function confirmJoinGroup(groupName) {
-            document.getElementById('groupTopicInput').value = groupName;
-            document.getElementById('modalMessage').textContent =
-                '"' + groupName + '" matches your profile. Do you want to join?';
-            document.getElementById('joinModal').style.display = 'flex';
+    <!-- Follow-up Questions Section -->
+    <div class="followup-section mt-6">
+        <h3>Have a Follow-up Question?</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 16px;">Ask the AI for more specific guidance ({{
+            followup_count }}/5 questions used).</p>
+
+        {% if followup_history %}
+        <div class="followup-history">
+            {% for item in followup_history %}
+            <div class="followup-item">
+                <div class="followup-question"><strong>Q:</strong> {{ item.question }}</div>
+                <div class="followup-answer"><strong>A:</strong> {{ item.answer }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if followup_response and followup_question %}
+        <div class="followup-response" id="followup-response">
+            <div class="followup-question"><strong>Q:</strong> {{ followup_question }}</div>
+            <div class="followup-answer"><strong>A:</strong> {{ followup_response }}</div>
+        </div>
+        {% endif %}
+
+        {% if limit_reached %}
+        <p class="warning-message">You have reached the follow-up question limit. Join a peer group to continue getting
+            support.</p>
+        {% else %}
+        <form method="POST" action="{{ url_for('resources') }}#followup-response" id="followupForm">
+            <div class="form-row">
+                <input type="text" name="followup_question" id="followupInput" class="form-input"
+                    placeholder="Ask the AI a follow-up question..." required>
+                <button type="submit" id="followupBtn" class="btn btn-maroon">Ask</button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- ASU Resources Card -->
+    <div class="card mt-6">
+        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">🔗 ASU Resources</h3>
+        {% if asu_resources %}
+        <ul class="resource-list">
+            {% for resource in asu_resources %}
+            <li><a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer">{{ resource.name }}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: var(--text-secondary);">No resources available at this time.</p>
+        {% endif %}
+    </div>
+
+    <!-- Recommended Groups Card -->
+    <div class="card mt-6">
+        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">👥 Recommended Peer Groups</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 16px;">Click a group to join. Groups are ranked by how
+            well they match your profile.</p>
+        {% if recommended_groups %}
+        <div class="group-list">
+            {% for group in recommended_groups %}
+            <button type="button" class="group-tag-btn" onclick="confirmJoinGroup('{{ group }}')">{{ group }}</button>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary);">No group recommendations at this time.</p>
+        {% endif %}
+    </div>
+
+    <!-- Navigation Links -->
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 32px;">
+        <a href="{{ url_for('decision') }}" class="btn btn-maroon">Connect with Peers</a>
+        <a href="{{ url_for('people') }}" class="btn btn-outline">Explore Peers</a>
+        <a href="{{ url_for('issue') }}" class="btn btn-secondary">Share Another Challenge</a>
+    </div>
+
+    <!-- User Footer -->
+    {% if username %}
+    <div class="user-footer">
+        <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
+        <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+    </div>
+    {% endif %}
+
+    <!-- Disclaimer -->
+    <div class="transparency-note disclaimer-bottom">
+        <strong>⚠️ About These Suggestions:</strong>
+        AI is used to generate personalized suggestions and safety monitoring. These suggestions are informational only
+        and do not constitute professional or medical advice.
+        {% if disclaimer %}{{ disclaimer }}{% endif %}
+    </div>
+</div>
+
+<!-- Join Group Confirmation Modal -->
+<div id="joinModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Join Group</h3>
+        <p id="modalMessage">This group matches your profile. Do you want to join?</p>
+        <div class="modal-actions">
+            <form method="POST" action="{{ url_for('join_group') }}" id="joinForm">
+                <input type="hidden" name="group_topic" id="groupTopicInput">
+                <button type="submit" class="btn btn-maroon">Yes, Join Group</button>
+            </form>
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function confirmJoinGroup(groupName) {
+        document.getElementById('groupTopicInput').value = groupName;
+        document.getElementById('modalMessage').textContent = '"' + groupName + '" matches your profile. Do you want to join?';
+        document.getElementById('joinModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('joinModal').style.display = 'none';
+    }
+
+    // Close modal on outside click
+    document.getElementById('joinModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeModal();
         }
+    });
 
-        function closeModal() {
-            document.getElementById('joinModal').style.display = 'none';
-        }
-
-        // Close modal on outside click
-        document.getElementById('joinModal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
-
-        // Disable button on form submit
-        document.getElementById('followupForm')?.addEventListener('submit', function () {
-            document.getElementById('followupBtn').disabled = true;
-            document.getElementById('followupBtn').textContent = 'Asking AI...';
-        });
-    </script>
-</body>
-
-</html>
+    // Disable button on form submit
+    document.getElementById('followupForm')?.addEventListener('submit', function () {
+        document.getElementById('followupBtn').disabled = true;
+        document.getElementById('followupBtn').textContent = 'Asking AI...';
+    });
+</script>
+{% endblock %}

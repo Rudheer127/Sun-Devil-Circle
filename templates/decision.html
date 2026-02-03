@@ -1,189 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Connect with Peers - Sun Devil Circle">
-    <title>Connect with Peers - Sun Devil Circle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+{% block title %}Dashboard - SunDevil Circle{% endblock %}
 
-<body>
-    <header>
-        <h1>Sun Devil Circle</h1>
-    </header>
+{% block content %}
+<div class="container" style="padding-top: 180px; padding-bottom: 80px;">
 
-    <div class="container">
-        {% if username %}
-        <div class="user-header">
-            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
-            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
-        </div>
-        {% endif %}
+    <!-- Welcome Header -->
+    <div style="margin-bottom: 40px;">
+        <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary);">
+            Welcome back{% if display_name %}, {{ display_name }}{% endif %} 👋
+        </h1>
+        <p style="color: var(--text-secondary); margin-top: 8px; font-size: 18px;">What would you like to do today?</p>
+    </div>
 
-        <div class="transparency-note">
-            <strong>About Peer Groups:</strong> Group chats are topic-based and temporary. Messages are stored in memory
-            only and are not permanently saved. AI monitors messages for safety. This is a peer support space, not a
-            replacement for professional help.
-        </div>
+    <!-- Action Cards Grid -->
+    <div class="steps-grid" style="margin-bottom: 48px;">
+        <!-- Get Support Card -->
+        <a href="{{ url_for('issue') }}" class="step-card" style="text-decoration: none;">
+            <div class="step-icon" style="background: #FDE2E4; color: #E11D48;">💬</div>
+            <h3 class="step-title">Share What's On Your Mind</h3>
+            <p class="step-desc">Tell us about your challenges and get personalized AI-powered support and resources.
+            </p>
+        </a>
 
-        <div class="card">
-            <h2>Connect with Peers</h2>
-            <p>Join a group to connect with other students who understand what you are going through.</p>
-        </div>
+        <!-- View Resources Card -->
+        <a href="{{ url_for('resources') }}" class="step-card" style="text-decoration: none;">
+            <div class="step-icon" style="background: #D1FAE5; color: #10B981;">📚</div>
+            <h3 class="step-title">View Your Resources</h3>
+            <p class="step-desc">Access your personalized suggestions, ASU resources, and follow-up with the AI.</p>
+        </a>
 
-        {% if recommended_groups %}
-        <div class="card">
-            <h3>Recommended for You</h3>
-            <p class="card-description">Groups ranked by how well they match your profile and challenges.</p>
-            <div class="group-list">
-                {% for group in recommended_groups %}
-                <form method="POST" action="{{ url_for('join_group') }}" style="display: inline;" class="join-form">
-                    <input type="hidden" name="group_topic" value="{{ group }}">
-                    <button type="submit" class="group-tag-btn">{{ group }}</button>
-                </form>
-                {% endfor %}
+        <!-- Find Peers Card -->
+        <a href="{{ url_for('people') }}" class="step-card" style="text-decoration: none;">
+            <div class="step-icon" style="background: #FEF3C7; color: #F59E0B;">👥</div>
+            <h3 class="step-title">Explore Peer Supporters</h3>
+            <p class="step-desc">Browse and connect with trained peers who understand your experiences.</p>
+        </a>
+    </div>
+
+    <!-- Current Group Section -->
+    {% if current_group %}
+    <div class="card" style="border-left: 4px solid var(--green-accent);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary);">🎉 You're in a group!</h3>
+                <p style="color: var(--text-secondary); margin-top: 4px;">Continue chatting with your peers in
+                    <strong>{{ current_group }}</strong></p>
             </div>
+            <a href="{{ url_for('chat') }}" class="btn btn-maroon">Go to Chat →</a>
         </div>
-        {% endif %}
-
-        {% if similar_users %}
-        <div class="card">
-            <h3>People You May Want to Connect With</h3>
-            <p class="card-description">Students with similar experiences. Send a connection request to connect.</p>
-            <div class="peers-list">
-                {% for user_id, score in similar_users %}
-                <div class="peer-card-inline" id="peer-{{ user_id }}">
-                    <span class="peer-match-small">{{ (score * 100)|int }}% match</span>
-                    <button type="button" class="btn btn-small" onclick="showMessageForm({{ user_id }})">Send
-                        Request</button>
-                    <div class="connect-form-inline" id="form-{{ user_id }}" style="display: none;">
-                        <textarea id="msg-{{ user_id }}" placeholder="Add a message (optional)"
-                            maxlength="200"></textarea>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-small"
-                                onclick="sendQuickRequest({{ user_id }})">Send</button>
-                            <button type="button" class="btn-secondary btn-small"
-                                onclick="hideMessageForm({{ user_id }})">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="border-left: 4px solid var(--warning-yellow); background: #FFFBEB;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary);">💡 You haven't joined a group
+                    yet</h3>
+                <p style="color: var(--text-secondary); margin-top: 4px;">Share your challenge to get matched with peer
+                    groups that fit your needs.</p>
             </div>
+            <a href="{{ url_for('issue') }}" class="btn btn-maroon">Get Started →</a>
         </div>
-        {% endif %}
+    </div>
+    {% endif %}
 
-
-        <div class="card">
-            <h3>All Available Groups</h3>
-            {% if available_groups %}
-            <div class="group-list">
-                {% for group in available_groups %}
-                <form method="POST" action="{{ url_for('join_group') }}" style="display: inline;" class="join-form">
-                    <input type="hidden" name="group_topic" value="{{ group }}">
-                    <button type="submit" class="btn-secondary btn-small">{{ group }}</button>
-                </form>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="empty-state">No groups available at this time.</p>
-            {% endif %}
+    <!-- Quick Stats -->
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 32px;">
+        <div class="card text-center" style="padding: 24px;">
+            <p style="font-size: 36px; font-weight: 700; color: var(--primary-maroon);">{{ followup_count|default(0)
+                }}/5</p>
+            <p style="color: var(--text-secondary); margin-top: 4px;">Follow-up questions used</p>
         </div>
-
-        <div class="card">
-            <h3>Create a New Group</h3>
-            <p>If no existing group fits your needs, you can create a new one. A new group will only be created if no
-                similar group already exists.</p>
-
-            {% if suggested_users_for_group %}
-            <div class="suggested-invites">
-                <h4>Suggested peers to invite:</h4>
-                <div class="suggested-peers">
-                    {% for uid, uname, score in suggested_users_for_group %}
-                    <span class="suggested-peer">{{ uname }} ({{ (score * 100)|int }}% match)</span>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <form method="POST" action="{{ url_for('create_group') }}" id="createGroupForm">
-                <div class="form-row">
-                    <input type="text" name="new_topic" id="newTopicInput"
-                        placeholder="Enter a topic (max 40 characters)" maxlength="40" required>
-                    <button type="submit" id="createGroupBtn">Create Group</button>
-                </div>
-            </form>
+        <div class="card text-center" style="padding: 24px;">
+            <p style="font-size: 36px; font-weight: 700; color: var(--green-accent);">{{ groups_joined|default(0) }}</p>
+            <p style="color: var(--text-secondary); margin-top: 4px;">Groups joined</p>
         </div>
-
-        <div class="nav-links">
-            <a href="{{ url_for('people') }}" class="btn">Explore Peers</a>
-            <a href="{{ url_for('resources') }}" class="btn btn-secondary">Back to Resources</a>
+        <div class="card text-center" style="padding: 24px;">
+            <p style="font-size: 36px; font-weight: 700; color: var(--primary-gold);">{{ messages_sent|default(0) }}</p>
+            <p style="color: var(--text-secondary); margin-top: 4px;">Messages sent</p>
         </div>
     </div>
 
-    <script>
-        // Disable buttons on form submit
-        document.querySelectorAll('.join-form').forEach(form => {
-            form.addEventListener('submit', function () {
-                const btn = this.querySelector('button');
-                btn.disabled = true;
-                btn.textContent = 'Joining...';
-            });
-        });
-
-        document.getElementById('createGroupForm').addEventListener('submit', function () {
-            document.getElementById('createGroupBtn').disabled = true;
-            document.getElementById('createGroupBtn').textContent = 'Creating...';
-        });
-
-        // Message form functions
-        function showMessageForm(userId) {
-            document.getElementById('form-' + userId).style.display = 'block';
-        }
-
-        function hideMessageForm(userId) {
-            document.getElementById('form-' + userId).style.display = 'none';
-        }
-
-        // Quick connection request
-        async function sendQuickRequest(recipientId) {
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = 'Sending...';
-
-            const messageEl = document.getElementById('msg-' + recipientId);
-            const message = messageEl ? messageEl.value : '';
-
-            const formData = new FormData();
-            formData.append('recipient_id', recipientId);
-            formData.append('message', message);
-
-            try {
-                const response = await fetch('{{ url_for("connect") }}', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-
-                const peerCard = document.getElementById('peer-' + recipientId);
-                if (data.success) {
-                    peerCard.innerHTML = '<span class="success-message">Request sent!</span>';
-                } else if (data.error === 'Request already sent') {
-                    peerCard.innerHTML = '<span class="success-message">Already sent</span>';
-                } else {
-                    btn.disabled = false;
-                    btn.textContent = 'Send';
-                    alert(data.error || 'Failed to send request');
-                }
-            } catch (error) {
-                btn.disabled = false;
-                btn.textContent = 'Send';
-                alert('Error sending request');
-            }
-        }
-
-    </script>
-</body>
-
-</html>
+    <!-- Update Profile Link -->
+    <div style="margin-top: 32px; text-align: center;">
+        <a href="{{ url_for('profile') }}" style="color: var(--primary-maroon); font-weight: 500;">
+            ⚙️ Update your profile
+        </a>
+    </div>
+</div>
+{% endblock %}

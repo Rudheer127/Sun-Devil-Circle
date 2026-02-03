@@ -1,195 +1,136 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Explore Peers - Sun Devil Circle">
-    <title>Explore Peers - Sun Devil Circle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+{% block title %}Explore Peers - SunDevil Circle{% endblock %}
 
-<body>
-    <header>
-        <h1>Sun Devil Circle</h1>
-    </header>
+{% block content %}
+<div class="container" style="padding-top: 180px; padding-bottom: 80px;">
 
-    <div class="container">
-        {% if username %}
-        <div class="user-header">
-            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
-            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
-        </div>
-        {% endif %}
+    <div style="margin-bottom: 40px;">
+        <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary);">Explore Peer Supporters 👥</h1>
+        <p style="color: var(--text-secondary); margin-top: 8px; font-size: 18px;">Connect with trained peers who
+            understand your experiences.</p>
+    </div>
 
-        <div class="transparency-note">
-            <strong>About Peer Matching:</strong> We suggest peers based on shared experiences and challenges.
-            Connection requests are moderated for safety. This is a peer support space, not a replacement for
-            professional help.
-        </div>
-
-        {% if incoming_requests %}
-        <div class="card">
-            <h2>Connection Requests</h2>
-            <div class="requests-list">
-                {% for req in incoming_requests %}
-                <div class="request-item" id="request-{{ req.sender_id }}">
-                    <div class="request-info">
-                        <span class="request-sender">{{ req.sender_display_name }}</span>
-                        <span class="request-time">{{ req.timestamp }}</span>
-                    </div>
-                    {% if req.message %}
-                    <p class="request-message">{{ req.message }}</p>
-                    {% endif %}
-                    <div class="request-actions">
-                        <button type="button" class="btn btn-small"
-                            onclick="acceptRequest({{ req.sender_id }}, 'group')">Accept and Invite to Group</button>
-                        <button type="button" class="btn-secondary btn-small"
-                            onclick="ignoreRequest({{ req.sender_id }})">Ignore</button>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <div class="card">
-            <h2>Recommended Peers</h2>
-            <p>These students share similar experiences with you.</p>
-
-            {% if recommended_peers %}
-            <div class="peers-list">
-                {% for peer in recommended_peers %}
-                <div class="peer-card" id="peer-{{ peer.user_id }}">
-                    <div class="peer-info">
-                        <span class="peer-name">{{ peer.display_name }}</span>
-                        <span class="peer-match">{{ peer.match_score }}% match</span>
-                    </div>
-                    <p class="peer-summary">{{ peer.profile_summary }}</p>
-                    <div class="peer-actions">
-                        <button type="button" class="btn btn-small"
-                            onclick="showConnectForm({{ peer.user_id }}, '{{ peer.display_name }}')">Send Connection
-                            Request</button>
-                    </div>
-                    <div class="connect-form" id="connect-form-{{ peer.user_id }}" style="display: none;">
-                        <textarea id="message-{{ peer.user_id }}"
-                            placeholder="Add an optional message (max 200 characters)" maxlength="200"></textarea>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-small"
-                                onclick="sendRequest({{ peer.user_id }})">Send</button>
-                            <button type="button" class="btn-secondary btn-small"
-                                onclick="hideConnectForm({{ peer.user_id }})">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="no-peers-message">No peer recommendations available yet. As more students join and set up their
-                profiles, you will see suggestions here.</p>
-            {% endif %}
-        </div>
-
-        <div class="nav-links">
-            <a href="{{ url_for('decision') }}" class="btn btn-secondary">Browse Groups</a>
-            <a href="{{ url_for('resources') }}" class="btn btn-secondary">Back to Resources</a>
+    <!-- Filter Section -->
+    <div class="card" style="margin-bottom: 32px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Filter by Challenge</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <a href="{{ url_for('people') }}" class="group-tag-btn"
+                style="{{ 'background: var(--primary-maroon); color: white;' if not filter else '' }}">All</a>
+            <a href="{{ url_for('people', filter='homesickness') }}" class="group-tag-btn"
+                style="{{ 'background: var(--primary-maroon); color: white;' if filter == 'homesickness' else '' }}">🏠
+                Homesickness</a>
+            <a href="{{ url_for('people', filter='academic') }}" class="group-tag-btn"
+                style="{{ 'background: var(--primary-maroon); color: white;' if filter == 'academic' else '' }}">📚
+                Academic</a>
+            <a href="{{ url_for('people', filter='social') }}" class="group-tag-btn"
+                style="{{ 'background: var(--primary-maroon); color: white;' if filter == 'social' else '' }}">👥
+                Social</a>
+            <a href="{{ url_for('people', filter='cultural') }}" class="group-tag-btn"
+                style="{{ 'background: var(--primary-maroon); color: white;' if filter == 'cultural' else '' }}">🌍
+                Cultural</a>
+            <a href="{{ url_for('people', filter='language') }}" class="group-tag-btn"
+                style="{{ 'background: var(--primary-maroon); color: white;' if filter == 'language' else '' }}">💬
+                Language</a>
         </div>
     </div>
 
-    <script>
-        function showConnectForm(userId, displayName) {
-            document.getElementById('connect-form-' + userId).style.display = 'block';
+    <!-- Peers Grid -->
+    {% if peers %}
+    <div class="steps-grid">
+        {% for peer in peers %}
+        <div class="step-card">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div
+                    style="width: 48px; height: 48px; background: linear-gradient(135deg, #8B1538, #A91D3A); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 600;">
+                    {{ peer.display_name[0].upper() if peer.display_name else '?' }}
+                </div>
+                <div>
+                    <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary);">{{ peer.display_name }}
+                    </h3>
+                    {% if peer.is_international_freshman %}
+                    <span
+                        style="font-size: 12px; background: var(--pink-light); color: var(--primary-maroon); padding: 2px 8px; border-radius: 12px;">International
+                        Freshman</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if peer.preferred_language %}
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">
+                🌐 Speaks {{ peer.preferred_language }}
+            </p>
+            {% endif %}
+
+            {% if peer.primary_challenge %}
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;">
+                {% for challenge in peer.primary_challenge.split(',')[:3] %}
+                <span
+                    style="font-size: 12px; background: #F3F4F6; color: var(--text-secondary); padding: 4px 10px; border-radius: 12px;">
+                    {{ challenge.strip() }}
+                </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <button onclick="connectWithPeer('{{ peer.display_name }}')" class="btn btn-outline"
+                style="width: 100%; margin-top: 16px;">
+                Connect
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card text-center" style="padding: 60px 20px;">
+        <p style="font-size: 48px; margin-bottom: 16px;">👥</p>
+        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">No peers found</h3>
+        <p style="color: var(--text-secondary);">Try adjusting your filters or check back later.</p>
+    </div>
+    {% endif %}
+
+    <!-- Back to Dashboard -->
+    <div style="margin-top: 40px;">
+        <a href="{{ url_for('decision') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+</div>
+
+<!-- Connect Modal -->
+<div id="connectModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Connect with Peer</h3>
+        <p id="connectMessage">Would you like to send a connection request?</p>
+        <div class="modal-actions">
+            <button onclick="sendConnection()" class="btn btn-maroon">Send Request</button>
+            <button onclick="closeConnectModal()" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let selectedPeer = '';
+
+    function connectWithPeer(peerName) {
+        selectedPeer = peerName;
+        document.getElementById('connectMessage').textContent = 'Would you like to connect with ' + peerName + '?';
+        document.getElementById('connectModal').style.display = 'flex';
+    }
+
+    function closeConnectModal() {
+        document.getElementById('connectModal').style.display = 'none';
+    }
+
+    function sendConnection() {
+        // In a real app, this would send a connection request
+        alert('Connection request sent to ' + selectedPeer + '! (This is a demo)');
+        closeConnectModal();
+    }
+
+    document.getElementById('connectModal')?.addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeConnectModal();
         }
-
-        function hideConnectForm(userId) {
-            document.getElementById('connect-form-' + userId).style.display = 'none';
-        }
-
-        function sendRequest(recipientId) {
-            const sendBtn = event.target;
-            sendBtn.disabled = true;
-            sendBtn.textContent = 'Sending...';
-
-            const message = document.getElementById('message-' + recipientId).value;
-            const formData = new FormData();
-            formData.append('recipient_id', recipientId);
-            formData.append('message', message);
-
-            fetch('{{ url_for("connect") }}', {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    const peerCard = document.getElementById('peer-' + recipientId);
-                    if (data.success) {
-                        peerCard.innerHTML = '<p class="success-message">Connection request sent!</p>';
-                        if (data.distress_detected) {
-                            alert('We noticed some concerning language in your message. If you are struggling, please consider reaching out to professional support.');
-                        }
-                    } else if (data.error === 'Request already sent') {
-                        peerCard.innerHTML = '<p class="success-message">Request already sent</p>';
-                    } else {
-                        sendBtn.disabled = false;
-                        sendBtn.textContent = 'Send';
-                        alert(data.error || 'Failed to send request');
-                    }
-                })
-                .catch(error => {
-                    sendBtn.disabled = false;
-                    sendBtn.textContent = 'Send';
-                    alert('Error sending request');
-                });
-        }
-
-        function acceptRequest(senderId, action) {
-            const formData = new FormData();
-            formData.append('sender_id', senderId);
-            formData.append('action', action);
-
-            fetch('{{ url_for("connect_accept") }}', {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const requestItem = document.getElementById('request-' + senderId);
-                        requestItem.innerHTML = '<p class="success-message">' + data.message + '</p>';
-                        if (data.redirect) {
-                            setTimeout(() => {
-                                window.location.href = data.redirect;
-                            }, 1500);
-                        }
-                    } else {
-                        alert(data.error || 'Failed to accept request');
-                    }
-                })
-                .catch(error => {
-                    alert('Error accepting request');
-                });
-        }
-
-        function ignoreRequest(senderId) {
-            const formData = new FormData();
-            formData.append('sender_id', senderId);
-
-            fetch('{{ url_for("connect_ignore") }}', {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const requestItem = document.getElementById('request-' + senderId);
-                        requestItem.remove();
-                    }
-                })
-                .catch(error => {
-                    alert('Error removing request');
-                });
-        }
-    </script>
-</body>
-
-</html>
+    });
+</script>
+{% endblock %}

@@ -1,220 +1,77 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Share your challenge - Sun Devil Circle">
-    <title>Share Your Challenge - Sun Devil Circle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+{% block title %}Share Your Challenge - SunDevil Circle{% endblock %}
 
-<body>
-    <header>
-        <h1>Sun Devil Circle</h1>
-    </header>
+{% block content %}
+<div class="container" style="padding-top: 180px; padding-bottom: 80px; max-width: 700px;">
 
-    <div class="container">
-        {% if username %}
-        <div class="user-header">
-            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
-            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
-        </div>
-        {% endif %}
-
-        <div class="transparency-note">
-            <strong>Your Privacy:</strong> Your issue text is stored locally in your browser using IndexedDB. It is not
-            saved on our servers except when you submit the form. You can delete all local data at any time.
+    <div class="card">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <span style="font-size: 48px;">💬</span>
+            <h1 style="font-size: 28px; font-weight: 700; margin-top: 16px; color: var(--text-primary);">What's on your
+                mind?</h1>
+            <p style="color: var(--text-secondary); margin-top: 8px;">Share what you're going through. Our AI will
+                provide personalized support and match you with peers who understand.</p>
         </div>
 
-        <div class="card">
-            <h2>What is on your mind?</h2>
-            <p>Describe your current challenge or situation. This will help us suggest relevant resources and peer
-                groups.</p>
-
-            <form method="POST" action="{{ url_for('issue') }}" id="issueForm">
-                <label for="issue_text">Your Challenge</label>
-                <textarea id="issue_text" name="issue_text" required
-                    placeholder="Write about what you are experiencing. Take your time. Your draft is automatically saved locally."></textarea>
-
-                <button type="submit">Get Support Suggestions</button>
-            </form>
-        </div>
-
-        <div class="card issue-history">
-            <h3>Your Recent Issues (stored locally)</h3>
-            <div id="historyList">
-                <p>No previous issues stored.</p>
+        <form method="POST" action="{{ url_for('issue') }}">
+            <div class="form-group">
+                <label class="form-label" for="issue_text">Describe your challenge</label>
+                <textarea id="issue_text" name="issue_text" class="form-input" rows="6"
+                    placeholder="Example: I've been feeling really homesick lately. I miss my family and friends back home, and I'm finding it hard to make new friends here..."
+                    required>{{ issue_text if issue_text else '' }}</textarea>
+                <p style="font-size: 12px; color: var(--text-light); margin-top: 8px;">
+                    🔒 Your response is private and only used to personalize your support. It won't be shared with
+                    others.
+                </p>
             </div>
-            <button type="button" id="deleteDataBtn" class="btn-danger btn-small" style="margin-top: 1rem;">Delete My
-                Local Data</button>
+
+            <button type="submit" class="btn btn-maroon" style="width: 100%; padding: 16px; font-size: 18px;">
+                Get Support
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="margin-left: 8px;">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+            </button>
+        </form>
+
+        <div class="transparency-note" style="margin-top: 24px;">
+            <strong>🤖 How AI Helps You:</strong>
+            Our AI analyzes your input to provide personalized suggestions and resources. It also monitors for signs of
+            distress to ensure you get the support you need.
         </div>
     </div>
 
-    <script>
-        const DB_NAME = 'SunDevilCircleDB';
-        const DB_VERSION = 1;
-        const DRAFT_STORE = 'drafts';
-        const HISTORY_STORE = 'issueHistory';
+    <!-- Quick Topic Suggestions -->
+    <div class="card mt-6">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Not sure what to write? Common topics:</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button type="button" onclick="setTopicText('homesick')" class="group-tag-btn">🏠 Feeling Homesick</button>
+            <button type="button" onclick="setTopicText('academic')" class="group-tag-btn">📚 Academic Stress</button>
+            <button type="button" onclick="setTopicText('friends')" class="group-tag-btn">👥 Making Friends</button>
+            <button type="button" onclick="setTopicText('culture')" class="group-tag-btn">🌍 Cultural
+                Adjustment</button>
+            <button type="button" onclick="setTopicText('language')" class="group-tag-btn">💬 Language Barriers</button>
+            <button type="button" onclick="setTopicText('lonely')" class="group-tag-btn">💙 Feeling Lonely</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-        let db;
+{% block scripts %}
+<script>
+    const topicTexts = {
+        'homesick': "I've been feeling really homesick lately. I miss my family and friends back home, and adjusting to life here has been harder than I expected.",
+        'academic': "I'm struggling with the academic pressure here. The coursework is challenging, and I'm worried about my grades and keeping up with the pace.",
+        'friends': "I'm finding it difficult to make new friends. Everyone seems to already have their own groups, and I feel like an outsider.",
+        'culture': "I'm having a hard time adjusting to the culture here. Things are so different from back home, and sometimes I feel like I don't fit in.",
+        'language': "English isn't my first language, and I sometimes struggle to express myself or understand others. It's making social situations stressful.",
+        'lonely': "I've been feeling really lonely and isolated. Even when I'm around people, I feel like no one really understands what I'm going through."
+    };
 
-        function openDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => {
-                    db = request.result;
-                    resolve(db);
-                };
-
-                request.onupgradeneeded = (event) => {
-                    const database = event.target.result;
-
-                    if (!database.objectStoreNames.contains(DRAFT_STORE)) {
-                        database.createObjectStore(DRAFT_STORE, { keyPath: 'id' });
-                    }
-
-                    if (!database.objectStoreNames.contains(HISTORY_STORE)) {
-                        const historyStore = database.createObjectStore(HISTORY_STORE, { keyPath: 'id', autoIncrement: true });
-                        historyStore.createIndex('timestamp', 'timestamp', { unique: false });
-                    }
-                };
-            });
-        }
-
-        function saveDraft(text) {
-            if (!db) return;
-            const tx = db.transaction(DRAFT_STORE, 'readwrite');
-            const store = tx.objectStore(DRAFT_STORE);
-            store.put({ id: 'currentDraft', text: text, timestamp: new Date().toISOString() });
-        }
-
-        function loadDraft() {
-            return new Promise((resolve) => {
-                if (!db) { resolve(null); return; }
-                const tx = db.transaction(DRAFT_STORE, 'readonly');
-                const store = tx.objectStore(DRAFT_STORE);
-                const request = store.get('currentDraft');
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => resolve(null);
-            });
-        }
-
-        function saveToHistory(text) {
-            return new Promise((resolve) => {
-                if (!db) { resolve(); return; }
-                const tx = db.transaction(HISTORY_STORE, 'readwrite');
-                const store = tx.objectStore(HISTORY_STORE);
-                store.add({ text: text, timestamp: new Date().toISOString() });
-                tx.oncomplete = () => resolve();
-            });
-        }
-
-        function loadHistory() {
-            return new Promise((resolve) => {
-                if (!db) { resolve([]); return; }
-                const tx = db.transaction(HISTORY_STORE, 'readonly');
-                const store = tx.objectStore(HISTORY_STORE);
-                const request = store.getAll();
-                request.onsuccess = () => {
-                    const items = request.result || [];
-                    items.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                    resolve(items.slice(0, 5));
-                };
-                request.onerror = () => resolve([]);
-            });
-        }
-
-        function clearDraft() {
-            if (!db) return;
-            const tx = db.transaction(DRAFT_STORE, 'readwrite');
-            const store = tx.objectStore(DRAFT_STORE);
-            store.delete('currentDraft');
-        }
-
-        function deleteAllData() {
-            return new Promise((resolve) => {
-                if (!db) { resolve(); return; }
-                const tx = db.transaction([DRAFT_STORE, HISTORY_STORE], 'readwrite');
-                tx.objectStore(DRAFT_STORE).clear();
-                tx.objectStore(HISTORY_STORE).clear();
-                tx.oncomplete = () => resolve();
-            });
-        }
-
-        function renderHistory(items) {
-            const container = document.getElementById('historyList');
-            if (items.length === 0) {
-                container.innerHTML = '<p>No previous issues stored.</p>';
-                return;
-            }
-
-            let html = '';
-            items.forEach(item => {
-                const date = new Date(item.timestamp);
-                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-                const preview = item.text.length > 100 ? item.text.substring(0, 100) + '...' : item.text;
-                html += '<div class="history-item"><span class="time">' + dateStr + '</span>' + escapeHtml(preview) + '</div>';
-            });
-            container.innerHTML = html;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        async function init() {
-            try {
-                await openDB();
-
-                const textarea = document.getElementById('issue_text');
-                const form = document.getElementById('issueForm');
-                const deleteBtn = document.getElementById('deleteDataBtn');
-
-                const draft = await loadDraft();
-                if (draft && draft.text) {
-                    textarea.value = draft.text;
-                }
-
-                const history = await loadHistory();
-                renderHistory(history);
-
-                let saveTimeout;
-                textarea.addEventListener('input', () => {
-                    clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(() => {
-                        saveDraft(textarea.value);
-                    }, 3000);
-                });
-
-                form.addEventListener('submit', async (e) => {
-                    const issueText = textarea.value.trim();
-                    if (issueText) {
-                        await saveToHistory(issueText);
-                        clearDraft();
-                    }
-                });
-
-                deleteBtn.addEventListener('click', async () => {
-                    if (confirm('Are you sure you want to delete all your local data? This action cannot be undone.')) {
-                        await deleteAllData();
-                        textarea.value = '';
-                        renderHistory([]);
-                        alert('All local data has been deleted.');
-                    }
-                });
-
-            } catch (error) {
-                console.error('IndexedDB error:', error);
-            }
-        }
-
-        init();
-    </script>
-</body>
-
-</html>
+    function setTopicText(topic) {
+        document.getElementById('issue_text').value = topicTexts[topic] || '';
+        document.getElementById('issue_text').focus();
+    }
+</script>
+{% endblock %}
