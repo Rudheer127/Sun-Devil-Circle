@@ -12,38 +12,52 @@
         .onboarding-container {
             min-height: 100vh;
             background: #FFFFFF;
-            padding: 80px 40px 140px;
+            padding: 100px 40px 140px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        /* Progress Bar */
-        .progress-bar {
+        /* Segmented Progress Bar */
+        .progress-bar-container {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
-            background: #E5E7EB;
+            padding: 12px 24px;
+            background: white;
             z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
-        .progress-fill {
+        .progress-segments {
+            display: flex;
+            gap: 8px;
+            max-width: 600px;
+            margin: 0 auto 8px;
+        }
+
+        .progress-segment {
+            flex: 1;
+            height: 6px;
+            background: #E5E7EB;
+            border-radius: 3px;
+            transition: background 300ms ease;
+        }
+
+        .progress-segment.active {
             background: #8B1538;
-            height: 100%;
-            width: 25%;
-            transition: width 400ms ease-out;
+        }
+
+        .progress-segment.completed {
+            background: #10B981;
         }
 
         .step-indicator {
-            position: fixed;
-            top: 24px;
-            right: 24px;
+            text-align: center;
             font-size: 14px;
             color: #6B7280;
             font-weight: 500;
-            z-index: 101;
         }
 
         /* Step Container */
@@ -77,14 +91,14 @@
         }
 
         .step-header h1 {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 700;
             color: #1A1A1A;
             margin-bottom: 12px;
         }
 
         .step-header p {
-            font-size: 18px;
+            font-size: 16px;
             color: #6B7280;
         }
 
@@ -240,7 +254,7 @@
         }
 
         .btn-back {
-            width: 30%;
+            width: 140px;
             height: 56px;
             background: #FFFFFF;
             color: #4B5563;
@@ -316,6 +330,54 @@
             outline: none;
         }
 
+        /* Consent Items */
+        .consent-items {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .consent-item {
+            background: #F9FAFB;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .consent-check {
+            width: 32px;
+            height: 32px;
+            background: #10B981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .consent-check svg {
+            color: white;
+            width: 16px;
+            height: 16px;
+        }
+
+        .consent-content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1A1A1A;
+            margin-bottom: 4px;
+        }
+
+        .consent-content p {
+            font-size: 14px;
+            color: #6B7280;
+            line-height: 1.5;
+        }
+
         /* Success Animation */
         .success-animation {
             display: flex;
@@ -349,15 +411,30 @@
                 transform: scale(1);
             }
         }
+
+        .privacy-note {
+            font-size: 14px;
+            color: #6B7280;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 </head>
 
 <body>
-    <!-- Progress Bar -->
-    <div class="progress-bar">
-        <div class="progress-fill" id="progressFill"></div>
+    <!-- Segmented Progress Bar -->
+    <div class="progress-bar-container">
+        <div class="progress-segments" id="progressSegments">
+            <div class="progress-segment active" id="seg1"></div>
+            <div class="progress-segment" id="seg2"></div>
+            <div class="progress-segment" id="seg3"></div>
+            <div class="progress-segment" id="seg4"></div>
+            <div class="progress-segment" id="seg5"></div>
+        </div>
+        <div class="step-indicator" id="stepIndicator">Step 1 of 5</div>
     </div>
-    <div class="step-indicator" id="stepIndicator">Step 1 of 4</div>
 
     <div class="onboarding-container">
         <!-- Step 1: Support Topics -->
@@ -450,7 +527,7 @@
         <div class="step" id="step3">
             <div class="step-header">
                 <h1>Your preferences</h1>
-                <p style="font-style: italic;">Optional - skip any you're unsure about</p>
+                <p style="font-style: italic;">Optional — skip any you're unsure about</p>
             </div>
 
             <label class="section-label">Cultural background (optional)</label>
@@ -479,8 +556,57 @@
             </div>
         </div>
 
-        <!-- Step 4: Display Name -->
+        <!-- Step 4: Boundaries & Consent -->
         <div class="step" id="step4">
+            <div class="step-header">
+                <h1>Boundaries & Consent</h1>
+                <p>Please read carefully</p>
+            </div>
+
+            <div class="consent-items">
+                <div class="consent-item">
+                    <div class="consent-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="consent-content">
+                        <h4>This is peer support</h4>
+                        <p>Your supporter is a trained student, not a therapist or counselor. They're here to listen and
+                            connect.</p>
+                    </div>
+                </div>
+
+                <div class="consent-item">
+                    <div class="consent-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="consent-content">
+                        <h4>Not for emergencies</h4>
+                        <p>If you're in crisis, please use the 988 Lifeline or ASU Counseling. We'll always show you
+                            these resources.</p>
+                    </div>
+                </div>
+
+                <div class="consent-item">
+                    <div class="consent-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="consent-content">
+                        <h4>You're in control</h4>
+                        <p>End conversations anytime. Set boundaries. Your privacy is protected until you choose to
+                            share.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Display Name -->
+        <div class="step" id="step5">
             <div class="step-header">
                 <h1>What should we call you?</h1>
                 <p>Choose a display name (can be anonymous)</p>
@@ -488,19 +614,24 @@
 
             <input type="text" class="display-name-input" id="displayNameInput" placeholder="Enter your display name..."
                 maxlength="30">
-            <p style="font-size: 14px; color: #6B7280; margin-bottom: 24px;">
-                🔒 This is how others will see you. You can use any name you'd like to protect your privacy.
+            <p class="privacy-note">
+                <span>🔒</span>
+                This is how others will see you. You can use any name you'd like to protect your privacy.
             </p>
 
-            <div class="transparency-note">
-                <strong>🎉 Almost done!</strong>
-                Your preferences help us match you with the right peers and resources. You can update these anytime from
-                your profile.
+            <div
+                style="background: #FEF3C7; padding: 16px 20px; border-radius: 12px; display: flex; gap: 12px; align-items: center;">
+                <span style="font-size: 20px;">🎉</span>
+                <div>
+                    <strong style="color: #92400E;">Almost done!</strong>
+                    <p style="color: #B45309; font-size: 14px; margin-top: 4px;">Your preferences help us match you with
+                        the right peers and resources. You can update these anytime from your profile.</p>
+                </div>
             </div>
         </div>
 
-        <!-- Step 5: Complete -->
-        <div class="step" id="step5">
+        <!-- Step 6: Complete -->
+        <div class="step" id="step6">
             <div class="success-animation">
                 <div class="success-checkmark">✓</div>
                 <h1 style="font-size: 32px; font-weight: 700; color: #1A1A1A; margin-bottom: 12px;">You're all set!</h1>
@@ -532,7 +663,7 @@
     <script>
         // State
         let currentStep = 1;
-        const totalSteps = 4;
+        const totalSteps = 5;
         let selectedTopics = [];
         let selectedLanguages = [];
         let selectedStyle = '';
@@ -542,7 +673,6 @@
 
         // Elements
         const steps = document.querySelectorAll('.step');
-        const progressFill = document.getElementById('progressFill');
         const stepIndicator = document.getElementById('stepIndicator');
         const btnBack = document.getElementById('btnBack');
         const btnContinue = document.getElementById('btnContinue');
@@ -657,8 +787,16 @@
         }
 
         function updateProgress() {
-            const percent = (currentStep / totalSteps) * 100;
-            progressFill.style.width = percent + '%';
+            // Update segments
+            for (let i = 1; i <= totalSteps; i++) {
+                const seg = document.getElementById('seg' + i);
+                seg.classList.remove('active', 'completed');
+                if (i < currentStep) {
+                    seg.classList.add('completed');
+                } else if (i === currentStep) {
+                    seg.classList.add('active');
+                }
+            }
             stepIndicator.textContent = `Step ${currentStep} of ${totalSteps}`;
         }
 
@@ -676,6 +814,9 @@
                     valid = true; // Optional step
                     break;
                 case 4:
+                    valid = true; // Consent step - just read
+                    break;
+                case 5:
                     valid = displayName.length >= 2;
                     break;
             }
@@ -693,11 +834,16 @@
             document.getElementById('formDisplayName').value = displayName;
 
             // Show success step
-            currentStep = 5;
+            currentStep = 6;
             steps.forEach(s => s.classList.remove('active'));
-            document.getElementById('step5').classList.add('active');
+            document.getElementById('step6').classList.add('active');
             navButtons.style.display = 'none';
-            progressFill.style.width = '100%';
+
+            // Update all segments to completed
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById('seg' + i).classList.add('completed');
+                document.getElementById('seg' + i).classList.remove('active');
+            }
             stepIndicator.textContent = 'Complete!';
 
             // Submit after animation

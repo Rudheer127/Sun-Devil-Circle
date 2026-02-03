@@ -1494,3 +1494,313 @@ textarea.form-input {
     clip: rect(0, 0, 0, 0);
     border: 0;
 }
+
+/* ============================================
+   UPDATED LANDING PAGE STYLES
+   ============================================ */
+
+/* 4-Column Steps Grid */
+.steps-grid.four-cols {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .steps-grid.four-cols {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .steps-grid.four-cols {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Step Number Colors */
+.step-number.maroon {
+    background: linear-gradient(135deg, #8B1538, #A91D3A);
+}
+
+.step-number.gold {
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+}
+
+.step-number.green {
+    background: linear-gradient(135deg, #10B981, #059669);
+}
+
+.step-number.pink {
+    background: linear-gradient(135deg, #E11D48, #BE123C);
+}
+
+/* Step Icon Box */
+.step-icon-box {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.step-icon-box.green-light {
+    background: var(--green-mint);
+}
+
+.step-icon-box.cream {
+    background: var(--yellow-soft);
+}
+
+.step-icon-box.pink-light {
+    background: var(--pink-light);
+}
+
+/* Feature Pill Icon Colors */
+.feature-pill-icon.gold {
+    color: #F59E0B;
+}
+
+/* ============================================
+   SAFETY SECTION
+   ============================================ */
+.safety-section {
+    background: white;
+    padding: 100px 40px;
+    margin: 0 -40px;
+}
+
+.safety-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .safety-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+}
+
+.safety-left {
+    padding-right: 20px;
+}
+
+.safety-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #F0FDF4;
+    color: #10B981;
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    margin-bottom: 24px;
+    border: 1px solid #D1FAE5;
+}
+
+.safety-title {
+    font-size: var(--text-5xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    line-height: 1.1;
+    margin-bottom: 24px;
+}
+
+.maroon-text {
+    color: var(--primary-maroon);
+}
+
+.safety-desc {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 32px;
+}
+
+.quote-box {
+    background: #F9FAFB;
+    border-left: 4px solid var(--primary-maroon);
+    padding: 24px;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.quote-text {
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    font-style: italic;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.quote-author {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    font-weight: var(--font-medium);
+}
+
+/* Safety Features Grid */
+.safety-features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 600px) {
+    .safety-features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.safety-feature-card {
+    background: white;
+    border: 1px solid var(--border-gray);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    transition: all 300ms ease;
+}
+
+.safety-feature-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+}
+
+.safety-feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.safety-feature-icon.pink-light {
+    background: var(--pink-light);
+}
+
+.safety-feature-icon.green-light {
+    background: var(--green-mint);
+}
+
+.safety-feature-icon.cream {
+    background: var(--yellow-soft);
+}
+
+.safety-feature-card h4 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.safety-feature-card p {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* ============================================
+   CTA SECTION
+   ============================================ */
+.cta-section {
+    padding-top: 100px;
+    padding-bottom: 100px;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.site-footer {
+    background: #1F2937;
+    color: white;
+    padding: 40px;
+}
+
+.footer-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #374151;
+}
+
+.footer-left .logo {
+    color: white;
+}
+
+.footer-left .logo-icon {
+    background: white;
+    color: var(--primary-maroon);
+}
+
+.footer-nav {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+}
+
+.footer-nav a {
+    color: #9CA3AF;
+    font-size: var(--text-sm);
+    transition: color 200ms;
+}
+
+.footer-nav a:hover {
+    color: white;
+}
+
+.footer-right {
+    font-size: var(--text-sm);
+    color: #9CA3AF;
+}
+
+.footer-right .heart {
+    color: #E11D48;
+}
+
+.footer-bottom {
+    max-width: 1280px;
+    margin: 24px auto 0;
+    text-align: center;
+}
+
+.footer-bottom p {
+    font-size: var(--text-sm);
+    color: #6B7280;
+    margin-bottom: 4px;
+}
+
+/* How It Works adjustments */
+.how-it-works {
+    padding-top: 100px;
+    padding-bottom: 100px;
+}
+
+.how-it-works .section-header {
+    margin-bottom: 80px;
+}
+
+.how-it-works .step-card {
+    text-align: center;
+    padding-top: 40px;
+}
+
+.how-it-works .step-icon-box {
+    margin: 0 auto 20px;
+}
+
+.how-it-works .step-number {
+    left: 50%;
+    transform: translateX(-50%);
+}

@@ -35,8 +35,41 @@
         </div>
     </div>
 
+    <!-- Incoming Connection Requests -->
+    {% if incoming_requests and incoming_requests|length > 0 %}
+    <div class="card" style="margin-bottom: 32px; background: linear-gradient(135deg, #FEF3C7, #FDE68A); border: none;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #92400E;">📩 Pending Connection
+            Requests</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for req in incoming_requests %}
+            <div
+                style="background: white; border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <strong style="color: var(--text-primary);">{{ req.sender_name }}</strong>
+                    {% if req.message %}
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">"{{ req.message }}"</p>
+                    {% endif %}
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <form method="POST" action="{{ url_for('connect_accept') }}" style="display: inline;">
+                        <input type="hidden" name="sender_id" value="{{ req.sender_id }}">
+                        <button type="submit" class="btn btn-maroon"
+                            style="padding: 8px 16px; font-size: 14px;">Accept</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('connect_ignore') }}" style="display: inline;">
+                        <input type="hidden" name="sender_id" value="{{ req.sender_id }}">
+                        <button type="submit" class="btn btn-secondary"
+                            style="padding: 8px 16px; font-size: 14px;">Ignore</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Peers Grid -->
-    {% if peers %}
+    {% if peers and peers|length > 0 %}
     <div class="steps-grid">
         {% for peer in peers %}
         <div class="step-card">
@@ -65,15 +98,17 @@
             {% if peer.primary_challenge %}
             <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;">
                 {% for challenge in peer.primary_challenge.split(',')[:3] %}
+                {% if challenge.strip() %}
                 <span
                     style="font-size: 12px; background: #F3F4F6; color: var(--text-secondary); padding: 4px 10px; border-radius: 12px;">
                     {{ challenge.strip() }}
                 </span>
+                {% endif %}
                 {% endfor %}
             </div>
             {% endif %}
 
-            <button onclick="connectWithPeer('{{ peer.display_name }}')" class="btn btn-outline"
+            <button onclick="connectWithPeer('{{ peer.user_id }}', '{{ peer.display_name }}')" class="btn btn-outline"
                 style="width: 100%; margin-top: 16px;">
                 Connect
             </button>
@@ -83,8 +118,10 @@
     {% else %}
     <div class="card text-center" style="padding: 60px 20px;">
         <p style="font-size: 48px; margin-bottom: 16px;">👥</p>
-        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">No peers found</h3>
-        <p style="color: var(--text-secondary);">Try adjusting your filters or check back later.</p>
+        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">No peers found yet</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Be the first to connect! Other users who complete
+            onboarding will appear here.</p>
+        <a href="{{ url_for('decision') }}" class="btn btn-maroon">Back to Dashboard</a>
     </div>
     {% endif %}
 
@@ -99,32 +136,38 @@
     <div class="modal-content">
         <h3>Connect with Peer</h3>
         <p id="connectMessage">Would you like to send a connection request?</p>
-        <div class="modal-actions">
-            <button onclick="sendConnection()" class="btn btn-maroon">Send Request</button>
-            <button onclick="closeConnectModal()" class="btn btn-secondary">Cancel</button>
-        </div>
+        <form id="connectForm" method="POST" action="{{ url_for('connect') }}">
+            <input type="hidden" name="recipient_id" id="recipientId">
+            <div style="margin: 16px 0;">
+                <label style="display: block; font-weight: 500; margin-bottom: 8px;">Add a message (optional):</label>
+                <textarea name="message" rows="3"
+                    style="width: 100%; padding: 12px; border: 1px solid var(--border-gray); border-radius: 8px; resize: none;"
+                    placeholder="Hi! I'd love to connect..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-maroon">Send Request</button>
+                <button type="button" onclick="closeConnectModal()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    let selectedPeer = '';
+    let selectedPeerId = '';
+    let selectedPeerName = '';
 
-    function connectWithPeer(peerName) {
-        selectedPeer = peerName;
+    function connectWithPeer(peerId, peerName) {
+        selectedPeerId = peerId;
+        selectedPeerName = peerName;
+        document.getElementById('recipientId').value = peerId;
         document.getElementById('connectMessage').textContent = 'Would you like to connect with ' + peerName + '?';
         document.getElementById('connectModal').style.display = 'flex';
     }
 
     function closeConnectModal() {
         document.getElementById('connectModal').style.display = 'none';
-    }
-
-    function sendConnection() {
-        // In a real app, this would send a connection request
-        alert('Connection request sent to ' + selectedPeer + '! (This is a demo)');
-        closeConnectModal();
     }
 
     document.getElementById('connectModal')?.addEventListener('click', function (e) {

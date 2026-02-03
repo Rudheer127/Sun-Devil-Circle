@@ -1568,22 +1568,64 @@ def remove_connection_request(recipient_id, sender_id):
 def people():
     """Show recommended peers based on semantic matching."""
     if not session.get("display_name"):
-        return redirect(url_for("profile"))
+        return redirect(url_for("onboarding"))
     
     user_id = session.get("user_id")
+    filter_challenge = request.args.get("filter", "")
     
-    # Get similar users
-    recommended_peers = []
+    # Get all profiles from database
+    db = get_db()
+    all_profiles = db.execute('''
+        SELECT p.*, u.username FROM profiles p 
+        JOIN users u ON p.user_id = u.id 
+        WHERE p.user_id != ? AND p.display_name IS NOT NULL AND p.display_name != ''
+    ''', (user_id,)).fetchall()
+    
+    peers = []
+    for row in all_profiles:
+        challenges = row['primary_challenge'] or ''
+        support_topics = row['support_topics'] or ''
+        all_challenges = challenges + ',' + support_topics
+        
+        # Apply filter if specified
+        if filter_challenge:
+            filter_lower = filter_challenge.lower()
+            all_challenges_lower = all_challenges.lower()
+            if filter_lower not in all_challenges_lower:
+                # Check for category matches
+                if filter_lower == 'homesickness' and 'homesickness' not in all_challenges_lower:
+                    continue
+                elif filter_lower == 'academic' and 'academic' not in all_challenges_lower:
+                    continue
+                elif filter_lower == 'social' and 'loneliness' not in all_challenges_lower and 'relationships' not in all_challenges_lower:
+                    continue
+                elif filter_lower == 'cultural' and 'culture' not in all_challenges_lower:
+                    continue
+                elif filter_lower == 'language' and 'language' not in all_challenges_lower:
+                    continue
+        
+        peers.append({
+            "user_id": row['user_id'],
+            "display_name": row['display_name'] or 'Anonymous',
+            "is_international_freshman": bool(row['is_international_freshman']),
+            "preferred_language": row['preferred_language'] or '',
+            "primary_challenge": row['primary_challenge'] or '',
+            "support_style": row['support_style'] or 'mixed'
+        })
+    
+    # Also add from in-memory cache for real-time peers
     if user_id:
         similar = get_similar_users(user_id, top_n=10, threshold=0.2)
         for peer_id, score in similar:
             peer_profile = user_profiles.get(peer_id)
-            if peer_profile:
-                recommended_peers.append({
+            if peer_profile and not any(p['user_id'] == peer_id for p in peers):
+                peers.append({
                     "user_id": peer_id,
                     "display_name": peer_profile.get("display_name", "Anonymous"),
-                    "profile_summary": peer_profile.get("profile_summary", ""),
-                    "match_score": round(score * 100)
+                    "is_international_freshman": peer_profile.get("is_international_freshman", False),
+                    "preferred_language": peer_profile.get("preferred_language", ""),
+                    "primary_challenge": ",".join(peer_profile.get("primary_challenge", [])),
+                    "support_style": peer_profile.get("support_style", "mixed")
                 })
     
     # Get pending requests for current user
@@ -1591,7 +1633,8 @@ def people():
     
     return render_template(
         "people.html",
-        recommended_peers=recommended_peers,
+        peers=peers,
+        filter=filter_challenge,
         incoming_requests=incoming_requests,
         username=session.get("username")
     )
@@ -1657,12 +1700,14 @@ def connect_accept():
     action = request.form.get("action", "group")  # "group" or "message"
     
     if not sender_id:
-        return jsonify({"success": False, "error": "Sender required"}), 400
+        flash("Sender required", "error")
+        return redirect(url_for("people"))
     
     try:
         sender_id = int(sender_id)
     except ValueError:
-        return jsonify({"success": False, "error": "Invalid sender"}), 400
+        flash("Invalid sender", "error")
+        return redirect(url_for("people"))
     
     # Find the request
     requests_list = get_pending_requests_for_user(user_id)
@@ -1673,26 +1718,14 @@ def connect_accept():
             break
     
     if not request_found:
-        return jsonify({"success": False, "error": "Request not found"}), 404
+        flash("Request not found", "error")
+        return redirect(url_for("people"))
     
     # Remove the request
     remove_connection_request(user_id, sender_id)
     
-    if action == "group":
-        # Redirect to decision page to invite to group
-        return jsonify({
-            "success": True,
-            "action": "group",
-            "redirect": url_for("decision"),
-            "message": f"You can now invite {request_found['sender_display_name']} to a group"
-        })
-    else:
-        # For now, just acknowledge - DM not implemented yet
-        return jsonify({
-            "success": True,
-            "action": "acknowledged",
-            "message": f"Connection with {request_found['sender_display_name']} accepted"
-        })
+    flash(f"Connection with {request_found['sender_display_name']} accepted!", "success")
+    return redirect(url_for("people"))
 
 
 @app.route("/connect/ignore", methods=["POST"])
@@ -1703,16 +1736,19 @@ def connect_ignore():
     sender_id = request.form.get("sender_id")
     
     if not sender_id:
-        return jsonify({"success": False, "error": "Sender required"}), 400
+        flash("Sender required", "error")
+        return redirect(url_for("people"))
     
     try:
         sender_id = int(sender_id)
     except ValueError:
-        return jsonify({"success": False, "error": "Invalid sender"}), 400
+        flash("Invalid sender", "error")
+        return redirect(url_for("people"))
     
     remove_connection_request(user_id, sender_id)
     
-    return jsonify({"success": True, "message": "Request removed"})
+    flash("Request removed", "info")
+    return redirect(url_for("people"))
 
 
 # -----------------------------------------------------------------------------
