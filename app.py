@@ -1286,6 +1286,13 @@ def resources():
     )
 
 
+@app.route("/resources-hub", methods=["GET"])
+@login_required
+def resources_hub():
+    """Resource hub page with all resources and filtering."""
+    return render_template("resources_hub.html", username=session.get("username"))
+
+
 @app.route("/decision", methods=["GET"])
 @login_required
 def decision():

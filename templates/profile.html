@@ -45,8 +45,6 @@
                         if profile else 'Anonymous' }}</p>
                     <p style="font-size: 14px; color: var(--text-secondary);">Member since {{ session.get('created_at',
                         'recently') | default('recently') }}</p>
-                    <span
-                        style="font-size: 12px; background: var(--pink-light); color: var(--primary-maroon); padding: 4px 12px; border-radius: 16px; font-weight: 500;">seeker</span>
                 </div>
             </div>
 
@@ -263,23 +261,31 @@
         border-color: var(--primary-maroon);
     }
 
+    /* Language and Culture pills - explicit styles */
+    .language-pill,
+    .culture-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border: 2px solid #E5E7EB;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 200ms;
+        background: white;
+        color: var(--text-primary);
+    }
+
     .language-pill:has(input:checked),
-    .culture-pill:has(input:checked) {
-        background: var(--primary-maroon);
-        color: white;
-        border-color: var(--primary-maroon);
+    .culture-pill:has(input:checked),
+    .language-pill.selected,
+    .culture-pill.selected {
+        background: var(--primary-maroon) !important;
+        color: white !important;
+        border-color: var(--primary-maroon) !important;
     }
 
     .radio-card-input:has(input:checked) {
         background: #FFF1F2;
-        border-color: var(--primary-maroon);
-    }
-
-    /* Fallback for browsers without :has() */
-    .language-pill.selected,
-    .culture-pill.selected {
-        background: var(--primary-maroon);
-        color: white;
         border-color: var(--primary-maroon);
     }
 </style>
@@ -305,16 +311,34 @@
 
     document.getElementById('display_name').addEventListener('input', updateAvatarPreview);
 
-    // Toggle pills for fallback
+    // Initialize pill states immediately on page load
+    function initializePills() {
+        document.querySelectorAll('.language-pill, .culture-pill').forEach(pill => {
+            const input = pill.querySelector('input');
+            if (input && input.checked) {
+                pill.classList.add('selected');
+            } else {
+                pill.classList.remove('selected');
+            }
+        });
+    }
+
+    // Toggle pills on click
     document.querySelectorAll('.language-pill input, .culture-pill input').forEach(input => {
         input.addEventListener('change', function () {
-            this.closest('label').classList.toggle('selected', this.checked);
+            const pill = this.closest('label');
+            if (this.checked) {
+                pill.classList.add('selected');
+            } else {
+                pill.classList.remove('selected');
+            }
         });
-        // Initialize
-        if (input.checked) {
-            input.closest('label').classList.add('selected');
-        }
     });
+
+    // Initialize on DOM ready
+    document.addEventListener('DOMContentLoaded', initializePills);
+    // Also run immediately in case DOM is already ready
+    initializePills();
 
     // Warn on unsaved changes
     let formChanged = false;

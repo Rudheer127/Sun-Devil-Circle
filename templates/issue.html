@@ -3,62 +3,196 @@
 {% block title %}Share Your Challenge - SunDevil Circle{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 180px; padding-bottom: 80px; max-width: 700px;">
+<div class="container" style="padding-top: 160px; padding-bottom: 80px; max-width: 800px;">
 
-    <div class="card">
-        <div style="text-align: center; margin-bottom: 32px;">
-            <span style="font-size: 48px;">💬</span>
-            <h1 style="font-size: 28px; font-weight: 700; margin-top: 16px; color: var(--text-primary);">What's on your
-                mind?</h1>
-            <p style="color: var(--text-secondary); margin-top: 8px;">Share what you're going through. Our AI will
-                provide personalized support and match you with peers who understand.</p>
+    <!-- Breadcrumb -->
+    <nav style="margin-bottom: 24px;">
+        <a href="{{ url_for('decision') }}" style="color: var(--text-secondary); font-size: 14px;">← Dashboard</a>
+        <span style="color: var(--text-light); margin: 0 8px;">›</span>
+        <span style="color: var(--text-primary); font-size: 14px; font-weight: 500;">Share Your Challenge</span>
+    </nav>
+
+    <!-- Main Card -->
+    <div class="card"
+        style="padding: 40px; background: white; border-radius: 24px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);">
+
+        <!-- Header with illustration -->
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div
+                style="width: 96px; height: 96px; background: linear-gradient(135deg, #FDE2E4, #FDE6D3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 24px rgba(139, 21, 56, 0.1);">
+                <span style="font-size: 48px;">💬</span>
+            </div>
+            <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">
+                What's on your mind?
+            </h1>
+            <p
+                style="color: var(--text-secondary); font-size: 16px; max-width: 500px; margin: 0 auto; line-height: 1.6;">
+                Share what you're going through. Our AI will provide personalized support and match you with peers who
+                understand.
+            </p>
         </div>
 
-        <form method="POST" action="{{ url_for('issue') }}">
+        <!-- Topic Quick Picks -->
+        <div style="margin-bottom: 32px;">
+            <label
+                style="display: block; font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">
+                Quick topics (click to start):
+            </label>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <button type="button" onclick="setTopicText('homesick')" class="topic-quick-btn">
+                    <span>🏠</span> Homesickness
+                </button>
+                <button type="button" onclick="setTopicText('academic')" class="topic-quick-btn">
+                    <span>📚</span> Academic Stress
+                </button>
+                <button type="button" onclick="setTopicText('friends')" class="topic-quick-btn">
+                    <span>👥</span> Making Friends
+                </button>
+                <button type="button" onclick="setTopicText('culture')" class="topic-quick-btn">
+                    <span>🌍</span> Culture Shock
+                </button>
+                <button type="button" onclick="setTopicText('language')" class="topic-quick-btn">
+                    <span>💬</span> Language Barriers
+                </button>
+                <button type="button" onclick="setTopicText('lonely')" class="topic-quick-btn">
+                    <span>💙</span> Loneliness
+                </button>
+                <button type="button" onclick="setTopicText('anxiety')" class="topic-quick-btn">
+                    <span>😰</span> Anxiety
+                </button>
+                <button type="button" onclick="setTopicText('finances')" class="topic-quick-btn">
+                    <span>💰</span> Finances
+                </button>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="POST" action="{{ url_for('issue') }}" id="issueForm">
             <div class="form-group">
-                <label class="form-label" for="issue_text">Describe your challenge</label>
-                <textarea id="issue_text" name="issue_text" class="form-input" rows="6"
+                <label class="form-label" for="issue_text" style="font-size: 14px; font-weight: 600;">
+                    Describe your challenge
+                </label>
+                <textarea id="issue_text" name="issue_text" class="form-input" rows="5"
                     placeholder="Example: I've been feeling really homesick lately. I miss my family and friends back home, and I'm finding it hard to make new friends here..."
-                    required>{{ issue_text if issue_text else '' }}</textarea>
-                <p style="font-size: 12px; color: var(--text-light); margin-top: 8px;">
-                    🔒 Your response is private and only used to personalize your support. It won't be shared with
-                    others.
-                </p>
+                    required
+                    style="font-size: 16px; line-height: 1.6; resize: vertical; min-height: 120px;">{{ issue_text if issue_text else '' }}</textarea>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                    <div
+                        style="display: flex; align-items: center; gap: 8px; color: var(--text-light); font-size: 13px;">
+                        <span>🔒</span>
+                        <span>Your response is private and only used to personalize your support.</span>
+                    </div>
+                    <span id="charCount" style="font-size: 12px; color: var(--text-light);">0 / 1000</span>
+                </div>
             </div>
 
-            <button type="submit" class="btn btn-maroon" style="width: 100%; padding: 16px; font-size: 18px;">
-                Get Support
+            <button type="submit" class="btn btn-maroon" id="submitBtn"
+                style="width: 100%; padding: 18px; font-size: 18px; margin-top: 24px; border-radius: 14px;">
+                Get Personalized Support
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     style="margin-left: 8px;">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
             </button>
         </form>
-
-        <div class="transparency-note" style="margin-top: 24px;">
-            <strong>🤖 How AI Helps You:</strong>
-            Our AI analyzes your input to provide personalized suggestions and resources. It also monitors for signs of
-            distress to ensure you get the support you need.
-        </div>
     </div>
 
-    <!-- Quick Topic Suggestions -->
-    <div class="card mt-6">
-        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Not sure what to write? Common topics:</h3>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <button type="button" onclick="setTopicText('homesick')" class="group-tag-btn">🏠 Feeling Homesick</button>
-            <button type="button" onclick="setTopicText('academic')" class="group-tag-btn">📚 Academic Stress</button>
-            <button type="button" onclick="setTopicText('friends')" class="group-tag-btn">👥 Making Friends</button>
-            <button type="button" onclick="setTopicText('culture')" class="group-tag-btn">🌍 Cultural
-                Adjustment</button>
-            <button type="button" onclick="setTopicText('language')" class="group-tag-btn">💬 Language Barriers</button>
-            <button type="button" onclick="setTopicText('lonely')" class="group-tag-btn">💙 Feeling Lonely</button>
+    <!-- How It Works -->
+    <div class="card" style="margin-top: 32px; padding: 32px; background: linear-gradient(135deg, #FAFAFA, #F5F3FF);">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: var(--text-primary);">
+            🤖 How AI Helps You
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div style="display: flex; gap: 12px;">
+                <div
+                    style="width: 40px; height: 40px; background: #D1FAE5; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <span style="font-size: 20px;">🎯</span>
+                </div>
+                <div>
+                    <strong
+                        style="display: block; color: var(--text-primary); margin-bottom: 4px;">Personalized</strong>
+                    <p style="font-size: 14px; color: var(--text-secondary); margin: 0;">Suggestions tailored to your
+                        needs</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <div
+                    style="width: 40px; height: 40px; background: #FDE2E4; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <span style="font-size: 20px;">🔗</span>
+                </div>
+                <div>
+                    <strong style="display: block; color: var(--text-primary); margin-bottom: 4px;">Resources</strong>
+                    <p style="font-size: 14px; color: var(--text-secondary); margin: 0;">Curated ASU support links</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <div
+                    style="width: 40px; height: 40px; background: #FEF3C7; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <span style="font-size: 20px;">👥</span>
+                </div>
+                <div>
+                    <strong style="display: block; color: var(--text-primary); margin-bottom: 4px;">Peer
+                        Matching</strong>
+                    <p style="font-size: 14px; color: var(--text-secondary); margin: 0;">Connect with similar students
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
+<style>
+    .topic-quick-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 16px;
+        background: white;
+        border: 2px solid #E5E7EB;
+        border-radius: 24px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 200ms ease;
+    }
+
+    .topic-quick-btn:hover {
+        border-color: var(--primary-maroon);
+        color: var(--primary-maroon);
+        background: #FFF1F2;
+        transform: translateY(-2px);
+    }
+
+    .topic-quick-btn.active {
+        border-color: var(--primary-maroon);
+        color: var(--primary-maroon);
+        background: #FFF1F2;
+    }
+
+    .topic-quick-btn span {
+        font-size: 16px;
+    }
+
+    #issue_text {
+        border: 2px solid #E5E7EB;
+        border-radius: 14px;
+        transition: all 200ms ease;
+    }
+
+    #issue_text:focus {
+        border-color: var(--primary-maroon);
+        box-shadow: 0 0 0 4px rgba(139, 21, 56, 0.08);
+    }
+
+    @media (max-width: 600px) {
+        .card {
+            padding: 24px !important;
+        }
+    }
+</style>
+
 <script>
     const topicTexts = {
         'homesick': "I've been feeling really homesick lately. I miss my family and friends back home, and adjusting to life here has been harder than I expected.",
@@ -66,12 +200,39 @@
         'friends': "I'm finding it difficult to make new friends. Everyone seems to already have their own groups, and I feel like an outsider.",
         'culture': "I'm having a hard time adjusting to the culture here. Things are so different from back home, and sometimes I feel like I don't fit in.",
         'language': "English isn't my first language, and I sometimes struggle to express myself or understand others. It's making social situations stressful.",
-        'lonely': "I've been feeling really lonely and isolated. Even when I'm around people, I feel like no one really understands what I'm going through."
+        'lonely': "I've been feeling really lonely and isolated. Even when I'm around people, I feel like no one really understands what I'm going through.",
+        'anxiety': "I've been dealing with a lot of anxiety lately. I worry about everything, from classes to social situations to my future.",
+        'finances': "I'm stressed about money. Between tuition, living expenses, and trying to save, I'm not sure how to manage my finances as an international student."
     };
 
     function setTopicText(topic) {
-        document.getElementById('issue_text').value = topicTexts[topic] || '';
-        document.getElementById('issue_text').focus();
+        const textarea = document.getElementById('issue_text');
+        textarea.value = topicTexts[topic] || '';
+        textarea.focus();
+        updateCharCount();
+
+        // Highlight the selected button
+        document.querySelectorAll('.topic-quick-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.closest('.topic-quick-btn').classList.add('active');
     }
+
+    // Character counter
+    const textarea = document.getElementById('issue_text');
+    const charCount = document.getElementById('charCount');
+
+    function updateCharCount() {
+        const count = textarea.value.length;
+        charCount.textContent = count + ' / 1000';
+        if (count > 900) {
+            charCount.style.color = '#E11D48';
+        } else {
+            charCount.style.color = 'var(--text-light)';
+        }
+    }
+
+    textarea.addEventListener('input', updateCharCount);
+    updateCharCount(); // Initialize
 </script>
 {% endblock %}

@@ -1,0 +1,501 @@
+{% extends "base.html" %}
+
+{% block title %}Resources Hub - SunDevil Circle{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 160px; padding-bottom: 80px;">
+
+    <!-- Breadcrumb -->
+    <nav style="margin-bottom: 24px;">
+        <a href="{{ url_for('decision') }}" style="color: var(--text-secondary); font-size: 14px;">← Dashboard</a>
+        <span style="color: var(--text-light); margin: 0 8px;">›</span>
+        <span style="color: var(--text-primary); font-size: 14px; font-weight: 500;">Resources Hub</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div style="margin-bottom: 40px;">
+        <h1 style="font-size: 36px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">
+            📚 Resources Hub
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 18px; max-width: 600px;">
+            Find helpful resources, support services, and tools for international students at ASU.
+        </p>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="card" style="margin-bottom: 32px; padding: 24px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+            <!-- Search Input -->
+            <div style="flex: 1; min-width: 280px;">
+                <div style="position: relative;">
+                    <input type="text" id="searchInput" class="form-input" placeholder="Search resources..."
+                        style="padding-left: 44px; width: 100%;">
+                    <span
+                        style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-light);">🔍</span>
+                </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="filter-pill active" data-category="all">All</button>
+                <button class="filter-pill" data-category="mental-health">🧠 Mental Health</button>
+                <button class="filter-pill" data-category="academic">📖 Academic</button>
+                <button class="filter-pill" data-category="cultural">🌍 Cultural</button>
+                <button class="filter-pill" data-category="financial">💰 Financial</button>
+                <button class="filter-pill" data-category="career">💼 Career</button>
+                <button class="filter-pill" data-category="emergency">🚨 Emergency</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resources Grid -->
+    <div id="resourcesGrid" class="resources-grid">
+        <!-- Emergency Resources -->
+        <div class="resource-card emergency" data-category="emergency">
+            <div class="resource-card-header emergency">
+                <span class="resource-icon">🚨</span>
+                <span class="resource-tag emergency">Emergency</span>
+            </div>
+            <h3>988 Suicide & Crisis Lifeline</h3>
+            <p>Free, confidential 24/7 support for anyone in crisis.</p>
+            <div class="resource-actions">
+                <a href="tel:988" class="btn btn-maroon btn-sm">Call 988</a>
+                <a href="sms:988" class="btn btn-outline btn-sm">Text 988</a>
+            </div>
+        </div>
+
+        <div class="resource-card emergency" data-category="emergency">
+            <div class="resource-card-header emergency">
+                <span class="resource-icon">🏥</span>
+                <span class="resource-tag emergency">Emergency</span>
+            </div>
+            <h3>ASU Counseling Services</h3>
+            <p>Free mental health support for all ASU students, available 24/7.</p>
+            <div class="resource-actions">
+                <a href="tel:4809656146" class="btn btn-maroon btn-sm">Call (480) 965-6146</a>
+            </div>
+        </div>
+
+        <div class="resource-card emergency" data-category="emergency">
+            <div class="resource-card-header emergency">
+                <span class="resource-icon">💬</span>
+                <span class="resource-tag emergency">Emergency</span>
+            </div>
+            <h3>Crisis Text Line</h3>
+            <p>Text-based crisis support available 24/7.</p>
+            <div class="resource-actions">
+                <a href="sms:741741?body=HOME" class="btn btn-maroon btn-sm">Text HOME to 741741</a>
+            </div>
+        </div>
+
+        <!-- Mental Health Resources -->
+        <div class="resource-card" data-category="mental-health">
+            <div class="resource-card-header">
+                <span class="resource-icon">🧠</span>
+                <span class="resource-tag mint">Mental Health</span>
+            </div>
+            <h3>ASU Health Services</h3>
+            <p>Comprehensive health services including mental health support, counseling, and wellness programs.</p>
+            <div class="resource-actions">
+                <a href="https://eoss.asu.edu/health" target="_blank" rel="noopener"
+                    class="btn btn-outline btn-sm">Visit Website</a>
+            </div>
+        </div>
+
+        <div class="resource-card" data-category="mental-health">
+            <div class="resource-card-header">
+                <span class="resource-icon">🌙</span>
+                <span class="resource-tag mint">Mental Health</span>
+            </div>
+            <h3>TAO Connect</h3>
+            <p>Free online mental health resources and self-help tools available to all ASU students.</p>
+            <div class="resource-actions">
+                <a href="https://eoss.asu.edu/counseling/tao" target="_blank" rel="noopener"
+                    class="btn btn-outline btn-sm">Access TAO</a>
+            </div>
+        </div>
+
+        <div class="resource-card" data-category="mental-health">
+            <div class="resource-card-header">
+                <span class="resource-icon">🧘</span>
+                <span class="resource-tag mint">Mental Health</span>
+            </div>
+            <h3>Mindfulness & Meditation</h3>
+            <p>Free guided meditations and stress-relief resources through ASU Wellness.</p>
+            <div class="resource-actions">
+                <a href="https://eoss.asu.edu/wellness" target="_blank" rel="noopener"
+                    class="btn btn-outline btn-sm">Explore</a>
+            </div>
+        </div>
+
+        <!-- Academic Resources -->
+        <div class="resource-card" data-category="academic">
+            <div class="resource-card-header">
+                <span class="resource-icon">📚</span>
+                <span class="resource-tag gold">Academic</span>
+            </div>
+            <h3>Tutoring Services</h3>
+            <p>Free tutoring in math, writing, science, and more through ASU Tutoring Centers.</p>
+            <div class="resource-actions">
+                <a href="https://tutoring.asu.edu" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Find
+                    Tutoring</a>
+            </div>
+        </div>
+
+        <div class="resource-card" data-category="academic">
+            <div class="resource-card-header">
+                <span class="resource-icon">✍️</span>
+                <span class="resource-tag gold">Academic</span>
+            </div>
+            <h3>Writing Centers</h3>
+            <p>Get help with essays, papers, and academic writing from trained writing consultants.</p>
+            <div class="resource-actions">
+                <a href="https://tutoring.asu.edu/student-services/writing-centers" target="_blank" rel="noopener"
+                    class="btn btn-outline btn-sm">Schedule Appointment</a>
+            </div>
+        </div>
+
+        <div class="resource-card" data-category="academic">
+            <div class="resource-card-header">
+                <span class="resource-icon">📖</span>
+                <span class="resource-tag gold">Academic</span>
+            </div>
+            <h3>Library Resources</h3>
+            <p>Access millions of books, journals, and research databases through ASU Library.</p>
+            <div class="resource-actions">
+                <a href="https://lib.asu.edu" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Explore
+                    Library</a>
+            </div>
+        </div>
+
+        <!-- Cultural Resources -->
+        <div class="resource-card" data-category="cultural">
+            <div class="resource-card-header">
+                <span class="resource-icon">🌍</span>
+                <span class="resource-tag pink">Cultural</span>
+            </div>
+            <h3>International Students & Scholars Center</h3>
+            <p>Support services, immigration assistance, and cultural programs for international students.</p>
+            <div class="resource-actions">
+                <a href="https://issc.asu.edu" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Visit
+                    ISSC</a>
+            </div>
+        </div>
+
+        <div class="resource-card" data-category="cultural">
+            <div class="resource-card-header">
+                <span class="resource-icon">🌏</span>
+                <span class="resource-tag pink">Cultural</span>
+            </div>
+            <h3>Global Launch ESL Programs</h3>
+            <p>English language courses and conversation partners for international students.</p>
+            <div class="resource-actions">
+                <a href="https://globallaunch.asu.edu" target="_blank" rel="noopener"
+                    class="btn btn-outline btn-sm">Learn More</a>
+            </div>
+        </div>
+
+        <div class="resource-card" data-category="cultural">
+            <div class="resource-card-header">
+                <span class="resource-icon">🎉</span>
+                <span class="resource-tag pink">Cultural</span>
+            </div>
+            <h3>Cultural Organizations</h3>
+            <p>Join student clubs and organizations celebrating diverse cultures and backgrounds.</p>
+            <div class="resource-actions">
+                <a href="https://eoss.asu.edu/clubs" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Find
+                    Clubs</a>
+            </div>
+        </div>
+
+        <!-- Financial Resources -->
+        <div class="resource-card" data-category="financial">
+            <div class="resource-card-header">
+                <span class="resource-icon">💰</span>
+                <span class="resource-tag green">Financial</span>
+            </div>
+            <h3>Financial Aid & Scholarships</h3>
+            <p>Information about scholarships, grants, and financial assistance for students.</p>
+            <div class="resource-actions">
+                <a href="https://students.asu.edu/financialaid" target="_blank" rel="noopener"
+                    class="btn btn-outline btn-sm">Explore Aid</a>
+            </div>
+        </div>
+
+        <div class="resource-card" data-category="financial">
+            <div class="resource-card-header">
+                <span class="resource-icon">🍽️</span>
+                <span class="resource-tag green">Financial</span>
+            </div>
+            <h3>Pitchfork Pantry</h3>
+            <p>Free food assistance for ASU students experiencing food insecurity.</p>
+            <div class="resource-actions">
+                <a href="https://eoss.asu.edu/pitchforkpantry" target="_blank" rel="noopener"
+                    class="btn btn-outline btn-sm">Get Help</a>
+            </div>
+        </div>
+
+        <div class="resource-card" data-category="financial">
+            <div class="resource-card-header">
+                <span class="resource-icon">🏠</span>
+                <span class="resource-tag green">Financial</span>
+            </div>
+            <h3>Emergency Assistance</h3>
+            <p>One-time financial assistance for unexpected emergencies and hardships.</p>
+            <div class="resource-actions">
+                <a href="https://eoss.asu.edu/dos/emergency-assistance" target="_blank" rel="noopener"
+                    class="btn btn-outline btn-sm">Apply</a>
+            </div>
+        </div>
+
+        <!-- Career Resources -->
+        <div class="resource-card" data-category="career">
+            <div class="resource-card-header">
+                <span class="resource-icon">💼</span>
+                <span class="resource-tag purple">Career</span>
+            </div>
+            <h3>Career & Professional Development</h3>
+            <p>Resume help, interview prep, job search assistance, and career counseling.</p>
+            <div class="resource-actions">
+                <a href="https://career.asu.edu" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Start
+                    Here</a>
+            </div>
+        </div>
+
+        <div class="resource-card" data-category="career">
+            <div class="resource-card-header">
+                <span class="resource-icon">🎯</span>
+                <span class="resource-tag purple">Career</span>
+            </div>
+            <h3>Handshake Job Board</h3>
+            <p>Browse jobs, internships, and on-campus employment opportunities.</p>
+            <div class="resource-actions">
+                <a href="https://asu.joinhandshake.com" target="_blank" rel="noopener"
+                    class="btn btn-outline btn-sm">Browse Jobs</a>
+            </div>
+        </div>
+
+        <div class="resource-card" data-category="career">
+            <div class="resource-card-header">
+                <span class="resource-icon">🌐</span>
+                <span class="resource-tag purple">Career</span>
+            </div>
+            <h3>OPT & CPT Resources</h3>
+            <p>Information about work authorization for international students.</p>
+            <div class="resource-actions">
+                <a href="https://issc.asu.edu/students/employment" target="_blank" rel="noopener"
+                    class="btn btn-outline btn-sm">Learn More</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- No Results Message -->
+    <div id="noResults" class="no-results" style="display: none;">
+        <div style="text-align: center; padding: 60px 20px;">
+            <span style="font-size: 64px; display: block; margin-bottom: 16px;">🔍</span>
+            <h3 style="color: var(--text-primary); margin-bottom: 8px;">No resources found</h3>
+            <p style="color: var(--text-secondary);">Try adjusting your search or filter criteria.</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card" style="margin-top: 40px; background: linear-gradient(135deg, #FFF5F5, #F5EEE6);">
+        <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: center; justify-content: space-between;">
+            <div>
+                <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
+                    Need personalized support?
+                </h3>
+                <p style="color: var(--text-secondary);">
+                    Share what's on your mind and get AI-powered suggestions tailored to you.
+                </p>
+            </div>
+            <a href="{{ url_for('issue') }}" class="btn btn-maroon">Get Personalized Help →</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .resources-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
+    }
+
+    .resource-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border: 1px solid #E5E7EB;
+        transition: all 250ms ease;
+    }
+
+    .resource-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary-maroon);
+    }
+
+    .resource-card.emergency {
+        border-left: 4px solid #E11D48;
+    }
+
+    .resource-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .resource-icon {
+        font-size: 32px;
+    }
+
+    .resource-tag {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .resource-tag.emergency {
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+
+    .resource-tag.mint {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+
+    .resource-tag.gold {
+        background: #FEF3C7;
+        color: #92400E;
+    }
+
+    .resource-tag.pink {
+        background: #FDE2E4;
+        color: #9D174D;
+    }
+
+    .resource-tag.green {
+        background: #D1FAE5;
+        color: #047857;
+    }
+
+    .resource-tag.purple {
+        background: #EDE9FE;
+        color: #6D28D9;
+    }
+
+    .resource-card h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .resource-card p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+
+    .resource-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-sm {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .filter-pill {
+        padding: 8px 16px;
+        border: 2px solid #E5E7EB;
+        border-radius: 20px;
+        background: white;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 200ms;
+    }
+
+    .filter-pill:hover {
+        border-color: var(--primary-maroon);
+        color: var(--primary-maroon);
+    }
+
+    .filter-pill.active {
+        background: var(--primary-maroon);
+        color: white;
+        border-color: var(--primary-maroon);
+    }
+
+    @media (max-width: 768px) {
+        .resources-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    // Filter functionality
+    const filterPills = document.querySelectorAll('.filter-pill');
+    const resourceCards = document.querySelectorAll('.resource-card');
+    const searchInput = document.getElementById('searchInput');
+    const noResults = document.getElementById('noResults');
+    const resourcesGrid = document.getElementById('resourcesGrid');
+
+    let activeCategory = 'all';
+    let searchQuery = '';
+
+    filterPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+            filterPills.forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            activeCategory = pill.dataset.category;
+            filterResources();
+        });
+    });
+
+    searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.toLowerCase().trim();
+        filterResources();
+    });
+
+    function filterResources() {
+        let visibleCount = 0;
+
+        resourceCards.forEach(card => {
+            const category = card.dataset.category;
+            const text = card.textContent.toLowerCase();
+
+            const matchesCategory = activeCategory === 'all' || category === activeCategory;
+            const matchesSearch = searchQuery === '' || text.includes(searchQuery);
+
+            if (matchesCategory && matchesSearch) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Show/hide no results message
+        if (visibleCount === 0) {
+            noResults.style.display = 'block';
+            resourcesGrid.style.display = 'none';
+        } else {
+            noResults.style.display = 'none';
+            resourcesGrid.style.display = 'grid';
+        }
+    }
+</script>
+{% endblock %}

@@ -1,139 +1,205 @@
 {% extends "base.html" %}
 
-{% block title %}Your Support Resources - SunDevil Circle{% endblock %}
+{% block title %}Your Support - SunDevil Circle{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 180px; padding-bottom: 80px;">
+<div class="container" style="padding-top: 160px; padding-bottom: 80px; max-width: 900px;">
+
+    <!-- Breadcrumb -->
+    <nav style="margin-bottom: 24px;">
+        <a href="{{ url_for('decision') }}" style="color: var(--text-secondary); font-size: 14px;">← Dashboard</a>
+        <span style="color: var(--text-light); margin: 0 8px;">›</span>
+        <span style="color: var(--text-primary); font-size: 14px; font-weight: 500;">Your Support</span>
+    </nav>
 
     <!-- AI Response Card -->
-    <div class="ai-response-card">
-        <h2>💜 We Hear You</h2>
-
-        {% if empathetic_message %}
-        <div class="empathetic-message">
-            <p>{{ empathetic_message }}</p>
-        </div>
-        {% endif %}
-
-        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary);">Personalized
-            Suggestions</h3>
-        {% if support_options %}
-        <div class="ai-suggestions">
-            {% for option in support_options %}
-            <div class="ai-suggestion-item">
-                <span class="ai-icon">💡</span>
-                <span class="suggestion-text">{{ option }}</span>
+    <div class="card"
+        style="margin-bottom: 24px; padding: 32px; background: linear-gradient(135deg, #FFFFFF, #FFF5F5); border-left: 4px solid var(--primary-maroon);">
+        <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px;">
+            <div
+                style="width: 56px; height: 56px; background: linear-gradient(135deg, #8B1538, #A91D3A); border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <span style="font-size: 28px;">💜</span>
             </div>
-            {% endfor %}
+            <div>
+                <h2 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">We Hear
+                    You</h2>
+                {% if empathetic_message %}
+                <p style="color: var(--text-secondary); line-height: 1.7; font-size: 16px;">{{ empathetic_message }}</p>
+                {% endif %}
+            </div>
         </div>
-        {% else %}
-        <p style="color: var(--text-secondary);">No personalized suggestions available at this time.</p>
+
+        {% if support_options %}
+        <div style="background: white; border-radius: 16px; padding: 24px; margin-top: 8px;">
+            <h3
+                style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <span>💡</span> Personalized Suggestions
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                {% for option in support_options %}
+                <div
+                    style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: #F9FAFB; border-radius: 12px;">
+                    <span style="font-size: 20px; line-height: 1;">✦</span>
+                    <span style="color: var(--text-primary); line-height: 1.6;">{{ option }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
         {% endif %}
     </div>
 
+    <!-- Two Column Layout -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+
+        <!-- ASU Resources Card -->
+        <div class="card" style="padding: 28px;">
+            <h3
+                style="font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">🔗</span> ASU Resources
+            </h3>
+            {% if asu_resources %}
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                {% for resource in asu_resources %}
+                <a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer"
+                    style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #F9FAFB; border-radius: 12px; color: var(--text-primary); font-weight: 500; text-decoration: none; transition: all 200ms;">
+                    <span>{{ resource.name }}</span>
+                    <span style="color: var(--text-light);">→</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: var(--text-secondary);">No resources available at this time.</p>
+            {% endif %}
+            <a href="{{ url_for('resources_hub') }}"
+                style="display: inline-block; margin-top: 16px; color: var(--primary-maroon); font-weight: 500; font-size: 14px;">
+                Browse all resources →
+            </a>
+        </div>
+
+        <!-- Recommended Groups Card -->
+        <div class="card" style="padding: 28px;">
+            <h3
+                style="font-size: 18px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">👥</span> Recommended Groups
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">Click a group to join and
+                chat with peers.</p>
+            {% if recommended_groups %}
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                {% for group in recommended_groups %}
+                <button type="button" class="group-tag-btn" onclick="confirmJoinGroup('{{ group }}')"
+                    style="padding: 10px 18px; border-radius: 24px; font-weight: 500; transition: all 200ms;">
+                    {{ group }}
+                </button>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: var(--text-secondary);">No group recommendations at this time.</p>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Follow-up Questions Section -->
-    <div class="followup-section mt-6">
-        <h3>Have a Follow-up Question?</h3>
-        <p style="color: var(--text-secondary); margin-bottom: 16px;">Ask the AI for more specific guidance ({{
-            followup_count }}/5 questions used).</p>
+    <div class="card" style="margin-top: 24px; padding: 28px;">
+        <h3
+            style="font-size: 18px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">🤖</span> Ask AI for More Help
+        </h3>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <div style="flex: 1; height: 6px; background: #E5E7EB; border-radius: 3px; overflow: hidden;">
+                <div
+                    style="width: {{ (followup_count / 5) * 100 }}%; height: 100%; background: linear-gradient(90deg, #10B981, #22C55E); transition: width 300ms;">
+                </div>
+            </div>
+            <span style="font-size: 14px; color: var(--text-secondary); white-space: nowrap;">{{ followup_count }}/5
+                questions used</span>
+        </div>
 
         {% if followup_history %}
-        <div class="followup-history">
+        <div style="margin-bottom: 24px;">
             {% for item in followup_history %}
-            <div class="followup-item">
-                <div class="followup-question"><strong>Q:</strong> {{ item.question }}</div>
-                <div class="followup-answer"><strong>A:</strong> {{ item.answer }}</div>
+            <div style="background: #F9FAFB; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <span style="font-weight: 600; color: var(--primary-maroon);">Q:</span>
+                    <span style="color: var(--text-primary);">{{ item.question }}</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <span style="font-weight: 600; color: #10B981;">A:</span>
+                    <span style="color: var(--text-secondary);">{{ item.answer }}</span>
+                </div>
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
         {% if followup_response and followup_question %}
-        <div class="followup-response" id="followup-response">
-            <div class="followup-question"><strong>Q:</strong> {{ followup_question }}</div>
-            <div class="followup-answer"><strong>A:</strong> {{ followup_response }}</div>
+        <div style="background: #ECFDF5; border: 1px solid #D1FAE5; border-radius: 12px; padding: 16px; margin-bottom: 20px;"
+            id="followup-response">
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <span style="font-weight: 600; color: var(--primary-maroon);">Q:</span>
+                <span style="color: var(--text-primary);">{{ followup_question }}</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <span style="font-weight: 600; color: #10B981;">A:</span>
+                <span style="color: var(--text-primary);">{{ followup_response }}</span>
+            </div>
         </div>
         {% endif %}
 
         {% if limit_reached %}
-        <p class="warning-message">You have reached the follow-up question limit. Join a peer group to continue getting
-            support.</p>
+        <div
+            style="background: #FEF3C7; border: 2px solid #FBBF24; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 24px;">⚠️</span>
+            <div>
+                <strong style="color: #92400E;">Question limit reached</strong>
+                <p style="color: #B45309; font-size: 14px; margin-top: 4px;">Join a peer group to continue getting
+                    support!</p>
+            </div>
+        </div>
         {% else %}
         <form method="POST" action="{{ url_for('resources') }}#followup-response" id="followupForm">
-            <div class="form-row">
+            <div style="display: flex; gap: 12px;">
                 <input type="text" name="followup_question" id="followupInput" class="form-input"
-                    placeholder="Ask the AI a follow-up question..." required>
-                <button type="submit" id="followupBtn" class="btn btn-maroon">Ask</button>
+                    placeholder="Ask the AI a follow-up question..." style="flex: 1;" required>
+                <button type="submit" id="followupBtn" class="btn btn-maroon" style="white-space: nowrap;">
+                    Ask AI
+                </button>
             </div>
         </form>
         {% endif %}
     </div>
 
-    <!-- ASU Resources Card -->
-    <div class="card mt-6">
-        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">🔗 ASU Resources</h3>
-        {% if asu_resources %}
-        <ul class="resource-list">
-            {% for resource in asu_resources %}
-            <li><a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer">{{ resource.name }}</a></li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p style="color: var(--text-secondary);">No resources available at this time.</p>
-        {% endif %}
-    </div>
-
-    <!-- Recommended Groups Card -->
-    <div class="card mt-6">
-        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">👥 Recommended Peer Groups</h3>
-        <p style="color: var(--text-secondary); margin-bottom: 16px;">Click a group to join. Groups are ranked by how
-            well they match your profile.</p>
-        {% if recommended_groups %}
-        <div class="group-list">
-            {% for group in recommended_groups %}
-            <button type="button" class="group-tag-btn" onclick="confirmJoinGroup('{{ group }}')">{{ group }}</button>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p style="color: var(--text-secondary);">No group recommendations at this time.</p>
-        {% endif %}
-    </div>
-
-    <!-- Navigation Links -->
+    <!-- Quick Actions -->
     <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 32px;">
-        <a href="{{ url_for('decision') }}" class="btn btn-maroon">Connect with Peers</a>
-        <a href="{{ url_for('people') }}" class="btn btn-outline">Explore Peers</a>
-        <a href="{{ url_for('issue') }}" class="btn btn-secondary">Share Another Challenge</a>
+        <a href="{{ url_for('people') }}" class="btn btn-maroon">Explore Peer Supporters</a>
+        <a href="{{ url_for('resources_hub') }}" class="btn btn-outline">Browse Resources</a>
+        <a href="{{ url_for('issue') }}" class="btn btn-outline">Share Another Challenge</a>
     </div>
-
-    <!-- User Footer -->
-    {% if username %}
-    <div class="user-footer">
-        <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
-        <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
-    </div>
-    {% endif %}
 
     <!-- Disclaimer -->
-    <div class="transparency-note disclaimer-bottom">
-        <strong>⚠️ About These Suggestions:</strong>
-        AI is used to generate personalized suggestions and safety monitoring. These suggestions are informational only
-        and do not constitute professional or medical advice.
-        {% if disclaimer %}{{ disclaimer }}{% endif %}
+    <div style="margin-top: 32px; padding: 20px; background: #F9FAFB; border-radius: 12px; border: 1px solid #E5E7EB;">
+        <p style="font-size: 13px; color: var(--text-light); line-height: 1.6;">
+            <strong style="color: var(--text-secondary);">⚠️ About These Suggestions:</strong>
+            AI is used to generate personalized suggestions and safety monitoring. These suggestions are informational
+            only
+            and do not constitute professional or medical advice.
+            {% if disclaimer %}{{ disclaimer }}{% endif %}
+        </p>
     </div>
 </div>
 
 <!-- Join Group Confirmation Modal -->
 <div id="joinModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <h3>Join Group</h3>
-        <p id="modalMessage">This group matches your profile. Do you want to join?</p>
-        <div class="modal-actions">
-            <form method="POST" action="{{ url_for('join_group') }}" id="joinForm">
+    <div class="modal-content" style="max-width: 400px; padding: 32px; border-radius: 20px;">
+        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px;">Join Group</h3>
+        <p id="modalMessage" style="color: var(--text-secondary); margin-bottom: 24px;">This group matches your profile.
+            Do you want to join?</p>
+        <div style="display: flex; gap: 12px;">
+            <form method="POST" action="{{ url_for('join_group') }}" id="joinForm" style="flex: 1;">
                 <input type="hidden" name="group_topic" id="groupTopicInput">
-                <button type="submit" class="btn btn-maroon">Yes, Join Group</button>
+                <button type="submit" class="btn btn-maroon" style="width: 100%;">Yes, Join</button>
             </form>
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="button" class="btn btn-outline" onclick="closeModal()" style="flex: 1;">Cancel</button>
         </div>
     </div>
 </div>
