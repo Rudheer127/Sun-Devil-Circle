@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Group Chat - Sun Devil Circle">
+    <title>{{ group_topic }} - Sun Devil Circle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>Sun Devil Circle</h1>
+    </header>
+
+    <div class="container">
+        {% if username %}
+        <div class="user-header">
+            <span class="user-info">Logged in as <strong>{{ username }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+        </div>
+        {% endif %}
+
+        <div class="transparency-note">
+            <strong>Chat Guidelines:</strong> This is a peer support space. Be respectful and supportive. Messages are
+            monitored for safety. If you or someone else is in crisis, please reach out to professional resources. AI is
+            used only for safety monitoring, not to read or store your conversations.
+        </div>
+
+        <div class="card">
+            <h2>{{ group_topic }}</h2>
+
+            {% if warning %}
+            <div class="warning">
+                {{ warning }}
+            </div>
+            {% endif %}
+
+            {% if distress_banner %}
+            <div class="distress-banner">
+                <strong>We noticed some concerning language.</strong> If you or someone you know is struggling, please
+                consider reaching out for professional support:
+                <ul>
+                    <li><a href="https://988lifeline.org/" target="_blank" rel="noopener noreferrer">988 Suicide and
+                            Crisis Lifeline</a></li>
+                    <li><a href="https://eoss.asu.edu/counseling" target="_blank" rel="noopener noreferrer">ASU
+                            Counseling Services</a></li>
+                </ul>
+                You are not alone.
+            </div>
+            {% endif %}
+
+            <div class="chat-messages" id="chatMessages">
+                {% if messages %}
+                {% for msg in messages %}
+                <div class="message {% if msg.is_system %}system-message{% endif %}"
+                    data-timestamp="{{ msg.timestamp }}" data-msg-id="{{ msg.id }}" data-user-id="{{ msg.user_id }}">
+                    <div class="message-header">
+                        <span class="message-author">{{ msg.display_name }}</span>
+                        <span class="message-time" data-raw="{{ msg.timestamp }}">{{ msg.timestamp }}</span>
+                        {% if msg.edited %}<span class="edited-tag">(edited)</span>{% endif %}
+                    </div>
+                    <div class="message-text" id="text-{{ msg.id }}">{{ msg.text }}</div>
+                    {% if not msg.is_system %}
+                    <div class="message-actions">
+                        {% if msg.user_id == current_user_id %}
+                        <button type="button" class="edit-btn" onclick="editMessage('{{ msg.id }}')">Edit</button>
+                        <button type="button" class="delete-btn" onclick="deleteMessage('{{ msg.id }}')">Delete</button>
+                        {% endif %}
+                        <button type="button" class="report-btn"
+                            onclick="alert('Report submitted. Thank you for helping keep this space safe.')">Report</button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% endfor %}
+                {% else %}
+                <p class="empty-state">No messages yet. Be the first to share.</p>
+                {% endif %}
+            </div>
+
+            <form method="POST" action="{{ url_for('chat') }}" id="chatForm">
+                <div class="form-row">
+                    <input type="text" name="message_text" id="messageInput" placeholder="Type your message..." required
+                        maxlength="500" autocomplete="off">
+                    <button type="submit" id="sendBtn">Send</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="nav-links">
+            <form method="POST" action="{{ url_for('leave_group') }}" style="display: inline;" id="leaveForm">
+                <button type="submit" class="btn btn-secondary" id="leaveBtn">Leave Group</button>
+            </form>
+            <a href="{{ url_for('decision') }}" class="btn btn-secondary">Browse Groups</a>
+            <a href="{{ url_for('resources') }}" class="btn btn-secondary">Back to Resources</a>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        let lastMessageCount = {{ messages| length }};
+        let isPolling = true;
+
+        // Scroll to bottom on load
+        function scrollToBottom() {
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+        scrollToBottom();
+
+        // Format timestamp to human-readable
+        function formatTime(timestamp) {
+            try {
+                const parts = timestamp.split(/[- :]/);
+                const date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+                const now = new Date();
+                const diff = (now - date) / 1000;
+
+                if (diff < 60) return 'Just now';
+                if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+                if (diff < 86400) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' +
+                    date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                return timestamp;
+            }
+        }
+
+        // Update timestamps
+        function updateTimestamps() {
+            document.querySelectorAll('.message-time[data-raw]').forEach(el => {
+                el.textContent = formatTime(el.dataset.raw);
+            });
+        }
+        updateTimestamps();
+
+        // Render a message
+        function renderMessage(msg) {
+            const div = document.createElement('div');
+            div.className = 'message' + (msg.is_system ? ' system-message' : '');
+            div.dataset.timestamp = msg.timestamp;
+
+            let html = `
+                <div class="message-header">
+                    <span class="message-author">${msg.display_name}</span>
+                    <span class="message-time" data-raw="${msg.timestamp}">${formatTime(msg.timestamp)}</span>
+                </div>
+                <div class="message-text">${msg.text}</div>
+            `;
+
+            if (!msg.is_system) {
+                html += `
+                    <div class="message-actions">
+                        <button type="button" class="report-btn" onclick="alert('Report submitted. Thank you for helping keep this space safe.')">Report</button>
+                    </div>
+                `;
+            }
+
+            div.innerHTML = html;
+            return div;
+        }
+
+        // Poll for new messages
+        async function pollMessages() {
+            if (!isPolling) return;
+
+            try {
+                const response = await fetch('{{ url_for("api_messages") }}');
+                const data = await response.json();
+
+                if (data.messages && data.messages.length > lastMessageCount) {
+                    // Get existing timestamps to avoid duplicates
+                    const existing = new Set();
+                    chatMessages.querySelectorAll('.message').forEach(el => {
+                        existing.add(el.dataset.timestamp + el.querySelector('.message-text')?.textContent);
+                    });
+
+                    // Remove empty state
+                    const emptyState = chatMessages.querySelector('.empty-state');
+                    if (emptyState) emptyState.remove();
+
+                    // Add new messages
+                    data.messages.forEach(msg => {
+                        const key = msg.timestamp + msg.text;
+                        if (!existing.has(key)) {
+                            chatMessages.appendChild(renderMessage(msg));
+                        }
+                    });
+
+                    lastMessageCount = data.messages.length;
+                    scrollToBottom();
+                }
+            } catch (e) {
+                console.error('Polling error:', e);
+            }
+
+            setTimeout(pollMessages, 2500);
+        }
+
+        // Start polling after 3 seconds
+        setTimeout(pollMessages, 3000);
+
+        // Disable send button on submit
+        document.getElementById('chatForm').addEventListener('submit', function () {
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('sendBtn').textContent = 'Sending...';
+        });
+
+        // Disable leave button on click
+        document.getElementById('leaveForm').addEventListener('submit', function () {
+            document.getElementById('leaveBtn').disabled = true;
+            document.getElementById('leaveBtn').textContent = 'Leaving...';
+        });
+
+        // Stop polling when page is hidden
+        document.addEventListener('visibilitychange', function () {
+            isPolling = !document.hidden;
+            if (isPolling) pollMessages();
+        });
+
+        // Edit message
+        function editMessage(msgId) {
+            const textEl = document.getElementById('text-' + msgId);
+            if (!textEl) return;
+
+            const currentText = textEl.textContent;
+            const msgDiv = textEl.closest('.message');
+
+            // Create edit form
+            const form = document.createElement('div');
+            form.className = 'edit-form';
+            form.innerHTML = `
+                <input type="text" value="${currentText}" maxlength="500" id="edit-input-${msgId}">
+                <button type="button" class="btn btn-small" onclick="saveEdit('${msgId}')">Save</button>
+                <button type="button" class="btn-secondary btn-small" onclick="cancelEdit('${msgId}', '${currentText.replace(/'/g, "\\'")}')">Cancel</button>
+            `;
+
+            textEl.style.display = 'none';
+            textEl.insertAdjacentElement('afterend', form);
+
+            // Hide action buttons
+            const actions = msgDiv.querySelector('.message-actions');
+            if (actions) actions.style.display = 'none';
+        }
+
+        async function saveEdit(msgId) {
+            const input = document.getElementById('edit-input-' + msgId);
+            const newText = input.value.trim();
+            if (!newText) return;
+
+            try {
+                const response = await fetch('/api/message/edit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message_id: msgId, text: newText })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const textEl = document.getElementById('text-' + msgId);
+                    textEl.textContent = data.text;
+                    cancelEdit(msgId, data.text);
+
+                    // Add edited tag if not present
+                    const header = textEl.closest('.message').querySelector('.message-header');
+                    if (!header.querySelector('.edited-tag')) {
+                        header.insertAdjacentHTML('beforeend', '<span class="edited-tag">(edited)</span>');
+                    }
+                } else {
+                    alert(data.error || 'Failed to edit message');
+                }
+            } catch (e) {
+                alert('Error editing message');
+            }
+        }
+
+        function cancelEdit(msgId, originalText) {
+            const textEl = document.getElementById('text-' + msgId);
+            const form = textEl.nextElementSibling;
+            if (form && form.classList.contains('edit-form')) {
+                form.remove();
+            }
+            textEl.style.display = '';
+
+            // Show action buttons
+            const actions = textEl.closest('.message').querySelector('.message-actions');
+            if (actions) actions.style.display = '';
+        }
+
+        // Delete message
+        async function deleteMessage(msgId) {
+            if (!confirm('Are you sure you want to delete this message?')) return;
+
+            try {
+                const response = await fetch('/api/message/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message_id: msgId })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const msgDiv = document.querySelector(`[data-msg-id="${msgId}"]`);
+                    if (msgDiv) msgDiv.remove();
+                } else {
+                    alert(data.error || 'Failed to delete message');
+                }
+            } catch (e) {
+                alert('Error deleting message');
+            }
+        }
+    </script>
+
+</body>
+
+</html>

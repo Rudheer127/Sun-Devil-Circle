@@ -39,7 +39,9 @@ Moderation logic
 
 Data Storage (Backend)
 
-No database is used
+No database is used for general application state (groups, chat, issue text)
+
+A local SQLite database is used ONLY for storing user credentials (hashed password and display name).
 
 All backend data is stored in memory only for the duration of the session:
 
@@ -197,7 +199,8 @@ The following must NOT be used:
 
 Databases (Postgres, MongoDB, Firebase, etc.)
 
-Authentication systems
+Authentication systems (OAuth, Email verification, Password Recovery)
+- Local username/password authentication IS allowed (demo continuity only)
 
 Background job queues
 
