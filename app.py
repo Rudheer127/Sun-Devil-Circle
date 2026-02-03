@@ -16,8 +16,15 @@ app = Flask(__name__)
 # Use a stable secret key for session persistence
 app.secret_key = os.environ.get("SECRET_KEY", "sun-devil-circle-dev-key-2024")
 
+# AI Configuration - Set defaults so AI works out of the box
+if not os.environ.get("CEREBRAS_API_KEY"):
+    os.environ["CEREBRAS_API_KEY"] = "csk-kyp53f5c5ev35p9hxjf8txpd2xdmf4ne4v3f3venh5t28kpy"
+if not os.environ.get("LIVE_AI"):
+    os.environ["LIVE_AI"] = "1"
+
 
 DATABASE = "auth.db"
+
 
 
 # -----------------------------------------------------------------------------
