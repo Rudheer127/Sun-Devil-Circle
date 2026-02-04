@@ -143,13 +143,20 @@
                     {% set languages = ['English', 'Spanish', 'Mandarin', 'Hindi', 'Arabic', 'Portuguese', 'French',
                     'Korean', 'Japanese', 'Vietnamese', 'Tagalog', 'Other'] %}
                     {% for lang in languages %}
-                    <label class="language-pill"
+                    <label class="language-pill" id="{{ 'otherLanguagePill' if lang == 'Other' else '' }}"
                         style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 2px solid #E5E7EB; border-radius: 20px; cursor: pointer; transition: all 200ms; background: white;">
                         <input type="checkbox" name="languages" value="{{ lang }}" {{ 'checked' if profile and lang in
                             (profile.languages or []) else '' }} style="display: none;">
                         <span>{{ lang }}</span>
                     </label>
                     {% endfor %}
+                </div>
+                <div id="customLanguageContainer" style="display: none; margin-top: 12px;">
+                    <input type="text" name="custom_languages" id="customLanguageInput" class="form-input"
+                        placeholder="Enter your language(s), separated by commas..."
+                        value="{{ profile.custom_languages if profile and profile.custom_languages else '' }}">
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Separate multiple
+                        languages with commas</p>
                 </div>
             </div>
 
@@ -350,6 +357,32 @@
     document.addEventListener('DOMContentLoaded', initializePills);
     // Also run immediately in case DOM is already ready
     initializePills();
+
+    // Handle "Other" language toggle
+    function initializeOtherLanguage() {
+        const otherCheckbox = document.querySelector('input[name="languages"][value="Other"]');
+        const customContainer = document.getElementById('customLanguageContainer');
+
+        if (otherCheckbox && customContainer) {
+            // Show/hide on initial load
+            if (otherCheckbox.checked) {
+                customContainer.style.display = 'block';
+            }
+
+            // Toggle on change
+            otherCheckbox.addEventListener('change', function () {
+                if (this.checked) {
+                    customContainer.style.display = 'block';
+                    document.getElementById('customLanguageInput').focus();
+                } else {
+                    customContainer.style.display = 'none';
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeOtherLanguage);
+    initializeOtherLanguage();
 
     // Warn on unsaved changes
     let formChanged = false;

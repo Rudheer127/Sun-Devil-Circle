@@ -649,7 +649,12 @@
                 <div class="pill" data-lang="Japanese">Japanese</div>
                 <div class="pill" data-lang="Vietnamese">Vietnamese</div>
                 <div class="pill" data-lang="Tagalog">Tagalog</div>
-                <div class="pill" data-lang="Other">Other</div>
+                <div class="pill" data-lang="Other" id="otherLanguagePill">Other</div>
+            </div>
+            <div id="otherLanguageInput" style="display: none; margin-top: 12px;">
+                <input type="text" class="display-name-input" id="customLanguageInput"
+                    placeholder="Enter your language(s)..." style="margin-bottom: 8px; height: 48px; font-size: 16px;">
+                <p style="font-size: 12px; color: #6B7280;">Separate multiple languages with commas</p>
             </div>
 
             <label class="section-label">How do you prefer to receive support?</label>
@@ -717,10 +722,15 @@
                     <h4>Doctoral/PhD</h4>
                     <p>Doctoral program</p>
                 </div>
-                <div class="radio-card" data-degree="other">
+                <div class="radio-card" data-degree="other" id="otherDegreeCard">
                     <h4>Other</h4>
                     <p>Certificate or other program</p>
                 </div>
+            </div>
+            <div id="otherDegreeInput" style="display: none; margin-top: 12px;">
+                <input type="text" class="display-name-input" id="customDegreeInput"
+                    placeholder="Enter your degree/program type..."
+                    style="margin-bottom: 0; height: 48px; font-size: 16px;">
             </div>
 
             <label class="section-label">Gender (optional)</label>
@@ -846,11 +856,13 @@
     <form id="onboardingForm" method="POST" action="{{ url_for('onboarding_submit') }}" style="display: none;">
         <input type="hidden" name="support_topics" id="formTopics">
         <input type="hidden" name="languages" id="formLanguages">
+        <input type="hidden" name="custom_languages" id="formCustomLanguages">
         <input type="hidden" name="support_style" id="formSupportStyle">
         <input type="hidden" name="cultural_background" id="formCulture">
         <input type="hidden" name="gender" id="formGender">
         <input type="hidden" name="graduation_year" id="formGradYear">
         <input type="hidden" name="degree_program" id="formDegree">
+        <input type="hidden" name="custom_degree" id="formCustomDegree">
         <input type="hidden" name="display_name" id="formDisplayName">
     </form>
 
@@ -902,6 +914,19 @@
                 } else {
                     selectedLanguages.push(lang);
                 }
+
+                // Show/hide "Other" language input
+                const otherInput = document.getElementById('otherLanguageInput');
+                if (lang === 'Other') {
+                    if (pill.classList.contains('selected')) {
+                        otherInput.style.display = 'block';
+                        document.getElementById('customLanguageInput').focus();
+                    } else {
+                        otherInput.style.display = 'none';
+                        document.getElementById('customLanguageInput').value = '';
+                    }
+                }
+
                 validateStep();
             });
         });
@@ -944,6 +969,16 @@
                 document.querySelectorAll('#degreeProgramCards .radio-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
                 selectedDegreeProgram = card.dataset.degree;
+
+                // Show/hide "Other" degree input
+                const otherInput = document.getElementById('otherDegreeInput');
+                if (card.dataset.degree === 'other') {
+                    otherInput.style.display = 'block';
+                    document.getElementById('customDegreeInput').focus();
+                } else {
+                    otherInput.style.display = 'none';
+                    document.getElementById('customDegreeInput').value = '';
+                }
             });
         });
 
@@ -1039,14 +1074,42 @@
         }
 
         function submitForm() {
+            // Get custom language value if "Other" is selected
+            let customLanguages = '';
+            if (selectedLanguages.includes('Other')) {
+                customLanguages = document.getElementById('customLanguageInput').value.trim();
+                // Replace "Other" with the custom value if provided
+                if (customLanguages) {
+                    selectedLanguages = selectedLanguages.filter(l => l !== 'Other');
+                    // Add custom languages (split by comma)
+                    customLanguages.split(',').forEach(lang => {
+                        const trimmed = lang.trim();
+                        if (trimmed && !selectedLanguages.includes(trimmed)) {
+                            selectedLanguages.push(trimmed);
+                        }
+                    });
+                }
+            }
+
+            // Get custom degree value if "other" is selected
+            let customDegree = '';
+            if (selectedDegreeProgram === 'other') {
+                customDegree = document.getElementById('customDegreeInput').value.trim();
+                if (customDegree) {
+                    selectedDegreeProgram = customDegree;
+                }
+            }
+
             // Fill form fields
             document.getElementById('formTopics').value = selectedTopics.join(',');
             document.getElementById('formLanguages').value = selectedLanguages.join(',');
+            document.getElementById('formCustomLanguages').value = customLanguages;
             document.getElementById('formSupportStyle').value = selectedStyle;
             document.getElementById('formCulture').value = selectedCultures.join(',');
             document.getElementById('formGender').value = selectedGender;
             document.getElementById('formGradYear').value = selectedGradYear;
             document.getElementById('formDegree').value = selectedDegreeProgram;
+            document.getElementById('formCustomDegree').value = customDegree;
             document.getElementById('formDisplayName').value = displayName;
 
             // Show success step
