@@ -1651,7 +1651,16 @@ textarea.form-input {
 .safety-section {
     background: white;
     padding: 100px 40px;
-    margin: 0 -40px;
+    /* Override parent .section max-width to allow full-width background */
+    max-width: none;
+    /* Break out of parent container */
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    width: 100vw;
+    box-sizing: border-box;
 }
 
 .safety-content {
@@ -1893,15 +1902,15 @@ textarea.form-input {
     max-width: 800px;
     margin: 32px auto 0;
     padding: 24px;
-    background: #FFF5F5;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: var(--radius-lg);
     text-align: center;
-    border: 1px solid #FDE2E4;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .footer-consent p {
     font-size: var(--text-sm);
-    color: #6B7280;
+    color: #9CA3AF;
     margin-bottom: 8px;
     line-height: 1.6;
 }
