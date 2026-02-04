@@ -23,27 +23,51 @@
         <button class="dashboard-tip-dismiss" onclick="dismissTip()" aria-label="Dismiss tip">✕</button>
     </div>
 
-    <!-- Action Cards Grid -->
-    <div class="steps-grid" style="margin-bottom: 48px;">
-        <!-- Share Support Need Card -->
+    <!-- Action Cards Grid (2 rows x 3 columns) -->
+    <div class="steps-grid"
+        style="margin-bottom: 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+        <!-- Row 1 -->
+        <!-- Get Support Card -->
         <a href="{{ url_for('issue') }}" class="step-card" style="text-decoration: none;">
             <div class="step-icon" style="background: #FDE2E4; color: #E11D48;">💬</div>
-            <h3 class="step-title">Share Your Support Need</h3>
-            <p class="step-desc">Tell us how you're feeling and get personalized AI-powered support.</p>
+            <h3 class="step-title">Get Support</h3>
+            <p class="step-desc">Share how you're feeling and receive personalized AI-powered guidance.</p>
         </a>
 
-        <!-- View Resources Card -->
+        <!-- Find Groups Card -->
+        <a href="{{ url_for('groups_page') }}" class="step-card" style="text-decoration: none;">
+            <div class="step-icon" style="background: #ECFDF5; color: #10B981;">🫶</div>
+            <h3 class="step-title">Find Groups</h3>
+            <p class="step-desc">Discover and join support groups around topics that matter to you.</p>
+        </a>
+
+        <!-- Find Peers Card -->
+        <a href="{{ url_for('people') }}" class="step-card" style="text-decoration: none;">
+            <div class="step-icon" style="background: #FEF3C7; color: #F59E0B;">🔍</div>
+            <h3 class="step-title">Find Peers</h3>
+            <p class="step-desc">Connect with students who understand your experiences.</p>
+        </a>
+
+        <!-- Row 2 -->
+        <!-- Browse Resources Card -->
         <a href="{{ url_for('resources_hub') }}" class="step-card" style="text-decoration: none;">
             <div class="step-icon" style="background: #D1FAE5; color: #10B981;">📚</div>
             <h3 class="step-title">Browse Resources</h3>
             <p class="step-desc">Explore ASU resources, mental health support, academic help, and more.</p>
         </a>
 
-        <!-- Connect with Peers Card -->
-        <a href="{{ url_for('people') }}" class="step-card" style="text-decoration: none;">
-            <div class="step-icon" style="background: #FEF3C7; color: #F59E0B;">👥</div>
-            <h3 class="step-title">Connect with Peer Supporters</h3>
-            <p class="step-desc">Find and connect with fellow students who understand your experiences.</p>
+        <!-- My Groups Card -->
+        <a href="{{ url_for('groups_page') }}?mine=1" class="step-card" style="text-decoration: none;">
+            <div class="step-icon" style="background: #E0F2FE; color: #0284C7;">👥</div>
+            <h3 class="step-title">My Groups</h3>
+            <p class="step-desc">View and manage the groups you've joined.</p>
+        </a>
+
+        <!-- My Peers Card -->
+        <a href="{{ url_for('peers_page') }}" class="step-card" style="text-decoration: none;">
+            <div class="step-icon" style="background: #E0E7FF; color: #6366F1;">🤝</div>
+            <h3 class="step-title">My Peers</h3>
+            <p class="step-desc">Manage your peer connections and pending requests.</p>
         </a>
     </div>
 

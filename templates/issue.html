@@ -39,38 +39,52 @@
                 Quick topics (click to start):
             </label>
             <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                <button type="button" onclick="setTopicText('homesick')" class="topic-quick-btn">
-                    <span>🏠</span> Homesickness
+                <button type="button" onclick="setTopicText('panic')" class="topic-quick-btn">
+                    <span>🚨</span> Panic or crisis
                 </button>
-                <button type="button" onclick="setTopicText('academic')" class="topic-quick-btn">
-                    <span>📚</span> Academic Stress
-                </button>
-                <button type="button" onclick="setTopicText('friends')" class="topic-quick-btn">
-                    <span>👥</span> Making Friends
-                </button>
-                <button type="button" onclick="setTopicText('culture')" class="topic-quick-btn">
-                    <span>🌍</span> Culture Shock
-                </button>
-                <button type="button" onclick="setTopicText('language')" class="topic-quick-btn">
-                    <span>💬</span> Language Barriers
-                </button>
-                <button type="button" onclick="setTopicText('lonely')" class="topic-quick-btn">
-                    <span>💙</span> Loneliness
+                <button type="button" onclick="setTopicText('depression')" class="topic-quick-btn">
+                    <span>🌧</span> Depression
                 </button>
                 <button type="button" onclick="setTopicText('anxiety')" class="topic-quick-btn">
                     <span>😰</span> Anxiety
                 </button>
+                <button type="button" onclick="setTopicText('lonely')" class="topic-quick-btn">
+                    <span>🌫</span> Loneliness or isolation
+                </button>
+                <button type="button" onclick="setTopicText('homesick')" class="topic-quick-btn">
+                    <span>🧳</span> Homesickness
+                </button>
+                <button type="button" onclick="setTopicText('relationship')" class="topic-quick-btn">
+                    <span>💞</span> Relationship issues
+                </button>
+                <button type="button" onclick="setTopicText('academic')" class="topic-quick-btn">
+                    <span>📚</span> Academic problems
+                </button>
+                <button type="button" onclick="setTopicText('sleep')" class="topic-quick-btn">
+                    <span>🌙</span> Sleep problems
+                </button>
                 <button type="button" onclick="setTopicText('finances')" class="topic-quick-btn">
-                    <span>💰</span> Finances
+                    <span>💰</span> Financial stress
                 </button>
             </div>
+        </div>
+
+        <!-- Browse More Topics Button -->
+        <div style="margin-bottom: 32px; text-align: center;">
+            <button type="button" onclick="openTopicModal()" class="btn btn-outline"
+                style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px;">
+                <span>🔍</span> Browse More Topics
+            </button>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+                Click to search and browse all available support topics
+            </p>
         </div>
 
         <!-- Form -->
         <form method="POST" action="{{ url_for('issue') }}" id="issueForm">
             <div class="form-group">
                 <label class="form-label" for="issue_text" style="font-size: 14px; font-weight: 600;">
-                    Describe your challenge
+                    Describe your support need
                 </label>
                 <textarea id="issue_text" name="issue_text" class="form-input" rows="5"
                     placeholder="Example: I've been feeling really homesick lately. I miss my family and friends back home, and I'm finding it hard to make new friends here..."
@@ -142,6 +156,41 @@
     </div>
 </div>
 
+<!-- Topic Selection Modal -->
+<div id="topicModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container" style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <h3 style="font-size: 20px; font-weight: 600;">Browse Support Topics</h3>
+            <button type="button" onclick="closeTopicModal()"
+                style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary);">×</button>
+        </div>
+        <div style="padding: 16px; border-bottom: 1px solid #E5E7EB;">
+            <input type="text" id="topicSearch" class="form-input" placeholder="🔍 Search topics..."
+                oninput="filterTopics()" style="width: 100%;">
+        </div>
+        <div id="topicModalContent" style="padding: 20px; overflow-y: auto; flex: 1;">
+            {% for category, topics in support_topic_categories %}
+            <div class="topic-category" data-category="{{ category }}">
+                <p style="font-size: 13px; color: var(--text-secondary); font-weight: 600; margin-bottom: 10px;">
+                    {{ category }}
+                </p>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+                    {% for value, icon, label in topics %}
+                    <button type="button" class="topic-chip-modal" data-label="{{ label }}"
+                        onclick="selectTopicFromModal('{{ label }}')">
+                        <span>{{ icon }}</span> {{ label }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="padding: 16px; border-top: 1px solid #E5E7EB; text-align: right;">
+            <button type="button" onclick="closeTopicModal()" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
 <style>
     .topic-quick-btn {
         display: inline-flex;
@@ -175,6 +224,26 @@
         font-size: 16px;
     }
 
+    .topic-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background: #F9FAFB;
+        border: 1px solid #E5E7EB;
+        border-radius: 16px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 200ms ease;
+    }
+
+    .topic-chip:hover {
+        border-color: var(--primary-maroon);
+        color: var(--primary-maroon);
+        background: #FFF1F2;
+    }
+
     #issue_text {
         border: 2px solid #E5E7EB;
         border-radius: 14px;
@@ -186,6 +255,57 @@
         box-shadow: 0 0 0 4px rgba(139, 21, 56, 0.08);
     }
 
+    /* Topic Modal Styles */
+    .topic-chip-modal {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background: #F9FAFB;
+        border: 1px solid #E5E7EB;
+        border-radius: 20px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 200ms ease;
+    }
+
+    .topic-chip-modal:hover {
+        border-color: var(--primary-maroon);
+        color: var(--primary-maroon);
+        background: #FFF1F2;
+        transform: translateY(-1px);
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .modal-container {
+        background: white;
+        border-radius: 20px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 24px;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
     @media (max-width: 600px) {
         .card {
             padding: 24px !important;
@@ -195,13 +315,14 @@
 
 <script>
     const topicTexts = {
-        'homesick': "I've been feeling really homesick lately. I miss my family and friends back home, and adjusting to life here has been harder than I expected.",
-        'academic': "I'm struggling with the academic pressure here. The coursework is challenging, and I'm worried about my grades and keeping up with the pace.",
-        'friends': "I'm finding it difficult to make new friends. Everyone seems to already have their own groups, and I feel like an outsider.",
-        'culture': "I'm having a hard time adjusting to the culture here. Things are so different from back home, and sometimes I feel like I don't fit in.",
-        'language': "English isn't my first language, and I sometimes struggle to express myself or understand others. It's making social situations stressful.",
-        'lonely': "I've been feeling really lonely and isolated. Even when I'm around people, I feel like no one really understands what I'm going through.",
+        'panic': "I've been having panic attacks and feeling overwhelmed. I'm not sure how to calm down when it happens.",
+        'depression': "I've been feeling very down and hopeless lately. It's hard to find motivation to do daily tasks.",
         'anxiety': "I've been dealing with a lot of anxiety lately. I worry about everything, from classes to social situations to my future.",
+        'lonely': "I've been feeling really lonely and isolated. Even when I'm around people, I feel like no one really understands what I'm going through.",
+        'homesick': "I've been feeling really homesick lately. I miss my family and friends back home, and adjusting to life here has been harder than I expected.",
+        'relationship': "I'm having difficulties in my relationships and feel unsure how to communicate or set boundaries.",
+        'academic': "I'm struggling with the academic pressure here. The coursework is challenging, and I'm worried about my grades and keeping up with the pace.",
+        'sleep': "I'm having trouble sleeping and feel exhausted. It's affecting my mood and focus during the day.",
         'finances': "I'm stressed about money. Between tuition, living expenses, and trying to save, I'm not sure how to manage my finances as an international student."
     };
 
@@ -216,6 +337,18 @@
             btn.classList.remove('active');
         });
         event.target.closest('.topic-quick-btn').classList.add('active');
+    }
+
+    function addTopicLabel(label) {
+        const textarea = document.getElementById('issue_text');
+        const current = textarea.value.trim();
+        if (!current) {
+            textarea.value = `I'm looking for support with ${label}.`;
+        } else if (!current.toLowerCase().includes(label.toLowerCase())) {
+            textarea.value = `${current} Also dealing with ${label}.`;
+        }
+        textarea.focus();
+        updateCharCount();
     }
 
     // Character counter
@@ -234,5 +367,50 @@
 
     textarea.addEventListener('input', updateCharCount);
     updateCharCount(); // Initialize
+
+    // Topic Modal Functions
+    function openTopicModal() {
+        document.getElementById('topicModal').style.display = 'flex';
+        document.getElementById('topicSearch').value = '';
+        filterTopics(); // Reset filter
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTopicModal() {
+        document.getElementById('topicModal').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function filterTopics() {
+        const searchTerm = document.getElementById('topicSearch').value.toLowerCase();
+        const categories = document.querySelectorAll('.topic-category');
+
+        categories.forEach(category => {
+            const chips = category.querySelectorAll('.topic-chip-modal');
+            let hasVisibleChip = false;
+
+            chips.forEach(chip => {
+                const label = chip.dataset.label.toLowerCase();
+                if (label.includes(searchTerm)) {
+                    chip.style.display = 'inline-flex';
+                    hasVisibleChip = true;
+                } else {
+                    chip.style.display = 'none';
+                }
+            });
+
+            category.style.display = hasVisibleChip ? 'block' : 'none';
+        });
+    }
+
+    function selectTopicFromModal(label) {
+        addTopicLabel(label);
+        closeTopicModal();
+    }
+
+    // Close modal on overlay click
+    document.getElementById('topicModal')?.addEventListener('click', function (e) {
+        if (e.target === this) closeTopicModal();
+    });
 </script>
 {% endblock %}

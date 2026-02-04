@@ -80,7 +80,7 @@
         <div class="card" style="padding: 28px;">
             <h3
                 style="font-size: 18px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 24px;">👥</span> Recommended Groups
+                <span style="font-size: 24px;">🫶</span> Recommended Groups
             </h3>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">Click a group to join and
                 chat with peers.</p>
@@ -96,6 +96,30 @@
             {% else %}
             <p style="color: var(--text-secondary);">No group recommendations at this time.</p>
             {% endif %}
+            <a href="{{ url_for('groups_page') }}" class="btn btn-outline"
+                style="margin-top: 16px; display: inline-flex; align-items: center; gap: 8px;">
+                <span>🫶</span> Browse All Groups →
+            </a>
+        </div>
+    </div>
+
+    <!-- Connect with Peers Section -->
+    <div class="card" style="margin-top: 24px; padding: 28px;">
+        <h3
+            style="font-size: 18px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">🤝</span> Connect with Peer Supporters
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">Find students who understand
+            your experiences and can provide one-on-one support.</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <a href="{{ url_for('people') }}" class="btn btn-maroon"
+                style="display: inline-flex; align-items: center; gap: 8px;">
+                <span>👥</span> Find Peer Supporters →
+            </a>
+            <a href="{{ url_for('groups_page') }}" class="btn btn-outline"
+                style="display: inline-flex; align-items: center; gap: 8px;">
+                <span>🫶</span> Create or Join a Group →
+            </a>
         </div>
     </div>
 
@@ -105,15 +129,8 @@
             style="font-size: 18px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 24px;">🤖</span> Ask AI for More Help
         </h3>
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-            <div style="flex: 1; height: 6px; background: #E5E7EB; border-radius: 3px; overflow: hidden;">
-                <div
-                    style="width: {{ (followup_count / 5) * 100 }}%; height: 100%; background: linear-gradient(90deg, #10B981, #22C55E); transition: width 300ms;">
-                </div>
-            </div>
-            <span style="font-size: 14px; color: var(--text-secondary); white-space: nowrap;">{{ followup_count }}/5
-                questions used</span>
-        </div>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">Ask as many follow-up questions
+            as you need.</p>
 
         {% if followup_history %}
         <div style="margin-bottom: 24px;">
@@ -135,99 +152,40 @@
         {% if followup_response and followup_question %}
         <div style="background: #ECFDF5; border: 1px solid #D1FAE5; border-radius: 12px; padding: 16px; margin-bottom: 20px;"
             id="followup-response">
-            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                <span style="font-weight: 600; color: var(--primary-maroon);">Q:</span>
-                <span style="color: var(--text-primary);">{{ followup_question }}</span>
-            </div>
-            <div style="display: flex; gap: 8px;">
-                <span style="font-weight: 600; color: #10B981;">A:</span>
-                <span style="color: var(--text-primary);">{{ followup_response }}</span>
-            </div>
+            <p style="font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">
+                <span style="color: var(--primary-maroon);">Q:</span> {{ followup_question }}
+            </p>
+            <p style="color: var(--text-secondary); line-height: 1.6;">{{ followup_response }}</p>
         </div>
         {% endif %}
 
-        {% if limit_reached %}
-        <div
-            style="background: #FEF3C7; border: 2px solid #FBBF24; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px;">
-            <span style="font-size: 24px;">⚠️</span>
-            <div>
-                <strong style="color: #92400E;">Question limit reached</strong>
-                <p style="color: #B45309; font-size: 14px; margin-top: 4px;">Join a peer group to continue getting
-                    support!</p>
-            </div>
-        </div>
-        {% else %}
-        <form method="POST" action="{{ url_for('resources') }}#followup-response" id="followupForm">
-            <div style="display: flex; gap: 12px;">
-                <input type="text" name="followup_question" id="followupInput" class="form-input"
-                    placeholder="Ask the AI a follow-up question..." style="flex: 1;" required>
-                <button type="submit" id="followupBtn" class="btn btn-maroon" style="white-space: nowrap;">
-                    Ask AI
-                </button>
-            </div>
+        <form method="POST" action="{{ url_for('resources') }}" style="display: flex; gap: 12px;">
+            <input type="text" name="followup_question" placeholder="Ask a follow-up question..." class="form-input"
+                style="flex: 1;">
+            <button type="submit" class="btn btn-maroon">Ask</button>
         </form>
-        {% endif %}
     </div>
 
-    <!-- Quick Actions -->
-    <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 32px;">
-        <a href="{{ url_for('people') }}" class="btn btn-maroon">Connect with Peer Supporters</a>
-        <a href="{{ url_for('resources_hub') }}" class="btn btn-outline">Browse Resources</a>
-        <a href="{{ url_for('issue') }}" class="btn btn-outline">Need help with something else?</a>
-    </div>
-
-    <!-- Disclaimer -->
-    <div style="margin-top: 32px; padding: 20px; background: #F9FAFB; border-radius: 12px; border: 1px solid #E5E7EB;">
-        <p style="font-size: 13px; color: var(--text-light); line-height: 1.6;">
-            <strong style="color: var(--text-secondary);">⚠️ About These Suggestions:</strong>
-            AI is used to generate personalized suggestions and safety monitoring. These suggestions are informational
-            only
-            and do not constitute professional or medical advice.
-            {% if disclaimer %}{{ disclaimer }}{% endif %}
-        </p>
-    </div>
-</div>
-
-<!-- Join Group Confirmation Modal -->
-<div id="joinModal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 400px; padding: 32px; border-radius: 20px;">
-        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px;">Join Group</h3>
-        <p id="modalMessage" style="color: var(--text-secondary); margin-bottom: 24px;">This group matches your profile.
-            Do you want to join?</p>
-        <div style="display: flex; gap: 12px;">
-            <form method="POST" action="{{ url_for('join_group') }}" id="joinForm" style="flex: 1;">
-                <input type="hidden" name="group_topic" id="groupTopicInput">
-                <button type="submit" class="btn btn-maroon" style="width: 100%;">Yes, Join</button>
-            </form>
-            <button type="button" class="btn btn-outline" onclick="closeModal()" style="flex: 1;">Cancel</button>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
     function confirmJoinGroup(groupName) {
-        document.getElementById('groupTopicInput').value = groupName;
-        document.getElementById('modalMessage').textContent = '"' + groupName + '" matches your profile. Do you want to join?';
-        document.getElementById('joinModal').style.display = 'flex';
-    }
+        if (confirm('Join the group "' + groupName + '"?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("join_group") }}';
 
-    function closeModal() {
-        document.getElementById('joinModal').style.display = 'none';
-    }
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'group_name';
+            input.value = groupName;
+            form.appendChild(input);
 
-    // Close modal on outside click
-    document.getElementById('joinModal').addEventListener('click', function (e) {
-        if (e.target === this) {
-            closeModal();
+            document.body.appendChild(form);
+            form.submit();
         }
-    });
-
-    // Disable button on form submit
-    document.getElementById('followupForm')?.addEventListener('submit', function () {
-        document.getElementById('followupBtn').disabled = true;
-        document.getElementById('followupBtn').textContent = 'Asking AI...';
-    });
+    }
 </script>
 {% endblock %}

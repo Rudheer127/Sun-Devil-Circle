@@ -90,29 +90,40 @@
             </h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">What would you like to
                 discuss? Select all that apply.</p>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">Private topics help us match you
+                with the right peers, but won’t be shown publicly on your profile.</p>
 
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-                {% set topics = [
-                ('homesickness', '🏠', 'Homesickness'),
-                ('loneliness', '💭', 'Loneliness'),
-                ('anxiety', '😰', 'Anxiety'),
-                ('culture_shock', '🌍', 'Culture Shock'),
-                ('academics', '📚', 'Academics'),
-                ('relationships', '💕', 'Relationships'),
-                ('identity', '🪪', 'Identity'),
-                ('finances', '💰', 'Finances')
-                ] %}
-                {% for value, icon, label in topics %}
-                <label class="checkbox-card"
-                    style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 14px 16px; background: #FAFAFA; border-radius: 12px; border: 2px solid transparent; transition: all 200ms;">
-                    <input type="checkbox" name="support_topics" value="{{ value }}" {{ 'checked' if profile and value
-                        in (profile.support_topics or []) else '' }}
-                        style="width: 18px; height: 18px; accent-color: var(--primary-maroon);">
-                    <span style="font-size: 20px;">{{ icon }}</span>
-                    <span style="font-weight: 500;">{{ label }}</span>
-                </label>
-                {% endfor %}
+            {% for category, topics in support_topic_categories %}
+            <div style="margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px;">
+                    {{ category }}
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    {% for value, icon, label in topics %}
+                    <div class="topic-card"
+                        style="padding: 14px 16px; background: #FAFAFA; border-radius: 12px; border: 2px solid transparent; transition: all 200ms;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <input type="checkbox" id="topic-{{ value }}" name="support_topics" value="{{ value }}" {{
+                                'checked' if profile and value in (profile.support_topics or []) else '' }}
+                                style="width: 18px; height: 18px; accent-color: var(--primary-maroon);">
+                            <label for="topic-{{ value }}" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <span style="font-size: 20px;">{{ icon }}</span>
+                                <span style="font-weight: 500;">{{ label }}</span>
+                            </label>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 12px; color: var(--text-secondary);">
+                            <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" name="private_topics" value="{{ value }}" {{ 'checked' if profile
+                                    and value in (profile.private_topics or []) else '' }}
+                                    style="width: 14px; height: 14px; accent-color: var(--primary-maroon);">
+                                Private (for matching only)
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
+            {% endfor %}
         </div>
 
         <!-- Language Section -->
@@ -215,7 +226,7 @@
             </h2>
 
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="{{ url_for('resources') }}" class="btn btn-outline">View All Resources</a>
+                <a href="{{ url_for('resources_hub') }}" class="btn btn-outline">View All Resources</a>
             </div>
         </div>
 
@@ -256,7 +267,7 @@
         gap: 8px;
     }
 
-    .checkbox-card:has(input:checked) {
+    .topic-card:has(input[name="support_topics"]:checked) {
         background: #FFF1F2;
         border-color: var(--primary-maroon);
     }
@@ -356,5 +367,25 @@
     document.getElementById('profileForm').addEventListener('submit', () => {
         formChanged = false;
     });
+
+    function syncPrivateTopicCheckboxes() {
+        document.querySelectorAll('input[name="support_topics"]').forEach(topicInput => {
+            const topicValue = topicInput.value;
+            const privateInput = document.querySelector(`input[name="private_topics"][value="${topicValue}"]`);
+            if (!privateInput) return;
+            if (!topicInput.checked) {
+                privateInput.checked = false;
+                privateInput.disabled = true;
+            } else {
+                privateInput.disabled = false;
+            }
+        });
+    }
+
+    document.querySelectorAll('input[name="support_topics"]').forEach(input => {
+        input.addEventListener('change', syncPrivateTopicCheckboxes);
+    });
+
+    syncPrivateTopicCheckboxes();
 </script>
 {% endblock %}

@@ -142,13 +142,19 @@
             </a>
 
             <div class="nav-links">
-                <a href="#how-it-works">How It Works</a>
-                <a href="#safety">Safety</a>
-                <a href="{{ url_for('resources_hub') if session.get('user_id') else '#' }}">Resources</a>
+                <a href="{{ url_for('index') }}#how-it-works">How It Works</a>
+                <a href="{{ url_for('index') }}#safety">Safety</a>
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('groups_page') }}">Groups</a>
+                <a href="{{ url_for('people') }}">Peers</a>
+                {% endif %}
+                <a
+                    href="{{ url_for('resources_hub') if session.get('user_id') else url_for('index') + '#resources' }}">Resources</a>
             </div>
 
             <div class="nav-actions">
                 {% if session.get('user_id') %}
+                <a href="{{ url_for('profile') }}" class="btn-signin" style="margin-right: 4px;">Profile</a>
                 <a href="{{ url_for('logout') }}" class="btn-signin">Log Out</a>
                 <a href="{{ url_for('decision') }}" class="btn-primary">Dashboard</a>
                 {% else %}

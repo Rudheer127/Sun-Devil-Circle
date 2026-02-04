@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}SunDevil Circle - Peer Support for ASU Students{% endblock %}
-{% block meta_description %}Connect with trained peer supporters who understand your journey. Safe, confidential, and
+{% block meta_description %}Connect with peer supporters who understand your journey. Safe, confidential, and
 culturally-aware support for ASU international students.{% endblock %}
 
 {% block content %}
@@ -25,13 +25,28 @@ culturally-aware support for ASU international students.{% endblock %}
         </p>
 
         <div class="hero-cta">
+            {% if session.get('user_id') and session.get('display_name') %}
+            <a href="{{ url_for('decision') }}" class="btn-hero-primary">
+                Find Support
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+            </a>
+            {% elif session.get('user_id') %}
+            <a href="{{ url_for('profile') }}" class="btn-hero-primary">
+                Complete Profile
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+            </a>
+            {% else %}
             <a href="{{ url_for('signup') }}" class="btn-hero-primary">
                 Find Support
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
             </a>
-            <a href="#for-supporters" class="btn-hero-secondary">Become a Supporter</a>
+            {% endif %}
         </div>
 
         <div class="feature-pills">
@@ -83,8 +98,8 @@ culturally-aware support for ASU international students.{% endblock %}
                 </svg>
             </div>
             <h3 class="step-title">Create Your Profile</h3>
-            <p class="step-desc">Tell us what kind of support you're looking for. Your privacy is protected — stay
-                anonymous until you're ready.</p>
+            <p class="step-desc">Tell us what kind of support you're looking for. Your privacy is protected and you can
+                stay anonymous until you're ready.</p>
         </div>
 
         <div class="step-card">
@@ -96,8 +111,8 @@ culturally-aware support for ASU international students.{% endblock %}
                 </svg>
             </div>
             <h3 class="step-title">Browse Matches</h3>
-            <p class="step-desc">See peer supporters who match your preferences — language, topics, communication style.
-                Swipe to connect.</p>
+            <p class="step-desc">See peer supporters who match your preferences like language, topics, and
+                communication style. Swipe to connect.</p>
         </div>
 
         <div class="step-card">
@@ -183,7 +198,7 @@ culturally-aware support for ASU international students.{% endblock %}
                         </svg>
                     </div>
                     <h4>Confidential Chats</h4>
-                    <p>Your conversations are private. Admins can't read messages — only you and your match.</p>
+                    <p>Your conversations are private. Admins can't read messages. Only you and your match.</p>
                 </div>
 
                 <div class="safety-feature-card">
@@ -208,12 +223,28 @@ culturally-aware support for ASU international students.{% endblock %}
     <h2 class="section-title">Ready to find your circle?</h2>
     <p class="section-subtitle mb-8">Join hundreds of ASU students who've found support through SunDevil Circle.</p>
     <div class="hero-cta">
+        {% if session.get('user_id') and session.get('display_name') %}
+        <a href="{{ url_for('decision') }}" class="btn-hero-primary">
+            Go to Dashboard
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+        </a>
+        {% elif session.get('user_id') %}
+        <a href="{{ url_for('profile') }}" class="btn-hero-primary">
+            Complete Profile
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+        </a>
+        {% else %}
         <a href="{{ url_for('signup') }}" class="btn-hero-primary">
             Get Started Today
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
         </a>
+        {% endif %}
     </div>
 </section>
 
@@ -229,10 +260,10 @@ culturally-aware support for ASU international students.{% endblock %}
             </div>
         </div>
         <nav class="footer-nav">
-            <a href="#how-it-works">How It Works</a>
-            <a href="#safety">Safety & Privacy</a>
-            <a href="#for-supporters">Become a Supporter</a>
-            <a href="{{ url_for('resources') if session.get('user_id') else '#' }}">Resources</a>
+            <a href="{{ url_for('index') }}#how-it-works">How It Works</a>
+            <a href="{{ url_for('index') }}#safety">Safety & Privacy</a>
+            <a
+                href="{{ url_for('resources_hub') if session.get('user_id') else url_for('index') + '#resources' }}">Resources</a>
         </nav>
         <div class="footer-right">
             <span>Made with <span class="heart">❤</span> for ASU students</span>
