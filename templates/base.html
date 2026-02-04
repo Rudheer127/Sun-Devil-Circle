@@ -8,6 +8,7 @@
         content="{% block meta_description %}SunDevil Circles - Peer support for ASU students{% endblock %}">
     <title>{% block title %}SunDevil Circles{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='animations.css') }}">
     {% block head %}{% endblock %}
 </head>
 
@@ -212,6 +213,8 @@
         });
     </script>
 
+    <!-- Animation Controller -->
+    <script src="{{ url_for('static', filename='animations.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 

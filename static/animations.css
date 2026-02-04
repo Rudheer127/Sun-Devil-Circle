@@ -1,0 +1,561 @@
+/* ============================================
+   SUNDEVIL CIRCLES - ANIMATIONS & TRANSITIONS
+   Add modern, smooth animations without changing layout
+   ============================================ */
+
+/* ============================================
+   ACCESSIBILITY - Reduced Motion
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================
+   KEYFRAME ANIMATIONS
+   ============================================ */
+
+/* Fade and slide up */
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Float up (lighter) */
+@keyframes floatUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Slide down */
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Gentle pulse for icons */
+@keyframes gentlePulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}
+
+/* Bounce */
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+/* Heartbeat for footer heart */
+@keyframes heartbeat {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    10%,
+    30% {
+        transform: scale(1.15);
+    }
+
+    20% {
+        transform: scale(1.05);
+    }
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* Scale up */
+@keyframes scaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ============================================
+   CRISIS BANNER ANIMATIONS
+   ============================================ */
+.crisis-banner {
+    animation: slideDown 0.5s ease-out;
+}
+
+.crisis-banner-icon svg {
+    animation: gentlePulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   HERO SECTION ANIMATIONS
+   ============================================ */
+
+/* Hero badge */
+.hero-badge {
+    opacity: 0;
+    animation: fadeSlideUp 0.6s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+    animation-delay: 0.1s;
+}
+
+/* Hero headline */
+.hero-headline {
+    opacity: 0;
+    animation: fadeSlideUp 0.8s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+    animation-delay: 0.2s;
+}
+
+/* Hero subheadline */
+.hero-subheadline {
+    opacity: 0;
+    animation: fadeSlideUp 0.8s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+    animation-delay: 0.4s;
+}
+
+/* Hero CTA buttons */
+.hero-cta {
+    opacity: 0;
+    animation: fadeSlideUp 0.8s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+    animation-delay: 0.5s;
+}
+
+/* Feature pills staggered animation */
+.feature-pills .feature-pill {
+    opacity: 0;
+    animation: floatUp 0.6s ease-out forwards;
+}
+
+.feature-pills .feature-pill:nth-child(1) {
+    animation-delay: 0.6s;
+}
+
+.feature-pills .feature-pill:nth-child(2) {
+    animation-delay: 0.75s;
+}
+
+.feature-pills .feature-pill:nth-child(3) {
+    animation-delay: 0.9s;
+}
+
+/* Feature pill hover effects */
+.feature-pill {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.feature-pill:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.feature-pill:hover svg {
+    animation: bounce 0.6s ease;
+}
+
+/* ============================================
+   BUTTON HOVER EFFECTS
+   ============================================ */
+
+/* Primary buttons shimmer effect */
+.btn-hero-primary,
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-hero-primary::before,
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-hero-primary:hover::before,
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+/* Secondary button hover */
+.btn-hero-secondary {
+    transition: all 0.3s ease-in-out, background 0.3s ease, color 0.3s ease;
+}
+
+/* ============================================
+   NAVIGATION BAR TRANSITIONS
+   ============================================ */
+
+/* Nav scroll effect handled via JS - just add transition */
+.navbar {
+    transition: backdrop-filter 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.navbar.scrolled {
+    background-color: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Nav link underline animation enhancement */
+.nav-links a {
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.nav-links a::after {
+    transition: width 0.3s ease-out, opacity 0.3s ease;
+}
+
+/* ============================================
+   STEP CARDS (HOW IT WORKS) ANIMATIONS
+   ============================================ */
+
+/* Initial hidden state for scroll animation */
+.step-card {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Animated state */
+.step-card.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Staggered delays */
+.step-card:nth-child(1).animate-in {
+    transition-delay: 0s;
+}
+
+.step-card:nth-child(2).animate-in {
+    transition-delay: 0.1s;
+}
+
+.step-card:nth-child(3).animate-in {
+    transition-delay: 0.2s;
+}
+
+.step-card:nth-child(4).animate-in {
+    transition-delay: 0.3s;
+}
+
+/* Step card hover enhancement */
+.step-card:hover .step-number {
+    transform: scale(1.1) rotate(5deg);
+    transition: transform 0.3s ease;
+}
+
+.step-card:hover .step-icon-box svg {
+    animation: bounce 0.5s ease;
+}
+
+/* Step number transition */
+.step-number {
+    transition: transform 0.3s ease;
+}
+
+/* ============================================
+   SAFETY SECTION ANIMATIONS
+   ============================================ */
+
+/* Safety content fade-in */
+.safety-section .safety-content {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease-out;
+}
+
+.safety-section .safety-content.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Safety feature cards */
+.safety-feature-card {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.safety-feature-card.animate-in {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Staggered delays for safety cards */
+.safety-feature-card:nth-child(1).animate-in {
+    transition-delay: 0s;
+}
+
+.safety-feature-card:nth-child(2).animate-in {
+    transition-delay: 0.1s;
+}
+
+.safety-feature-card:nth-child(3).animate-in {
+    transition-delay: 0.2s;
+}
+
+.safety-feature-card:nth-child(4).animate-in {
+    transition-delay: 0.3s;
+}
+
+/* Safety card hover effects */
+.safety-feature-card {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease, border-color 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.safety-feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    border-color: rgba(139, 21, 56, 0.15);
+}
+
+.safety-feature-card:hover .safety-feature-icon svg {
+    transform: scale(1.15);
+    transition: transform 0.3s ease;
+}
+
+.safety-feature-icon svg {
+    transition: transform 0.3s ease;
+}
+
+/* Quote box animation */
+.quote-box {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.6s ease-out;
+}
+
+.quote-box.animate-in {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* ============================================
+   CTA SECTION ANIMATIONS
+   ============================================ */
+
+.cta-section {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.cta-section.animate-in {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ============================================
+   FOOTER ANIMATIONS
+   ============================================ */
+
+.site-footer {
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.site-footer.animate-in {
+    opacity: 1;
+}
+
+/* Footer link underline animation */
+.footer-nav a {
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.footer-nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: currentColor;
+    transition: width 0.3s ease-out;
+}
+
+.footer-nav a:hover::after {
+    width: 100%;
+}
+
+/* Heart pulse animation */
+.footer-right .heart {
+    display: inline-block;
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   NAVIGATION BAR SPACING FIX
+   Profile/Logout grouping on the right
+   ============================================ */
+
+/* Push Profile to the right in nav-actions */
+.nav-actions a[href*="profile"],
+.nav-actions .btn-signin[href*="profile"] {
+    margin-left: auto;
+}
+
+/* Keep Log Out close to Profile */
+.nav-actions a[href*="logout"] {
+    margin-left: 0.5rem;
+}
+
+/* Slight space before Dashboard button */
+.nav-actions a[href*="decision"],
+.nav-actions .btn-primary {
+    margin-left: 0.75rem;
+}
+
+/* ============================================
+   GENERAL CARD HOVER EFFECTS
+   ============================================ */
+
+.card {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   GROUP/PEER CARDS HOVER ANIMATIONS
+   ============================================ */
+
+.group-card,
+.peer-card {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
+}
+
+.group-card:hover,
+.peer-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Match badge pulse on hover */
+.group-card:hover .match-badge,
+.peer-card:hover .match-badge {
+    animation: gentlePulse 0.6s ease;
+}
+
+/* ============================================
+   FORM INPUT FOCUS ANIMATIONS
+   ============================================ */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 21, 56, 0.1);
+}
+
+/* ============================================
+   MESSAGE/CHAT ANIMATIONS
+   ============================================ */
+
+.message {
+    animation: fadeSlideUp 0.3s ease-out;
+}
+
+/* ============================================
+   LOADING STATES
+   ============================================ */
+
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   TOOLTIP/POPOVER ANIMATIONS
+   ============================================ */
+
+.info-popover {
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    transform: translateX(-50%) translateY(5px);
+}
+
+.tooltip-trigger:hover+.info-popover,
+.info-popover:hover {
+    transform: translateX(-50%) translateY(0);
+}
