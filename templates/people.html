@@ -23,17 +23,34 @@
                 <div>
                     <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Support
                         topics</label>
-                    <select name="topics" multiple class="form-input" style="height: 46px;">
-                        {% for category, topics in support_topic_categories %}
-                        <optgroup label="{{ category }}">
+                    <div class="topic-dropdown" style="position: relative;">
+                        <button type="button" class="form-input topic-dropdown-btn"
+                            style="text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+                            onclick="toggleTopicDropdown('filterTopics')">
+                            <span id="filterTopicsLabel">Select topics...</span>
+                            <span style="font-size: 10px;">▼</span>
+                        </button>
+                        <div id="filterTopics" class="topic-dropdown-menu"
+                            style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 280px; overflow-y: auto; z-index: 100; margin-top: 4px;">
+                            {% for category, topics in support_topic_categories %}
+                            <div
+                                style="padding: 8px 12px; background: #F9FAFB; font-weight: 600; font-size: 12px; color: var(--text-secondary); border-bottom: 1px solid #E5E7EB;">
+                                {{ category }}</div>
                             {% for topic_id, icon, label in topics %}
-                            <option value="{{ topic_id }}" {{ 'selected' if topic_id in selected_topics else '' }}>
-                                {{ icon }} {{ label }}
-                            </option>
+                            <label
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; transition: background 0.15s;"
+                                onmouseover="this.style.background='#F3F4F6'"
+                                onmouseout="this.style.background='transparent'">
+                                <input type="checkbox" name="topics" value="{{ topic_id }}" {{ 'checked' if topic_id in
+                                    selected_topics else '' }}
+                                    style="accent-color: var(--primary-maroon); width: 16px; height: 16px;"
+                                    onchange="updateTopicLabel('filterTopics', 'filterTopicsLabel')">
+                                <span style="font-size: 14px;">{{ icon }} {{ label }}</span>
+                            </label>
                             {% endfor %}
-                        </optgroup>
-                        {% endfor %}
-                    </select>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Sort
@@ -242,6 +259,49 @@
 
 {% block scripts %}
 <script>
+    // Topic dropdown functions
+    function toggleTopicDropdown(id) {
+        const dropdown = document.getElementById(id);
+        const isVisible = dropdown.style.display === 'block';
+
+        // Close all dropdowns first
+        document.querySelectorAll('.topic-dropdown-menu').forEach(d => d.style.display = 'none');
+
+        // Toggle this one
+        if (!isVisible) {
+            dropdown.style.display = 'block';
+        }
+    }
+
+    function updateTopicLabel(dropdownId, labelId) {
+        const dropdown = document.getElementById(dropdownId);
+        const label = document.getElementById(labelId);
+        const checked = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+
+        if (checked.length === 0) {
+            label.textContent = 'Select topics...';
+        } else if (checked.length === 1) {
+            const text = checked[0].nextElementSibling.textContent.trim();
+            label.textContent = text;
+        } else {
+            label.textContent = checked.length + ' topics selected';
+        }
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.topic-dropdown')) {
+            document.querySelectorAll('.topic-dropdown-menu').forEach(d => d.style.display = 'none');
+        }
+    });
+
+    // Initialize labels on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        if (document.getElementById('filterTopics')) {
+            updateTopicLabel('filterTopics', 'filterTopicsLabel');
+        }
+    });
+
     let selectedPeerId = '';
     let selectedPeerName = '';
 

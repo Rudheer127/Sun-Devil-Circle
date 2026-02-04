@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}My Groups - SunDevil Circle{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 160px; padding-bottom: 80px; max-width: 1000px;">
+    <div style="margin-bottom: 32px;">
+        <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary);">My Groups</h1>
+        <p style="color: var(--text-secondary); margin-top: 8px; font-size: 18px;">Manage your group memberships and
+            invitations.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div style="margin-bottom: 24px;">
+        {% for category, message in messages %}
+        <div style="margin-bottom: 12px; padding: 14px 18px; border-radius: 12px; 
+            background: {{ '#D1FAE5' if category == 'success' else '#FEE2E2' }}; 
+            color: {{ '#065F46' if category == 'success' else '#991B1B' }};">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Joined Groups -->
+    <div class="card" style="padding: 24px; margin-bottom: 24px;">
+        <h3
+            style="font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">✅</span> Joined Groups
+            <span
+                style="background: #D1FAE5; color: #065F46; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 600;">{{
+                joined_groups|length }}</span>
+        </h3>
+        {% if joined_groups %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+            {% for group in joined_groups %}
+            <div
+                style="display: flex; align-items: center; justify-content: space-between; padding: 16px; background: #F9FAFB; border-radius: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div
+                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #8B1538, #A91D3A); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 18px;">
+                        {{ group.name[0]|upper if group.name else '?' }}
+                    </div>
+                    <div>
+                        <p style="font-weight: 600; color: var(--text-primary);">{{ group.name }}</p>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">{{ group.member_count
+                            }} members</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('group_detail', group_name=group.name) }}" class="btn btn-outline"
+                    style="padding: 8px 16px; font-size: 13px;">View</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+            <p style="font-size: 48px; margin-bottom: 12px;">🫶</p>
+            <p>No groups joined yet.</p>
+            <a href="{{ url_for('groups_page') }}" class="btn btn-maroon"
+                style="margin-top: 16px; display: inline-block;">Find Groups</a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if group_join_requests %}
+    <!-- Join Requests (for groups you own) -->
+    <div class="card" style="padding: 24px; margin-bottom: 24px;">
+        <h3
+            style="font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">👥</span> Join Requests
+            <span
+                style="background: #FEF3C7; color: #92400E; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 600;">{{
+                group_join_requests|length }}</span>
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for req in group_join_requests %}
+            <div
+                style="display: flex; align-items: center; justify-content: space-between; padding: 14px; background: #FFF7ED; border: 1px solid #FDBA74; border-radius: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div
+                        style="width: 40px; height: 40px; background: #FED7AA; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #9A3412; font-weight: 600;">
+                        {{ req.display_name[0]|upper if req.display_name else '?' }}
+                    </div>
+                    <div>
+                        <p style="font-weight: 600; color: var(--text-primary);">{{ req.display_name }}</p>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">wants to join: {{
+                            req.group_name }}</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <form method="POST" action="{{ url_for('group_request_approve', group_name=req.group_name) }}"
+                        style="display: inline;">
+                        <input type="hidden" name="requester_id" value="{{ req.user_id }}">
+                        <button type="submit" class="btn btn-maroon"
+                            style="padding: 6px 12px; font-size: 12px;">Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('group_request_decline', group_name=req.group_name) }}"
+                        style="display: inline;">
+                        <input type="hidden" name="requester_id" value="{{ req.user_id }}">
+                        <button type="submit" class="btn btn-secondary"
+                            style="padding: 6px 12px; font-size: 12px;">Decline</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if pending_invitations %}
+    <!-- Group Invitations -->
+    <div class="card" style="padding: 24px; margin-bottom: 24px;">
+        <h3
+            style="font-size: 18px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">📩</span> Group Invitations
+        </h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">You've been invited to these
+            groups.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+            {% for invitation in pending_invitations %}
+            <div class="step-card" style="padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <div
+                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #8B1538, #A91D3A); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 18px;">
+                        {{ invitation.group_name[0]|upper if invitation.group_name else '?' }}
+                    </div>
+                    <div>
+                        <p style="font-weight: 600; color: var(--text-primary);">{{ invitation.group_name }}</p>
+                        {% if invitation.invited_at %}
+                        <span
+                            style="font-size: 11px; background: #E0F2FE; color: #0369A1; padding: 2px 8px; border-radius: 6px;">
+                            Invited {{ invitation.invited_at }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <form method="POST" action="{{ url_for('join_group_full') }}" style="flex: 1;">
+                        <input type="hidden" name="group_name" value="{{ invitation.group_name }}">
+                        <button type="submit" class="btn btn-maroon" style="width: 100%; padding: 10px;">Join</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('decline_group_invitation') }}" style="flex: 1;">
+                        <input type="hidden" name="group_name" value="{{ invitation.group_name }}">
+                        <button type="submit" class="btn btn-secondary"
+                            style="width: 100%; padding: 10px;">Decline</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div style="display: flex; gap: 16px; justify-content: center;">
+        <a href="{{ url_for('groups_page') }}" class="btn btn-maroon"
+            style="display: inline-flex; align-items: center; gap: 8px;">
+            <span>🔍</span> Find Groups
+        </a>
+    </div>
+</div>
+{% endblock %}

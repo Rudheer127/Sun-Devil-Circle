@@ -669,7 +669,7 @@
             </div>
         </div>
 
-        <!-- Step 3: Cultural Background -->
+        <!-- Step 3: Cultural Background & Academic Info -->
         <div class="step" id="step3">
             <div class="step-header">
                 <h1>Your preferences</h1>
@@ -691,6 +691,36 @@
                 <div class="pill" data-culture="Latin America">Latin America</div>
                 <div class="pill" data-culture="North America">North America</div>
                 <div class="pill" data-culture="Pacific Islands">Pacific Islands</div>
+            </div>
+
+            <label class="section-label">Expected graduation year (optional)</label>
+            <div class="pills-container" id="gradYearPills">
+                <div class="pill" data-gradyear="2025">2025</div>
+                <div class="pill" data-gradyear="2026">2026</div>
+                <div class="pill" data-gradyear="2027">2027</div>
+                <div class="pill" data-gradyear="2028">2028</div>
+                <div class="pill" data-gradyear="2029">2029</div>
+                <div class="pill" data-gradyear="2030+">2030+</div>
+            </div>
+
+            <label class="section-label">Degree program (optional)</label>
+            <div class="radio-cards" id="degreeProgramCards">
+                <div class="radio-card" data-degree="bachelors">
+                    <h4>Bachelor's Degree</h4>
+                    <p>Undergraduate program</p>
+                </div>
+                <div class="radio-card" data-degree="masters">
+                    <h4>Master's Degree</h4>
+                    <p>Graduate program</p>
+                </div>
+                <div class="radio-card" data-degree="doctoral">
+                    <h4>Doctoral/PhD</h4>
+                    <p>Doctoral program</p>
+                </div>
+                <div class="radio-card" data-degree="other">
+                    <h4>Other</h4>
+                    <p>Certificate or other program</p>
+                </div>
             </div>
 
             <label class="section-label">Are you an international freshman?</label>
@@ -811,6 +841,8 @@
         <input type="hidden" name="support_style" id="formSupportStyle">
         <input type="hidden" name="cultural_background" id="formCulture">
         <input type="hidden" name="is_international_freshman" id="formFreshman">
+        <input type="hidden" name="graduation_year" id="formGradYear">
+        <input type="hidden" name="degree_program" id="formDegree">
         <input type="hidden" name="display_name" id="formDisplayName">
     </form>
 
@@ -822,6 +854,8 @@
         let selectedLanguages = [];
         let selectedStyle = '';
         let selectedCultures = [];
+        let selectedGradYear = '';
+        let selectedDegreeProgram = '';
         let isFreshman = '';
         let displayName = '';
 
@@ -884,6 +918,24 @@
                 } else {
                     selectedCultures.push(culture);
                 }
+            });
+        });
+
+        // Graduation year pills
+        document.querySelectorAll('#gradYearPills .pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('#gradYearPills .pill').forEach(p => p.classList.remove('selected'));
+                pill.classList.add('selected');
+                selectedGradYear = pill.dataset.gradyear;
+            });
+        });
+
+        // Degree program cards
+        document.querySelectorAll('#degreeProgramCards .radio-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('#degreeProgramCards .radio-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedDegreeProgram = card.dataset.degree;
             });
         });
 
@@ -985,6 +1037,8 @@
             document.getElementById('formSupportStyle').value = selectedStyle;
             document.getElementById('formCulture').value = selectedCultures.join(',');
             document.getElementById('formFreshman').value = isFreshman === 'yes' ? '1' : '0';
+            document.getElementById('formGradYear').value = selectedGradYear;
+            document.getElementById('formDegree').value = selectedDegreeProgram;
             document.getElementById('formDisplayName').value = displayName;
 
             // Show success step

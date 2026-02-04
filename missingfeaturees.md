@@ -1,465 +1,223 @@
-MASTER IMPLEMENTATION PROMPT: SunDevil Circle Complete Overhaul
-You are redesigning and implementing critical updates to the SunDevil Circle web application for ASU students. This is a mental health peer support platform that requires immediate attention to safety, comprehensiveness, and user experience.
+You are updating the Groups page of the SunDevil Circle web app for ASU students. Keep the existing layout, styling, and card design exactly the same: same headings, card structure, typography, spacing, shadows, buttons, and “Join Group” behavior.
+​
 
-CRITICAL INSTRUCTION: All changes must remain visually and structurally consistent with the existing UI design system (colors, fonts, spacing, card styles, button styles, layout patterns). Do not redesign the visual aesthetic — only implement the functional gaps and content improvements outlined below.
+1. Preserve current layout and structure
+Keep the “Need immediate support?” crisis banner, the top navigation bar, and the “Groups – Find or create a peer support group that fits your needs” header exactly as they are.
+​
 
-🚨 PRIORITY 1: FIX CRISIS RESOURCES BANNER (LIFE-CRITICAL)
-Current Issue: The crisis banner only shows 4 resources and is missing critical emergency contacts including 911.
+Keep the search bar (“Search groups”), support topic multi-select (“Support topics”), and “Sort by” dropdown with options: Best Match, Most members, Newest, A–Z, plus Clear and Apply controls.
+​
 
-Required Implementation:
+Keep the “All Groups” section and the “Create a New Group” form at the bottom with the same fields: Group name, Description, Primary support topics (multi-select), Group type (Peer Support / Study/Accountability / Identity/Community / Social), Visibility (Public / Private), and Group Duration (Ongoing / Temporary).
+​
 
-Create a prominent, always-visible crisis banner at the top of all pages (Dashboard, Explore/Connect Peers, Resources, Groups, Share Support Need). The banner must:
+Do not alter visual style, fonts, icons, colors, or card layout. Only add groups and fix search/filter behavior.
 
-Display this exact list in this order:
+2. Ensure all groups are always visible (scrollable list)
+Under “All Groups”, always render the full list of groups as cards in a scrollable list.
 
-Emergency: 911
+When no search query and no topic filters are applied, show all preset + user-created groups, ordered by the current “Sort by” selection.
 
-Text: "Immediate danger, medical emergency, or someone is at risk right now (anywhere in the U.S.), 24/7."
+When search or filters are applied, show the filtered results, but still as cards in the same list; do not hide the section or change the layout.
 
-Link behavior: tel:911 (clickable on mobile)
+3. Fix the broken search behavior
+Current bug: typing “finance” in the search field and clicking Search does not show the “Financial Stress” group in the results, even though it should match.
+​
 
-988 Suicide & Crisis Lifeline
+Implement correct search logic:
 
-Text: "Free, confidential support for mental health/substance-use crises; call, text, or chat 24/7/365 (U.S.)."
+Search must match against at least:
 
-Call link: tel:988
+group name (title)
 
-Text link: sms:988
+group description
 
-Chat link: https://988lifeline.org/chat (opens in new tab)
+associated support topics (e.g., “Financial stress”, “Stress”, “Burnout”, etc.)
 
-ASU/EMPACT 24-Hour Crisis Line: (480) 921-1006
+Example:
 
-Text: "ASU-dedicated urgent behavioral/mental health crisis support for students; 24/7."
+Query: “finance” or “financial” should match the “Financial Stress” group because its title and topics include “Financial Stress” / “Financial stress”.
 
-Call link: tel:+14809211006
+Query: “career” should match “Career and Internships”.
 
-ASU Open Call & Open Chat (TELUS Health): 1-877-258-7429
+Make search case-insensitive and robust to partial word matches (e.g., “finan” still finds “Financial”).
 
-Text: "ASU student counseling support by phone/chat; 24/7/365, usable from anywhere in the world."
+When search returns zero matches, show a friendly “No groups found” message plus a suggestion to “Clear filters” or “Create a New Group”.
 
-Call link: tel:+18772587429
+4. Ensure support-topic filter works correctly
+The “Support topics” multi-select must filter groups where any of the group’s topics match one of the selected topics (OR logic).
 
-Add a "Chat" button linking to the ASU TELUS Health chat page
+Example: selecting “Financial stress” must include the “Financial Stress” group; selecting “Stress” should include multiple groups like “Academic Pressure”, “Financial Stress”, “Health and Wellness”, “Career and Internships”, etc.
 
-Crisis Text Line: Text HOME to 741741
+Filters must combine with search:
 
-Text: "Free, confidential crisis support via text in the U.S.; 24/7."
+Search query + selected topics narrow down results together.
 
-Link behavior: sms:741741?body=HOME (pre-fills SMS on mobile)
+5. Keep and reuse existing preset groups
+Use the existing groups as baseline presets (same text, same topics), ensuring they are always present unless explicitly deleted in the future admin UI.
+​
 
-Add disclaimer text:
-"SunDevil Circle is not an emergency service. For urgent safety or life-threatening situations, use the resources above."
+Existing groups (do not rename or restyle unless specified):
 
-Visual consistency: Use the existing banner design pattern (light mint/teal background, shield icon). Ensure all links are clearly clickable and work on both desktop and mobile.
+Cultural Adjustment
 
-📋 PRIORITY 2: EXPAND SUPPORT TOPICS TO FULL MENTAL HEALTH SPECTRUM
-Current Issue: Only 9 generic topics exist (Homesickness, Academic Stress, Making Friends, Culture Shock, Language Barriers, Loneliness, Anxiety, Finances). This excludes critical mental health issues.
+Homesickness and Family
 
-Required Implementation:
+Academic Pressure
 
-Replace the limited topic list with this complete 43-topic taxonomy across all interfaces (Share Support Need page, profile settings, Explore/Connect Peers filters, group creation):
+Language Barriers
 
-Mental Health & Crisis
+Making Friends
 
-Suicide / self-harm
+Financial Stress
 
-Crisis / panic attack
+Health and Wellness
 
-Depression
+Career and Internships
+​
 
-Anxiety
+Each keeps its current description and topic tags (e.g., “Financial stress / Stress”, “Career stress / time management / procrastination”).
 
-Social anxiety
+6. Add the new preset groups (same card style & features)
+Add the following new preset groups, using the same card layout as the existing ones (title, match %, badge like “Public”, description, topic pills, member count line, and “Join Group” button).
+​
 
-Stress
+The new groups must behave exactly like existing groups:
 
-Burnout
+can be joined/left
 
-Sleep problems / insomnia
+show up in search
 
-Eating disorders / disordered eating
+honor topic filters
 
-Body image concerns
+appear in all sorting modes (Best Match, Most members, Newest, A–Z).
 
-Trauma / PTSD
+Use reasonable placeholder match percentages (e.g., 40–70% “Good Fit” or “New Group”) and 0 members for now, unless your system auto-calculates these.
 
-Grief & loss
+Core emotional/academic/connection groups (if not already present):
 
-Anger management
+Anxiety & Overthinking
 
-OCD
+Description: “A space for students dealing with anxiety, overthinking, or constant worry. Share coping strategies and feel less alone.”
 
-Phobias
+Topics: Anxiety, Social anxiety, Stress.
 
-Bipolar disorder
+Depression & Low Mood
 
-Psychosis / schizophrenia-spectrum concerns
+Description: “For students experiencing sadness, low energy, or feeling down. Connect with others who understand and support each other.”
 
-Substance use (alcohol/drugs)
+Topics: Depression, Low mood, Motivation / concentration problems.
 
-Addiction / dependence
+Loneliness & Making Friends (if separate from existing “Making Friends”)
 
-ADHD / attention & focus problems
+Description: “If you’re feeling lonely or like you don’t quite fit in yet, this group is for you. Talk, share, and connect with others looking for community.”
 
-Autism spectrum / neurodiversity support
+Topics: Loneliness / isolation, Social anxiety, Homesickness.
 
-Relationships & Social
+Identity & “Who Am I?” / Direction
 
-Relationship issues
+Description: “A space to talk about purpose, direction, and identity—academic, career, cultural, or personal. You don’t need to have it all figured out.”
 
-Breakups
+Topics: Identity concerns, Career stress / “no direction”, Academic problems.
 
-Family problems
+Sleep Problems & Insomnia
 
-Roommate conflict
+Description: “Struggling to fall asleep, stay asleep, or rest well? Share tips and routines and feel supported around your sleep challenges.”
 
-Loneliness / isolation
+Topics: Sleep problems / insomnia, Stress, Anxiety.
+​
 
-Homesickness
+General Check‑In / How You’re Doing
 
-Culture shock / adjustment issues
+Title suggestion: “Check‑In & General Support”
 
-Discrimination / bias experiences
+Description: “A gentle space to share how you’re doing—good, bad, or in‑between—and get support from peers.”
 
-Identity concerns (sexuality / gender / faith)
+Topics: Stress, Loneliness / isolation, General emotional support.
 
-Sexual assault / harassment
+Safety / higher‑risk topics (with clear non‑crisis framing):
 
-Domestic/dating violence
+Coping with Suicidal Thoughts / Self‑Harm Urges
 
-Safety concerns / violence risk
+Description: “For talking about urges and staying safe, not for emergencies. If you’re in immediate danger, use the 24/7 crisis resources at the top of the page.”
 
-Academic & Career
+Topics: Suicidal thoughts / self-harm, Safety planning, Depression.
 
-Academic problems
+Trauma & Assault Survivors (Peer Coping)
 
-Test anxiety
+Description: “A trauma‑aware space for students living with the impact of past trauma or assault. Focus on coping, grounding, and not feeling alone.”
 
-Time management / procrastination
+Topics: Trauma / PTSD, Sexual assault / harassment, Domestic/dating violence.
 
-Motivation / concentration problems
+Substance Use & Cutting Back
 
-Career stress / "no direction"
+Description: “For students who want to talk about alcohol or substance use, cutting back, or finding healthier coping strategies.”
 
-Financial stress
+Topics: Substance use, Addiction / dependence, Safety concerns.
 
-Implementation notes:
+Daily functioning / study-life groups:
 
-Make these available as checkboxes in profile settings (multi-select)
+Focus, ADHD & Procrastination
 
-Present as clickable topic buttons on "Share Your Support Need" page (the page currently called "Share Your Challenge")
+Description: “Trouble focusing, starting tasks, or finishing assignments? Connect with others navigating ADHD, attention, and procrastination.”
 
-Use in dropdown filter on Connect with Peers page (see Priority 3)
+Topics: ADHD / attention problems, Time management / procrastination, Motivation / concentration problems.
 
-Enable for group topic tagging when creating groups
+Burnout & Overload
 
-🔒 PRIORITY 3: ADD PRIVACY CONTROLS FOR SENSITIVE TOPICS
-Current Issue: Profile topics are either public or not selected at all. No way to mark sensitive topics as "use for matching but hide from public profile."
+Description: “Feeling exhausted, drained, or overloaded by school and life? Share experiences and small steps to prevent or recover from burnout.”
 
-Required Implementation:
+Topics: Burnout, Stress, Academic problems.
 
-On the Profile Settings page, for each support topic checkbox:
+Money & Financial Stress (if you want a second finance-focused group)
 
-Add a secondary toggle/checkbox labeled: "Hide from my public profile" or "Private (for matching only)"
+Description: “Talk about budgeting, financial aid, work hours, and money stress with peers who get it.”
 
-Behavior:
+Topics: Financial stress, Work–school balance, Basic needs.
 
-When enabled: Topic is used by AI/matching algorithm but NOT displayed on the user's public profile card in Connect with Peers
+You can add additional preset groups for:
 
-When disabled (default): Topic is visible on profile cards
+International Students & Culture Shock
 
-Add explanatory text: "Private topics help us match you with the right peers, but won't be shown publicly on your profile."
+LGBTQ+ Students
 
-Visual consistency: Use the existing checkbox/toggle design pattern from the current profile page
+Students of Color & Bias/Discrimination
 
-🤖 PRIORITY 4: IMPLEMENT AI-POWERED PEER MATCHING
-Current Issue: "Explore Peers" page has basic filters (5 pills) with no intelligence, search, or matching. No AI despite claims.
+Chronic Health & Disability Coping
+using the same pattern (title, short supportive description, topic tags drawn from the topic list).
 
-Required Implementation:
+7. Match all new groups to the topic system
+For every new preset group, assign support topics from the existing master topic list (e.g., Anxiety, Depression, Financial stress, Homesickness, etc.) so that:
 
-Rename "Explore Peer Supporters" to "Connect with Peer Supporters" everywhere (nav, buttons, page title).
+AI matching can recommend them.
 
-On the Connect with Peers page:
+Topic filters and search behave consistently.
 
-Replace the horizontal pill filter bar with:
+Do not invent a separate topic taxonomy; reuse the same topic names as used on other pages (e.g., intake, “We Hear You” issues, profile setup).
 
-A multi-select dropdown for support topics (using the 43-topic list from Priority 2)
+8. Keep “Create a New Group” fully functional and consistent
+User-created groups should:
 
-A search bar for searching by name, major, interests, or keywords
+Appear in the same “All Groups” list, using the same card layout.
 
-Keep visual design consistent with existing filters (same colors/styling)
+Be included in search and topic filters.
 
-Add AI-powered matching and sorting:
+Be sortable by all “Sort by” modes.
 
-Default view: "Recommended for you" section at the top
+Users cannot break the layout; enforce reasonable length constraints on titles and descriptions to fit the existing card design.
 
-Calculate match scores (0-100 or "High/Good/Fair Match") based on:
+9. Testing and acceptance criteria
+Consider the work done when all of these are true:
 
-Overlap between user's "topics I'm experiencing" and peers' "topics I can support with"
+Typing “finance” or “financial” in Search and clicking Apply shows the “Financial Stress” group and any other finance-related groups.
 
-Shared major, year, role (e.g., international student, transfer)
+Typing “sleep” shows “Sleep Problems & Insomnia” and “Health and Wellness”.
 
-Shared languages
+Selecting “Financial stress” in the Support topics filter shows all finance-related groups.
 
-Shared communities/identities (if opted in)
+Selecting “Stress” shows multiple groups (Academic Pressure, Financial Stress, Health and Wellness, Career and Internships, Burnout & Overload, etc.).
 
-Shared interests/hobbies
+All preset groups listed above are visible under “All Groups”, scrollable, and styled identically to existing cards.
 
-Display match indicator on each peer card: "95% Match" or "Best Fit" / "Good Fit" / "New Peer"
+Clearing search and filters returns the full list of groups.
 
-Sort by match score descending by default
-
-Allow manual re-sorting: "Best Match" / "Recently Active" / "Alphabetical"
-
-Respect privacy:
-
-Never display topics marked "Hide from my public profile"
-
-Use hidden topics internally for matching only
-
-Peer cards show:
-
-Name/nickname
-
-Role (e.g., "International Freshman")
-
-Languages spoken
-
-Non-private support topics (as tags)
-
-Match label (e.g., "Best Fit for you")
-
-"Connect" button
-
-Visual consistency: Maintain the existing card design, typography, and button styles. Only add the match indicator and reorganize filtering UI.
-
-👥 PRIORITY 5: BUILD COMPLETE GROUPS SYSTEM
-Current Issue: Groups page returns 404. Feature is completely missing despite being mentioned throughout the app.
-
-Required Implementation:
-
-Create /groups page with full functionality:
-
-A. Group Discovery/Browse Page
-
-List of all public groups (searchable/filterable)
-
-Each group card shows:
-
-Group name
-
-Short description
-
-Primary support topics (as tags)
-
-Visibility badge: "Public" or "Private"
-
-Member count
-
-"Join" button (for public) or "Request Access" (for private)
-
-Search bar and topic filter dropdown (using 43-topic list)
-
-B. Group Creation Flow
-
-Button: "Create New Group"
-
-Form fields:
-
-Group name (required)
-
-Description (required)
-
-Primary support topics: Multi-select from 43-topic list (required)
-
-Group type: Dropdown (e.g., "Peer Support", "Study/Accountability", "Identity/Community", "Social")
-
-Visibility toggle: Public (discoverable in groups list) or Private (invite-only, not listed)
-
-"Create Group" button
-
-C. Invite People to Group (AI-powered recommendations)
-
-In group settings, "Invite People" button opens modal/page
-
-Show recommended people to invite based on:
-
-Match between group's topics and people's "topics I'm experiencing" or "topics I can support with"
-
-Profile similarity (major, year, interests)
-
-Display sections:
-
-"People who may benefit from this group" (their topics align with group's topics)
-
-"People who can support this group" (they marked group topics as "can support with")
-
-Include search bar for manual invite by name/email/username
-
-Show match strength indicator (e.g., "High relevance", "Good fit")
-
-D. Group Privacy Toggle
-
-Group owner can switch Public ↔ Private anytime in settings
-
-Confirmation prompt when switching to Public: "This will make your group discoverable. Are you sure?"
-
-Switching to Private removes from public discovery but keeps existing members
-
-E. Group Page View
-
-Shows members, posts/messages, group description, topics
-
-"Leave Group" button
-
-Owner sees "Settings" and "Invite People" buttons
-
-Visual consistency: Use the existing card design system, color palette, and button styles. Groups should feel like a natural extension of the current UI.
-
-🗑️ PRIORITY 6: REMOVE GAMIFICATION METRICS
-Current Issue: Dashboard shows "0/5 Follow-up questions used", "0 Groups joined", "0 Messages sent" — these feel like achievements/scores rather than support-focused metrics. The 5-question limit is artificial and harmful.
-
-Required Changes:
-
-Remove these three counters entirely from the dashboard:
-
-"Follow-up questions used"
-
-"Groups joined"
-
-"Messages sent"
-
-Remove the 5-question limit on AI follow-up questions:
-
-Allow unlimited follow-up questions
-
-Remove the "0/5 questions used" counter from the "Ask AI for More Help" section
-
-This is a support tool, not a game — there should be no artificial scarcity
-
-Keep the dashboard clean and supportive:
-
-Focus on action cards: "Share Your Support Need", "Browse Resources", "Connect with Peer Supporters"
-
-Show personalized recommendations: "Recommended peers for you", "Suggested groups"
-
-Remove any numeric counters or progress bars that feel like gamification
-
-Rationale: Students seeking mental health support should not feel like they're "using up" resources or being tracked/scored. The focus must be on care and accessibility, not metrics.
-
-📝 PRIORITY 7: RENAME & REFRAME CALL-TO-ACTION BUTTONS
-Current Issue: "Share Another Challenge" sounds too enthusiastic and achievement-oriented. "Explore Peer Supporters" is passive/clinical.
-
-Required Changes:
-
-"Share Another Challenge" → "Need help with something else?"
-
-Alternative: "How else can we support you?"
-
-Alternative: "Share another concern"
-
-Tone: Gentle, caring, open-ended inquiry (not "Share another challenge!" which feels forced)
-
-"Explore Peer Supporters" → "Connect with Peer Supporters"
-
-More action-oriented and supportive than "explore"
-
-Use consistently across nav, dashboard, buttons, page titles
-
-"Share Your Challenge" (page title) → "Share Your Support Need" or "Tell Us How We Can Help"
-
-Less clinical, more person-centered
-
-Update page title, breadcrumb, and any references
-
-"Get Personalized Support" (submit button) → Keep as-is (this is good)
-
-Visual consistency: Buttons maintain the same styling (maroon primary buttons, white secondary buttons), only text changes.
-
-✅ ADDITIONAL FIXES FROM DETAILED ASSESSMENT
-A. Navigation Confusion
-
-"Resources" link in nav currently redirects to /issue (Share Your Challenge page) — this is broken
-
-Fix: "Resources" should go to /resources-hub consistently
-
-B. Crisis Banner Interactivity
-
-Ensure ALL phone/text links work correctly on both desktop and mobile
-
-Test click behavior: tel: links on mobile, sms: with pre-filled body, external links open in new tabs
-
-C. Profile Page Topic Checkboxes
-
-Currently shows 8 topics (Homesickness, Loneliness, Anxiety, Culture Shock, Academics, Relationships, Identity, Finances)
-
-Expand to full 43-topic list with categorized sections (use collapsible accordions if needed to avoid overwhelming users)
-
-Add privacy toggle to each (see Priority 3)
-
-📐 DESIGN SYSTEM CONSISTENCY REQUIREMENTS
-YOU MUST:
-
-Use existing maroon/burgundy (#8B1538 or similar) for primary buttons and brand elements
-
-Use existing mint/teal background for crisis banner
-
-Maintain current card style: white background, subtle shadow, rounded corners
-
-Keep existing typography (font families, sizes, weights)
-
-Use existing icon style (emoji-based icons for topics, UI icons for nav)
-
-Match existing spacing/padding patterns
-
-Use existing button styles: solid maroon primary, outlined secondary
-
-Keep existing form input styles (rounded, bordered)
-
-Maintain existing navigation bar design
-
-YOU MUST NOT:
-
-Change color palette
-
-Redesign card layouts
-
-Change typography system
-
-Add flashy animations or modern UI trends that clash with current design
-
-Alter logo or branding elements
-
-🎯 IMPLEMENTATION CHECKLIST
-When you are done implementing:
-
-✅ Crisis banner shows all 7 resources with working links (911, 988, EMPACT, TELUS, Crisis Text Line)
-✅ All 43 support topics are available in profile, Share Support Need, filters, and group creation
-✅ Profile settings allow marking topics as "Hide from public profile"
-✅ Connect with Peers page has dropdown filter + search bar (not horizontal pills)
-✅ Connect with Peers shows AI-recommended matches with match scores
-✅ Privacy-marked topics are used for matching but hidden from public profile cards
-✅ /groups page exists with full CRUD functionality
-✅ Group creation allows topic selection and public/private toggle
-✅ Group invite screen shows AI-recommended people based on topic match
-✅ "Follow-up questions used", "Groups joined", "Messages sent" counters are removed
-✅ 5-question limit on AI follow-up is removed
-✅ "Share Another Challenge" renamed to "Need help with something else?"
-✅ "Explore Peer Supporters" renamed to "Connect with Peer Supporters" everywhere
-✅ "Share Your Challenge" page renamed to "Share Your Support Need"
-✅ All navigation links work correctly (Resources → resources-hub)
-✅ All UI changes match existing design system (colors, fonts, spacing, components)
-
-🛡️ SAFETY & ETHICS NOTES
-Always keep the crisis banner visible and accessible
-
-Never hide or deprioritize emergency resources
-
-Treat sensitive topics (suicide, assault, trauma) with utmost care in UI language
-
-Ensure AI matching respects privacy: never expose private topics publicly
-
-Group recommendations must not expose private information
-
-All safety disclaimers ("This is peer

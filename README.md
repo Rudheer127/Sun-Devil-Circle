@@ -3,10 +3,13 @@
 A peer support platform for international freshman students at ASU, featuring AI-powered personalized suggestions and empathetic support.
 
 ## Features
-- **Semantic Matching**: Connects students with peers and groups based on shared challenges and interests.
+- **Semantic Matching**: Connects students with peers and groups based on shared challenges, interests, and profile compatibility.
 - **AI Support**: Uses Cerebras AI (Llama 3.3 70B) to provide empathetic responses and personalized resource suggestions.
 - **Topic-Based Chat**: Real-time group chats with AI moderation and message editing/deleting.
 - **Resource Hub**: Curated ASU resources and support options.
+- **25+ Support Groups**: Pre-configured peer support groups covering emotional wellness, academic challenges, identity communities, and daily functioning. Includes groups for anxiety, depression, LGBTQ+ students, international students, and more.
+- **Smart Search**: Search groups by name, description, or topic labels for easier discovery.
+- **Best Match Sorting**: Groups and peers are ranked by compatibility based on profile overlap, shared challenges, and semantic similarity.
 
 ## 🚀 Running on macOS / Linux
 

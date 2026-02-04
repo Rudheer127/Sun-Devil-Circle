@@ -98,6 +98,14 @@ def init_db():
             db.execute('ALTER TABLE profiles ADD COLUMN onboarding_complete INTEGER DEFAULT 0')
         except:
             pass
+        try:
+            db.execute('ALTER TABLE profiles ADD COLUMN graduation_year TEXT DEFAULT ""')
+        except:
+            pass
+        try:
+            db.execute('ALTER TABLE profiles ADD COLUMN degree_program TEXT DEFAULT ""')
+        except:
+            pass
         db.commit()
 
 
@@ -111,8 +119,8 @@ def save_profile_to_db(user_id, profile_dict):
     cultural_background = ','.join(profile_dict.get('cultural_background', []))
     db.execute('''
         INSERT OR REPLACE INTO profiles 
-        (user_id, display_name, is_international_freshman, preferred_language, primary_challenge, support_style, support_topics, private_topics, languages, cultural_background, onboarding_complete)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (user_id, display_name, is_international_freshman, preferred_language, primary_challenge, support_style, support_topics, private_topics, languages, cultural_background, onboarding_complete, graduation_year, degree_program)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         user_id,
         profile_dict.get('display_name', ''),
@@ -124,7 +132,9 @@ def save_profile_to_db(user_id, profile_dict):
         private_topics,
         languages,
         cultural_background,
-        1 if profile_dict.get('onboarding_complete') else 0
+        1 if profile_dict.get('onboarding_complete') else 0,
+        profile_dict.get('graduation_year', ''),
+        profile_dict.get('degree_program', '')
     ))
     db.commit()
 
@@ -141,12 +151,19 @@ def load_profile_from_db(user_id):
         languages = []
         cultural_background = []
         onboarding_complete = False
+        graduation_year = ''
+        degree_program = ''
         try:
             support_topics = row['support_topics'].split(',') if row['support_topics'] else []
             private_topics = row['private_topics'].split(',') if row['private_topics'] else []
             languages = row['languages'].split(',') if row['languages'] else []
             cultural_background = row['cultural_background'].split(',') if row['cultural_background'] else []
             onboarding_complete = bool(row['onboarding_complete'])
+        except:
+            pass
+        try:
+            graduation_year = row['graduation_year'] or ''
+            degree_program = row['degree_program'] or ''
         except:
             pass
         return {
@@ -159,7 +176,9 @@ def load_profile_from_db(user_id):
             'private_topics': private_topics,
             'languages': languages,
             'cultural_background': cultural_background,
-            'onboarding_complete': onboarding_complete
+            'onboarding_complete': onboarding_complete,
+            'graduation_year': graduation_year,
+            'degree_program': degree_program
         }
     return None
 
@@ -281,35 +300,48 @@ def get_topic_labels(topic_ids):
 # Each group has associated metadata (description, topics) defined in seed_group_meta().
 # -----------------------------------------------------------------------------
 PRESET_GROUPS = [
-    # Existing groups
-    "Homesickness and Family",
-    "Academic Pressure",
-    "Making Friends",
-    "Cultural Adjustment",
-    "Language Barriers",
-    "Financial Stress",
-    "Health and Wellness",
-    "Career and Internships",
-    # New core emotional/academic/connection groups
-    "Anxiety & Overthinking",
-    "Depression & Low Mood",
-    "Loneliness & Making Friends",
-    "Identity & Direction",
-    "Sleep Problems & Insomnia",
-    "Check-In & General Support",
-    # Safety / higher-risk topics (with clear non-crisis framing)
-    "Coping with Difficult Thoughts",
-    "Trauma & Survivor Support",
-    "Substance Use & Cutting Back",
-    # Daily functioning / study-life groups
-    "Focus, ADHD & Procrastination",
-    "Burnout & Overload",
-    "Money & Financial Stress",
-    # Identity groups
-    "International Students & Culture Shock",
-    "LGBTQ+ Students",
-    "Students of Color & Bias",
-    "Chronic Health & Disability",
+    # Mental Health & Crisis
+    "🆘 Suicide / Self-harm Support",
+    "🚨 Crisis / Panic Attack Support",
+    "🌧 Depression Support",
+    "😰 Anxiety Support",
+    "😳 Social Anxiety Support",
+    "⚡ Stress Management",
+    "🔥 Burnout Recovery",
+    "🌙 Sleep Problems / Insomnia",
+    "🍽 Eating Disorders / Disordered Eating",
+    "🪞 Body Image Concerns",
+    "🧩 Trauma / PTSD Support",
+    "🕯 Grief & Loss Support",
+    "🌋 Anger Management",
+    "🌀 OCD Support",
+    "🕸 Phobias Support",
+    "⚖ Bipolar Disorder Support",
+    "🧠 Psychosis / Schizophrenia-spectrum Support",
+    "🍺 Substance Use (Alcohol/Drugs)",
+    "🔗 Addiction / Dependence Support",
+    "🎯 ADHD / Attention & Focus Problems",
+    "🧩 Autism Spectrum / Neurodiversity Support",
+    # Relationships & Social
+    "💞 Relationship Issues",
+    "💔 Breakups Support",
+    "🏠 Family Problems",
+    "🛏 Roommate Conflict",
+    "🌫 Loneliness / Isolation",
+    "🧳 Homesickness Support",
+    "🌍 Culture Shock / Adjustment Issues",
+    "⚠ Discrimination / Bias Experiences",
+    "🪪 Identity Concerns (Sexuality / Gender / Faith)",
+    "🛡 Sexual Assault / Harassment Support",
+    "🧯 Domestic/Dating Violence Support",
+    "🚧 Safety Concerns / Violence Risk",
+    # Academic & Career
+    "📚 Academic Problems",
+    "📝 Test Anxiety",
+    "⏰ Time Management / Procrastination",
+    "🧠 Motivation / Concentration Problems",
+    "🧭 Career Stress / No Direction",
+    "💰 Financial Stress",
 ]
 
 # In-memory groups: { "topic": [ {"timestamp": str, "display_name": str, "text": str}, ... ] }
@@ -320,73 +352,101 @@ GROUP_TYPES = ["Peer Support", "Study/Accountability", "Identity/Community", "So
 group_meta = {}
 group_members = {}
 group_requests = {}
+group_invitations = {}  # { user_id: [ {group_name, inviter_id, timestamp}, ... ] }
+group_member_dates = {}  # { group_name: { user_id: join_timestamp } }
 
 def seed_group_meta():
     """Seed group metadata for preset groups."""
     # Unique descriptions for each preset group
     group_descriptions = {
-        # Existing groups
-        "Homesickness and Family": "Missing home or loved ones? Connect with others who understand the challenges of being far from family and find comfort together.",
-        "Academic Pressure": "Struggling with coursework, exams, or academic expectations? Share strategies, support, and encouragement with fellow students.",
-        "Making Friends": "Looking to build meaningful friendships on campus? Meet others who are also seeking connections and social opportunities.",
-        "Cultural Adjustment": "Navigating life in a new culture can be challenging. Share experiences and tips for adapting to American campus life.",
-        "Language Barriers": "Building confidence in English or navigating communication challenges? Practice and support each other in a judgment-free space.",
-        "Financial Stress": "Dealing with money worries, budgeting, or financial aid questions? Find support and share resources with peers facing similar challenges.",
-        "Health and Wellness": "Prioritizing your physical and mental health? Discuss self-care, wellness tips, and support each other's health journeys.",
-        "Career and Internships": "Preparing for internships, jobs, or career planning? Network with peers and share advice on professional development.",
-        # New core emotional/academic/connection groups
-        "Anxiety & Overthinking": "A space for students dealing with anxiety, overthinking, or constant worry. Share coping strategies and feel less alone.",
-        "Depression & Low Mood": "For students experiencing sadness, low energy, or feeling down. Connect with others who understand and support each other.",
-        "Loneliness & Making Friends": "If you're feeling lonely or like you don't quite fit in yet, this group is for you. Talk, share, and connect with others looking for community.",
-        "Identity & Direction": "A space to talk about purpose, direction, and identity - academic, career, cultural, or personal. You don't need to have it all figured out.",
-        "Sleep Problems & Insomnia": "Struggling to fall asleep, stay asleep, or rest well? Share tips and routines and feel supported around your sleep challenges.",
-        "Check-In & General Support": "A gentle space to share how you're doing - good, bad, or in-between - and get support from peers.",
-        # Safety / higher-risk topics (with clear non-crisis framing)
-        "Coping with Difficult Thoughts": "For talking about urges and staying safe, not for emergencies. If you're in immediate danger, use the 24/7 crisis resources at the top of the page.",
-        "Trauma & Survivor Support": "A trauma-aware space for students living with the impact of past trauma or assault. Focus on coping, grounding, and not feeling alone.",
-        "Substance Use & Cutting Back": "For students who want to talk about alcohol or substance use, cutting back, or finding healthier coping strategies.",
-        # Daily functioning / study-life groups
-        "Focus, ADHD & Procrastination": "Trouble focusing, starting tasks, or finishing assignments? Connect with others navigating ADHD, attention, and procrastination.",
-        "Burnout & Overload": "Feeling exhausted, drained, or overloaded by school and life? Share experiences and small steps to prevent or recover from burnout.",
-        "Money & Financial Stress": "Talk about budgeting, financial aid, work hours, and money stress with peers who get it.",
-        # Identity groups
-        "International Students & Culture Shock": "A supportive space for international students navigating cultural transitions, visa concerns, and feeling at home abroad.",
-        "LGBTQ+ Students": "A safe, affirming space for LGBTQ+ students to connect, share experiences, and find community.",
-        "Students of Color & Bias": "A space for students of color to discuss experiences with bias, discrimination, and finding solidarity and support.",
-        "Chronic Health & Disability": "For students managing chronic health conditions or disabilities. Share coping strategies and connect with others who understand.",
+        # Mental Health & Crisis
+        "🆘 Suicide / Self-harm Support": "A safe, peer-supported space to talk about difficult thoughts. Not for emergencies - if you're in immediate danger, use the 24/7 crisis resources.",
+        "🚨 Crisis / Panic Attack Support": "For students experiencing panic attacks or crisis moments. Share grounding techniques and support each other.",
+        "🌧 Depression Support": "For students experiencing sadness, low energy, or feeling down. Connect with others who understand.",
+        "😰 Anxiety Support": "A space for students dealing with anxiety and constant worry. Share coping strategies and feel less alone.",
+        "😳 Social Anxiety Support": "Struggling with social situations? Connect with others who understand social anxiety.",
+        "⚡ Stress Management": "Feeling overwhelmed? Share stress management tips and support each other through tough times.",
+        "🔥 Burnout Recovery": "Feeling exhausted and drained? Share experiences and steps to recover from burnout.",
+        "🌙 Sleep Problems / Insomnia": "Struggling to fall or stay asleep? Share tips and routines for better rest.",
+        "🍽 Eating Disorders / Disordered Eating": "A supportive space for those navigating eating challenges. Share experiences and coping strategies.",
+        "🪞 Body Image Concerns": "Struggling with body image? Connect with peers who understand and support each other.",
+        "🧩 Trauma / PTSD Support": "A trauma-aware space for students living with past trauma. Focus on coping and healing together.",
+        "🕯 Grief & Loss Support": "Processing loss or grief? Connect with others who understand and share your journey.",
+        "🌋 Anger Management": "Working on managing anger? Share strategies and support each other.",
+        "🌀 OCD Support": "Living with OCD? Connect with peers who understand and share coping strategies.",
+        "🕸 Phobias Support": "Dealing with phobias? Share experiences and support each other in overcoming fears.",
+        "⚖ Bipolar Disorder Support": "A space for students managing bipolar disorder. Share experiences and support.",
+        "🧠 Psychosis / Schizophrenia-spectrum Support": "A supportive space for students with psychosis or schizophrenia-spectrum experiences.",
+        "🍺 Substance Use (Alcohol/Drugs)": "For students wanting to talk about substance use and finding healthier coping strategies.",
+        "🔗 Addiction / Dependence Support": "Working through addiction or dependence? Connect with peers on similar journeys.",
+        "🎯 ADHD / Attention & Focus Problems": "Trouble focusing or finishing tasks? Connect with others navigating ADHD and attention challenges.",
+        "🧩 Autism Spectrum / Neurodiversity Support": "A welcoming space for neurodivergent students to connect and share experiences.",
+        # Relationships & Social
+        "💞 Relationship Issues": "Navigating relationship challenges? Share experiences and get peer support.",
+        "💔 Breakups Support": "Going through a breakup? Connect with others who understand and heal together.",
+        "🏠 Family Problems": "Dealing with family challenges? Share experiences and find support from peers.",
+        "🛏 Roommate Conflict": "Roommate issues? Share tips and strategies for living together peacefully.",
+        "🌫 Loneliness / Isolation": "Feeling lonely or isolated? Connect with others seeking community and belonging.",
+        "🧳 Homesickness Support": "Missing home? Connect with others who understand being far from family and loved ones.",
+        "🌍 Culture Shock / Adjustment Issues": "Navigating cultural transitions? Share experiences and tips for adjusting.",
+        "⚠ Discrimination / Bias Experiences": "Experienced discrimination or bias? Find solidarity and support here.",
+        "🪪 Identity Concerns (Sexuality / Gender / Faith)": "Exploring your identity? A safe space to discuss sexuality, gender, faith, and more.",
+        "🛡 Sexual Assault / Harassment Support": "A trauma-informed space for survivors of sexual assault or harassment. You're not alone.",
+        "🧯 Domestic/Dating Violence Support": "Navigating domestic or dating violence? Find support and resources here.",
+        "🚧 Safety Concerns / Violence Risk": "Concerned about safety or violence? Get peer support and resources.",
+        # Academic & Career
+        "📚 Academic Problems": "Struggling with coursework or academics? Share strategies and support each other.",
+        "📝 Test Anxiety": "Dealing with test anxiety? Share tips and coping strategies with peers.",
+        "⏰ Time Management / Procrastination": "Trouble managing time or procrastinating? Connect with others working on these skills.",
+        "🧠 Motivation / Concentration Problems": "Low motivation or trouble concentrating? Share strategies and support.",
+        "🧭 Career Stress / No Direction": "Feeling lost about career direction? Explore your path with peer support.",
+        "💰 Financial Stress": "Dealing with money worries? Find support and share resources with peers.",
     }
     
     # Map group names to their associated topic IDs for filtering
     group_topics = {
-        # Existing groups
-        "Homesickness and Family": ["homesickness", "family_problems", "loneliness_isolation"],
-        "Academic Pressure": ["academic_problems", "test_anxiety", "stress", "burnout", "motivation_focus", "time_management"],
-        "Making Friends": ["loneliness_isolation", "social_anxiety"],
-        "Cultural Adjustment": ["culture_shock", "discrimination_bias", "identity_concerns"],
-        "Language Barriers": ["culture_shock", "stress"],
-        "Financial Stress": ["financial_stress", "stress"],
-        "Health and Wellness": ["stress", "burnout", "sleep_insomnia", "anxiety", "depression", "body_image", "eating_disorders"],
-        "Career and Internships": ["career_stress", "stress", "time_management"],
-        # New core emotional/academic/connection groups
-        "Anxiety & Overthinking": ["anxiety", "social_anxiety", "stress"],
-        "Depression & Low Mood": ["depression", "motivation_focus", "loneliness_isolation"],
-        "Loneliness & Making Friends": ["loneliness_isolation", "social_anxiety", "homesickness"],
-        "Identity & Direction": ["identity_concerns", "career_stress", "academic_problems"],
-        "Sleep Problems & Insomnia": ["sleep_insomnia", "stress", "anxiety"],
-        "Check-In & General Support": ["stress", "loneliness_isolation", "anxiety"],
-        # Safety / higher-risk topics
-        "Coping with Difficult Thoughts": ["suicide_self_harm", "depression", "crisis_panic"],
-        "Trauma & Survivor Support": ["trauma_ptsd", "sexual_assault", "dating_violence"],
-        "Substance Use & Cutting Back": ["substance_use", "addiction", "safety_concerns"],
-        # Daily functioning / study-life groups
-        "Focus, ADHD & Procrastination": ["adhd", "time_management", "motivation_focus"],
-        "Burnout & Overload": ["burnout", "stress", "academic_problems"],
-        "Money & Financial Stress": ["financial_stress", "stress", "career_stress"],
-        # Identity groups
-        "International Students & Culture Shock": ["culture_shock", "homesickness", "discrimination_bias"],
-        "LGBTQ+ Students": ["identity_concerns", "discrimination_bias", "loneliness_isolation"],
-        "Students of Color & Bias": ["discrimination_bias", "identity_concerns", "stress"],
-        "Chronic Health & Disability": ["stress", "anxiety", "depression", "identity_concerns"],
+        # Mental Health & Crisis
+        "🆘 Suicide / Self-harm Support": ["suicide_self_harm", "crisis_panic", "depression"],
+        "🚨 Crisis / Panic Attack Support": ["crisis_panic", "anxiety", "stress"],
+        "🌧 Depression Support": ["depression", "motivation_focus", "loneliness_isolation"],
+        "😰 Anxiety Support": ["anxiety", "stress", "crisis_panic"],
+        "😳 Social Anxiety Support": ["social_anxiety", "anxiety", "loneliness_isolation"],
+        "⚡ Stress Management": ["stress", "burnout", "anxiety"],
+        "🔥 Burnout Recovery": ["burnout", "stress", "motivation_focus"],
+        "🌙 Sleep Problems / Insomnia": ["sleep_insomnia", "stress", "anxiety"],
+        "🍽 Eating Disorders / Disordered Eating": ["eating_disorders", "body_image", "anxiety"],
+        "🪞 Body Image Concerns": ["body_image", "eating_disorders", "anxiety"],
+        "🧩 Trauma / PTSD Support": ["trauma_ptsd", "anxiety", "depression"],
+        "🕯 Grief & Loss Support": ["grief_loss", "depression", "loneliness_isolation"],
+        "🌋 Anger Management": ["anger_management", "stress", "relationship_issues"],
+        "🌀 OCD Support": ["ocd", "anxiety", "stress"],
+        "🕸 Phobias Support": ["phobias", "anxiety", "stress"],
+        "⚖ Bipolar Disorder Support": ["bipolar", "depression", "anxiety"],
+        "🧠 Psychosis / Schizophrenia-spectrum Support": ["psychosis", "anxiety", "depression"],
+        "🍺 Substance Use (Alcohol/Drugs)": ["substance_use", "addiction", "stress"],
+        "🔗 Addiction / Dependence Support": ["addiction", "substance_use", "stress"],
+        "🎯 ADHD / Attention & Focus Problems": ["adhd", "time_management", "motivation_focus"],
+        "🧩 Autism Spectrum / Neurodiversity Support": ["autism", "identity_concerns", "social_anxiety"],
+        # Relationships & Social
+        "💞 Relationship Issues": ["relationship_issues", "stress", "loneliness_isolation"],
+        "💔 Breakups Support": ["breakups", "grief_loss", "loneliness_isolation"],
+        "🏠 Family Problems": ["family_problems", "stress", "loneliness_isolation"],
+        "🛏 Roommate Conflict": ["roommate_conflict", "stress", "loneliness_isolation"],
+        "🌫 Loneliness / Isolation": ["loneliness_isolation", "social_anxiety", "depression"],
+        "🧳 Homesickness Support": ["homesickness", "loneliness_isolation", "family_problems"],
+        "🌍 Culture Shock / Adjustment Issues": ["culture_shock", "homesickness", "identity_concerns"],
+        "⚠ Discrimination / Bias Experiences": ["discrimination_bias", "identity_concerns", "stress"],
+        "🪪 Identity Concerns (Sexuality / Gender / Faith)": ["identity_concerns", "discrimination_bias", "loneliness_isolation"],
+        "🛡 Sexual Assault / Harassment Support": ["sexual_assault", "trauma_ptsd", "safety_concerns"],
+        "🧯 Domestic/Dating Violence Support": ["dating_violence", "trauma_ptsd", "safety_concerns"],
+        "🚧 Safety Concerns / Violence Risk": ["safety_concerns", "trauma_ptsd", "stress"],
+        # Academic & Career
+        "📚 Academic Problems": ["academic_problems", "stress", "motivation_focus"],
+        "📝 Test Anxiety": ["test_anxiety", "anxiety", "academic_problems"],
+        "⏰ Time Management / Procrastination": ["time_management", "adhd", "motivation_focus"],
+        "🧠 Motivation / Concentration Problems": ["motivation_focus", "adhd", "depression"],
+        "🧭 Career Stress / No Direction": ["career_stress", "identity_concerns", "stress"],
+        "💰 Financial Stress": ["financial_stress", "stress", "career_stress"],
     }
     
     for name in PRESET_GROUPS:
@@ -525,6 +585,15 @@ def build_profile_text(profile_dict):
     if interests:
         interest_text = ", ".join(interests)
         parts.append(f"My interests include: {interest_text}.")
+    
+    graduation_year = profile_dict.get("graduation_year", "")
+    if graduation_year:
+        parts.append(f"I'm graduating in {graduation_year}.")
+    
+    degree_program = profile_dict.get("degree_program", "")
+    if degree_program:
+        degree_readable = degree_program.replace("_", " ").title()
+        parts.append(f"I'm pursuing a {degree_readable} degree.")
 
     display_name = profile_dict.get("display_name", "")
     if display_name:
@@ -1161,6 +1230,8 @@ def get_profile_dict():
         "private_topics": session.get("private_topics", []),
         "languages": session.get("languages", []),
         "cultural_background": session.get("cultural_background", []),
+        "graduation_year": session.get("graduation_year", ""),
+        "degree_program": session.get("degree_program", ""),
     }
 
 
@@ -1344,6 +1415,8 @@ def onboarding_submit():
     
     is_freshman = request.form.get("is_international_freshman") == "1"
     display_name = request.form.get("display_name", "").strip()[:50]
+    graduation_year = request.form.get("graduation_year", "").strip()
+    degree_program = request.form.get("degree_program", "").strip()
     
     # Build profile dict
     profile_dict = {
@@ -1356,6 +1429,8 @@ def onboarding_submit():
         "private_topics": [],
         "languages": languages,
         "cultural_background": cultural_background,
+        "graduation_year": graduation_year,
+        "degree_program": degree_program,
         "onboarding_complete": True
     }
     
@@ -1404,6 +1479,8 @@ def profile():
         private_topics = [t for t in private_topics if t in support_topics]
         languages = request.form.getlist("languages")
         cultural_background = request.form.getlist("cultural_background")
+        graduation_year = request.form.get("graduation_year", "").strip()
+        degree_program = request.form.get("degree_program", "").strip()
         
         # Update session
         session["display_name"] = display_name
@@ -1414,6 +1491,8 @@ def profile():
         session["languages"] = languages
         session["preferred_language"] = languages[0] if languages else ""
         session["cultural_background"] = cultural_background
+        session["graduation_year"] = graduation_year
+        session["degree_program"] = degree_program
         session["primary_challenge"] = support_topics  # For compatibility
         
         # Build profile dict
@@ -1427,6 +1506,8 @@ def profile():
             "private_topics": private_topics,
             "languages": languages,
             "cultural_background": cultural_background,
+            "graduation_year": graduation_year,
+            "degree_program": degree_program,
             "onboarding_complete": True
         }
         
@@ -1686,7 +1767,14 @@ def groups_page():
             # Build searchable text from name, description, AND topic labels
             topic_labels = " ".join(get_topic_labels(topics))
             searchable = " ".join([name, meta.get("description", ""), topic_labels]).lower()
-            if search_query not in searchable:
+            # Split search query into words and check if any word matches
+            search_words = search_query.split()
+            found_match = False
+            for word in search_words:
+                if len(word) >= 3 and word in searchable:
+                    found_match = True
+                    break
+            if not found_match:
                 continue
 
         # Calculate match score for this group
@@ -1801,6 +1889,12 @@ def join_group_full():
         return redirect(url_for("groups_page"))
 
     group_members[group_name].add(user_id)
+    
+    # Track join date
+    if group_name not in group_member_dates:
+        group_member_dates[group_name] = {}
+    group_member_dates[group_name][user_id] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
     session["current_group"] = group_name
     return redirect(url_for("group_detail", group_name=group_name))
 
@@ -1923,58 +2017,121 @@ def group_invite(group_name):
         flash("Group not found.", "error")
         return redirect(url_for("groups_page"))
 
+    user_id = session.get("user_id")
     topics = normalize_topic_ids(meta.get("topics", []))
     search_query = request.args.get("q", "").strip().lower()
 
+    # Get current user profile for matching
+    current_profile = load_profile_from_db(user_id) if user_id else None
+    if not current_profile:
+        current_profile = {}
+
     db = get_db()
+    # Exclude current user from results (same as people page)
     all_profiles = db.execute('''
         SELECT p.*, u.username FROM profiles p
         JOIN users u ON p.user_id = u.id
-        WHERE p.display_name IS NOT NULL AND p.display_name != ''
-    ''').fetchall()
+        WHERE p.user_id != ? AND p.display_name IS NOT NULL AND p.display_name != ''
+    ''', (user_id,)).fetchall()
 
     benefit = []
     support = []
+    
     for row in all_profiles:
+        # Skip users already in the group
         if row['user_id'] in group_members.get(group_name, set()):
             continue
+            
         challenges = normalize_topic_ids((row['primary_challenge'] or '').split(','))
         supports = normalize_topic_ids((row['support_topics'] or '').split(','))
         privates = normalize_topic_ids((row['private_topics'] or '').split(','))
+        all_topics = list(dict.fromkeys(challenges + supports))
 
+        # Apply search filter (same as people page)
         if search_query:
             searchable = " ".join([
                 row['display_name'] or '',
                 row['username'] or '',
-                ",".join(challenges + supports)
+                row['preferred_language'] or '',
+                ",".join(all_topics),
             ]).lower()
-            if search_query not in searchable:
+            # Word-based matching for flexibility
+            query_words = search_query.split()
+            found = False
+            for word in query_words:
+                if len(word) >= 3 and word in searchable:
+                    found = True
+                    break
+            if not found and search_query not in searchable:
                 continue
 
+        # Build peer profile for match scoring
+        peer_profile = {
+            "display_name": row['display_name'] or 'Anonymous',
+            "is_international_freshman": bool(row['is_international_freshman']),
+            "preferred_language": row['preferred_language'] or '',
+            "primary_challenge": challenges,
+            "support_topics": supports,
+            "private_topics": privates,
+            "languages": (row['languages'] or '').split(',') if row['languages'] else [],
+            "cultural_background": (row['cultural_background'] or '').split(',') if row['cultural_background'] else [],
+            "support_style": row['support_style'] or 'mixed'
+        }
+        try:
+            peer_profile["graduation_year"] = row['graduation_year'] or ''
+            peer_profile["degree_program"] = row['degree_program'] or ''
+        except:
+            pass
+
+        # Calculate match score based on group topics overlap
         benefit_overlap = len(set(challenges + privates) & set(topics))
         support_overlap = len(set(supports + privates) & set(topics))
+        
+        # Calculate general match score for sorting
+        match_score = calculate_match_score(current_profile, peer_profile)
+        
+        # Add topic match bonus to score
+        topic_bonus = (benefit_overlap + support_overlap) * 10
+        final_score = min(100, match_score + topic_bonus)
+        
+        if final_score >= 80:
+            match_label = "Best Fit"
+        elif final_score >= 60:
+            match_label = "Good Fit"
+        elif benefit_overlap > 0 or support_overlap > 0:
+            match_label = "Topic Match"
+        else:
+            match_label = "New Peer"
 
+        user_data = {
+            "user_id": row['user_id'],
+            "display_name": row['display_name'],
+            "match_label": match_label,
+            "match_score": final_score,
+            "benefit_overlap": benefit_overlap,
+            "support_overlap": support_overlap
+        }
+
+        # Show ALL users - categorize by topic overlap but include everyone
+        # Users with topic overlap appear in their relevant section
+        # Users without overlap go to the "benefit" section (general recommendations)
         if benefit_overlap > 0:
-            label = "High relevance" if benefit_overlap >= 2 else "Good fit"
-            benefit.append({
-                "user_id": row['user_id'],
-                "display_name": row['display_name'],
-                "match_label": label
-            })
-
-        if support_overlap > 0:
-            label = "High relevance" if support_overlap >= 2 else "Good fit"
-            support.append({
-                "user_id": row['user_id'],
-                "display_name": row['display_name'],
-                "match_label": label
-            })
+            benefit.append(user_data)
+        elif support_overlap > 0:
+            support.append(user_data)
+        else:
+            # Include users even without topic overlap (like Find Peers does)
+            benefit.append(user_data)
+    
+    # Sort by match score (best match first)
+    benefit.sort(key=lambda x: x['match_score'], reverse=True)
+    support.sort(key=lambda x: x['match_score'], reverse=True)
 
     return render_template(
         "group_invite.html",
         group=meta,
-        benefit_candidates=benefit[:10],
-        support_candidates=support[:10],
+        benefit_candidates=benefit[:20],
+        support_candidates=support[:20],
         search_query=search_query,
         username=session.get("username")
     )
@@ -2262,8 +2419,28 @@ def calculate_match_score(current_profile, peer_profile):
         culture_score = 1.0
 
     freshman_score = 1.0 if current_profile.get("is_international_freshman") == peer_profile.get("is_international_freshman") else 0.0
+    
+    # Graduation year matching (within 1 year counts as match)
+    grad_year_score = 0.0
+    current_grad = current_profile.get("graduation_year", "")
+    peer_grad = peer_profile.get("graduation_year", "")
+    if current_grad and peer_grad:
+        try:
+            current_year = int(current_grad.replace("+", "")[:4])  # Handle "2030+"
+            peer_year = int(peer_grad.replace("+", "")[:4])
+            if abs(current_year - peer_year) <= 1:
+                grad_year_score = 1.0
+        except:
+            pass
+    
+    # Degree program matching
+    degree_score = 0.0
+    current_degree = current_profile.get("degree_program", "")
+    peer_degree = peer_profile.get("degree_program", "")
+    if current_degree and peer_degree and current_degree == peer_degree:
+        degree_score = 1.0
 
-    score = (topic_score * 70) + (lang_score * 10) + (culture_score * 10) + (freshman_score * 10)
+    score = (topic_score * 60) + (lang_score * 10) + (culture_score * 10) + (freshman_score * 10) + (grad_year_score * 5) + (degree_score * 5)
     return int(round(score))
 
 
@@ -2838,6 +3015,161 @@ def cancel_connection():
     
     flash("Request cancelled", "info")
     return redirect(url_for("peers_page"))
+
+
+@app.route("/my-groups", methods=["GET"])
+@login_required
+def my_groups_page():
+    """My Groups page - shows joined groups, invitations, and join requests."""
+    user_id = session.get("user_id")
+    
+    # Get joined groups
+    joined_groups = []
+    for group_name, members in group_members.items():
+        if user_id in members:
+            group_info = group_meta.get(group_name, {})
+            join_date = group_member_dates.get(group_name, {}).get(user_id, "")
+            
+            # Format join date
+            if join_date:
+                try:
+                    dt = datetime.strptime(join_date, "%Y-%m-%d %H:%M:%S")
+                    days_ago = (datetime.now() - dt).days
+                    if days_ago == 0:
+                        joined_at = "today"
+                    elif days_ago == 1:
+                        joined_at = "yesterday"
+                    elif days_ago < 7:
+                        joined_at = f"{days_ago} days ago"
+                    elif days_ago < 30:
+                        joined_at = f"{days_ago // 7} weeks ago"
+                    else:
+                        joined_at = dt.strftime("%b %d, %Y")
+                except:
+                    joined_at = ""
+            else:
+                joined_at = ""
+            
+            joined_groups.append({
+                "name": group_name,
+                "member_count": len(members),
+                "group_type": group_info.get("group_type", "Peer Support"),
+                "joined_at": joined_at
+            })
+    
+    # Get group join requests (for groups you own)
+    group_join_requests = []
+    for group_name, requesters in group_requests.items():
+        group_info = group_meta.get(group_name, {})
+        if group_info.get("owner_id") == user_id:
+            for requester_id in requesters:
+                requester_profile = load_profile_from_db(requester_id)
+                if requester_profile:
+                    group_join_requests.append({
+                        "user_id": requester_id,
+                        "group_name": group_name,
+                        "display_name": requester_profile.get("display_name", "Anonymous")
+                    })
+    
+    # Get pending group invitations
+    pending_invitations = []
+    user_invitations = group_invitations.get(user_id, [])
+    for invitation in user_invitations:
+        group_name = invitation.get("group_name")
+        if group_name and group_name in group_meta:
+            # Skip if already joined
+            if user_id in group_members.get(group_name, set()):
+                continue
+            
+            group_info = group_meta.get(group_name, {})
+            invited_time = invitation.get("timestamp", "")
+            
+            # Format invite date
+            if invited_time:
+                try:
+                    dt = datetime.strptime(invited_time, "%Y-%m-%d %H:%M:%S")
+                    days_ago = (datetime.now() - dt).days
+                    if days_ago == 0:
+                        invited_at = "today"
+                    elif days_ago == 1:
+                        invited_at = "yesterday"
+                    elif days_ago < 7:
+                        invited_at =f"{days_ago}d ago"
+                    else:
+                        invited_at = dt.strftime("%b %d")
+                except:
+                    invited_at = ""
+            else:
+                invited_at = ""
+            
+            pending_invitations.append({
+                "group_name": group_name,
+                "description": group_info.get("description", ""),
+                "invited_at": invited_at
+            })
+    
+    return render_template(
+        "my_groups.html",
+        joined_groups=joined_groups,
+        group_join_requests=group_join_requests,
+        pending_invitations=pending_invitations,
+        username=session.get("username")
+    )
+
+
+@app.route("/groups/<path:group_name>/requests/decline", methods=["POST"])
+@login_required
+def group_request_decline(group_name):
+    """Decline a group join request."""
+    group_name = unquote(group_name)
+    user_id = session.get("user_id")
+    requester_id = request.form.get("requester_id")
+    
+    if not requester_id:
+        flash("Invalid request", "error")
+        return redirect(url_for("my_groups_page"))
+    
+    try:
+        requester_id = int(requester_id)
+    except ValueError:
+        flash("Invalid request", "error")
+        return redirect(url_for("my_groups_page"))
+    
+    # Check if user owns the group
+    group_info = group_meta.get(group_name, {})
+    if group_info.get("owner_id") != user_id:
+        flash("You don't have permission to decline this request", "error")
+        return redirect(url_for("my_groups_page"))
+    
+    # Remove from requests
+    if group_name in group_requests:
+        group_requests[group_name].discard(requester_id)
+    
+    flash("Request declined", "info")
+    return redirect(url_for("my_groups_page"))
+
+
+@app.route("/groups/invitation/decline", methods=["POST"])
+@login_required
+def decline_group_invitation():
+    """Decline a group invitation."""
+    user_id = session.get("user_id")
+    group_name = request.form.get("group_name", "").strip()
+    
+    if not group_name:
+        flash("Invalid invitation", "error")
+        return redirect(url_for("my_groups_page"))
+    
+    # Remove invitation
+    if user_id in group_invitations:
+        group_invitations[user_id] = [
+            inv for inv in group_invitations[user_id]
+            if inv.get("group_name") != group_name
+        ]
+    
+    flash("Invitation declined", "info")
+    return redirect(url_for("my_groups_page"))
+
 
 
 # -----------------------------------------------------------------------------
