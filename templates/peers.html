@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Peers - SunDevil Circle{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 160px; padding-bottom: 80px;">
+    <div style="margin-bottom: 32px;">
+        <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary);">Peers</h1>
+        <p style="color: var(--text-secondary); margin-top: 8px; font-size: 18px;">Manage your peer connections and
+            requests.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div style="margin-bottom: 24px;">
+        {% for category, message in messages %}
+        <div
+            style="margin-bottom: 12px; padding: 14px 18px; border-radius: 12px; background: {{ '#D1FAE5' if category == 'success' else '#FEE2E2' }}; color: {{ '#065F46' if category == 'success' else '#991B1B' }};">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <!-- Connected Peers -->
+        <div class="card" style="padding: 24px;">
+            <h3
+                style="font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">🤝</span> Connected Peers
+                <span
+                    style="background: #D1FAE5; color: #065F46; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 600;">{{
+                    connected_peers|length }}</span>
+            </h3>
+            {% if connected_peers %}
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                {% for peer in connected_peers %}
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; padding: 16px; background: #F9FAFB; border-radius: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div
+                            style="width: 48px; height: 48px; background: linear-gradient(135deg, #8B1538, #A91D3A); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 18px;">
+                            {{ peer.display_name[0]|upper if peer.display_name else '?' }}
+                        </div>
+                        <div>
+                            <p style="font-weight: 600; color: var(--text-primary);">{{ peer.display_name }}</p>
+                            {% if peer.match_reason %}
+                            <p style="font-size: 12px; color: var(--text-secondary);">{{ peer.match_reason }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{{ url_for('chat', group=peer.display_name) }}" class="btn btn-outline"
+                            style="padding: 8px 16px; font-size: 13px;">Chat</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                <p style="font-size: 48px; margin-bottom: 12px;">👥</p>
+                <p>No connected peers yet.</p>
+                <a href="{{ url_for('people') }}" class="btn btn-maroon"
+                    style="margin-top: 16px; display: inline-block;">Find Peers</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Pending Requests -->
+        <div class="card" style="padding: 24px;">
+            <h3
+                style="font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">⏳</span> Pending Requests
+                <span
+                    style="background: #FEF3C7; color: #92400E; font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 600;">{{
+                    (incoming_requests|length) + (outgoing_requests|length) }}</span>
+            </h3>
+
+            <!-- Incoming Requests -->
+            {% if incoming_requests %}
+            <div style="margin-bottom: 20px;">
+                <p
+                    style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Incoming Requests</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    {% for req in incoming_requests %}
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; padding: 14px; background: #FFF7ED; border: 1px solid #FDBA74; border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div
+                                style="width: 40px; height: 40px; background: #FED7AA; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #9A3412; font-weight: 600;">
+                                {{ req.sender_display_name[0]|upper if req.sender_display_name else '?' }}
+                            </div>
+                            <div>
+                                <p style="font-weight: 600; color: var(--text-primary);">{{ req.sender_display_name }}
+                                </p>
+                                {% if req.message %}
+                                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">"{{
+                                    req.message[:50] }}{{ '...' if req.message|length > 50 else '' }}"</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <form method="POST" action="{{ url_for('accept_connection') }}" style="display: inline;">
+                                <input type="hidden" name="sender_id" value="{{ req.sender_id }}">
+                                <button type="submit" class="btn btn-maroon"
+                                    style="padding: 6px 12px; font-size: 12px;">Accept</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('decline_connection') }}" style="display: inline;">
+                                <input type="hidden" name="sender_id" value="{{ req.sender_id }}">
+                                <button type="submit" class="btn btn-secondary"
+                                    style="padding: 6px 12px; font-size: 12px;">Decline</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Outgoing Requests -->
+            {% if outgoing_requests %}
+            <div>
+                <p
+                    style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Outgoing Requests</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    {% for req in outgoing_requests %}
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; padding: 14px; background: #F9FAFB; border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div
+                                style="width: 40px; height: 40px; background: #E5E7EB; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #6B7280; font-weight: 600;">
+                                {{ req.recipient_display_name[0]|upper if req.recipient_display_name else '?' }}
+                            </div>
+                            <div>
+                                <p style="font-weight: 600; color: var(--text-primary);">{{ req.recipient_display_name
+                                    }}</p>
+                                <span
+                                    style="display: inline-block; font-size: 11px; background: #FEF3C7; color: #92400E; padding: 2px 8px; border-radius: 6px; margin-top: 4px;">Pending</span>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ url_for('cancel_connection') }}" style="display: inline;">
+                            <input type="hidden" name="recipient_id" value="{{ req.recipient_id }}">
+                            <button type="submit" class="btn btn-secondary"
+                                style="padding: 6px 12px; font-size: 12px;">Cancel</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if not incoming_requests and not outgoing_requests %}
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                <p style="font-size: 48px; margin-bottom: 12px;">📬</p>
+                <p>No pending requests.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Suggested Peers Section -->
+    {% if suggested_peers %}
+    <div class="card" style="margin-top: 24px; padding: 24px;">
+        <h3
+            style="font-size: 18px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">✨</span> Suggested Peers
+        </h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">Based on your profile and shared
+            interests.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+            {% for peer in suggested_peers %}
+            <div class="step-card" style="padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <div
+                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #8B1538, #A91D3A); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 18px;">
+                        {{ peer.display_name[0]|upper if peer.display_name else '?' }}
+                    </div>
+                    <div>
+                        <p style="font-weight: 600; color: var(--text-primary);">{{ peer.display_name }}</p>
+                        {% if peer.match_score %}
+                        <span
+                            style="font-size: 11px; background: #D1FAE5; color: #065F46; padding: 2px 8px; border-radius: 6px;">{{
+                            (peer.match_score * 100)|round|int }}% match</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if peer.common_topics %}
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
+                    {% for topic in peer.common_topics[:3] %}
+                    <span
+                        style="font-size: 11px; background: #F3F4F6; color: var(--text-secondary); padding: 4px 8px; border-radius: 8px;">{{
+                        topic }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <a href="{{ url_for('people') }}?connect={{ peer.user_id }}" class="btn btn-outline"
+                    style="width: 100%; text-align: center; padding: 10px;">Connect</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div style="margin-top: 24px; display: flex; gap: 16px; justify-content: center;">
+        <a href="{{ url_for('people') }}" class="btn btn-maroon"
+            style="display: inline-flex; align-items: center; gap: 8px;">
+            <span>👥</span> Find More Peers
+        </a>
+        <a href="{{ url_for('groups_page') }}" class="btn btn-outline"
+            style="display: inline-flex; align-items: center; gap: 8px;">
+            <span>🫶</span> Browse Groups
+        </a>
+    </div>
+</div>
+{% endblock %}

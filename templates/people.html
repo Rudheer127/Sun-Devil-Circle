@@ -1,38 +1,59 @@
 {% extends "base.html" %}
 
-{% block title %}Explore Peers - SunDevil Circle{% endblock %}
+{% block title %}Connect with Peer Supporters - SunDevil Circle{% endblock %}
 
 {% block content %}
 <div class="container" style="padding-top: 180px; padding-bottom: 80px;">
 
     <div style="margin-bottom: 40px;">
-        <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary);">Explore Peer Supporters 👥</h1>
-        <p style="color: var(--text-secondary); margin-top: 8px; font-size: 18px;">Connect with trained peers who
-            understand your experiences.</p>
+        <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary);">Connect with Peer Supporters 👥</h1>
+        <p style="color: var(--text-secondary); margin-top: 8px; font-size: 18px;">Find peers who understand your
+            experiences and support style.</p>
     </div>
 
     <!-- Filter Section -->
     <div class="card" style="margin-bottom: 32px;">
-        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Filter by Challenge</h3>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <a href="{{ url_for('people') }}" class="group-tag-btn"
-                style="{{ 'background: var(--primary-maroon); color: white;' if not filter else '' }}">All</a>
-            <a href="{{ url_for('people', filter='homesickness') }}" class="group-tag-btn"
-                style="{{ 'background: var(--primary-maroon); color: white;' if filter == 'homesickness' else '' }}">🏠
-                Homesickness</a>
-            <a href="{{ url_for('people', filter='academic') }}" class="group-tag-btn"
-                style="{{ 'background: var(--primary-maroon); color: white;' if filter == 'academic' else '' }}">📚
-                Academic</a>
-            <a href="{{ url_for('people', filter='social') }}" class="group-tag-btn"
-                style="{{ 'background: var(--primary-maroon); color: white;' if filter == 'social' else '' }}">👥
-                Social</a>
-            <a href="{{ url_for('people', filter='cultural') }}" class="group-tag-btn"
-                style="{{ 'background: var(--primary-maroon); color: white;' if filter == 'cultural' else '' }}">🌍
-                Cultural</a>
-            <a href="{{ url_for('people', filter='language') }}" class="group-tag-btn"
-                style="{{ 'background: var(--primary-maroon); color: white;' if filter == 'language' else '' }}">💬
-                Language</a>
-        </div>
+        <form method="GET" action="{{ url_for('people') }}">
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr 0.6fr; gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Search</label>
+                    <input type="text" name="q" class="form-input" placeholder="Name, major, interests, keywords"
+                        value="{{ search_query }}">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Support
+                        topics</label>
+                    <select name="topics" multiple class="form-input" style="height: 46px;">
+                        {% for category, topics in support_topic_categories %}
+                        <optgroup label="{{ category }}">
+                            {% for topic_id, icon, label in topics %}
+                            <option value="{{ topic_id }}" {{ 'selected' if topic_id in selected_topics else '' }}>
+                                {{ icon }} {{ label }}
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Sort
+                        by</label>
+                    <select name="sort" class="form-input">
+                        <option value="best" {{ 'selected' if sort_by=='best' else '' }}>Best Match</option>
+                        <option value="recent" {{ 'selected' if sort_by=='recent' else '' }}>Recently Active</option>
+                        <option value="alpha" {{ 'selected' if sort_by=='alpha' else '' }}>Alphabetical</option>
+                    </select>
+                </div>
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 12px;">
+                <p style="font-size: 12px; color: var(--text-secondary);">Private topics are used for matching only.</p>
+                <div style="display: flex; gap: 8px;">
+                    <a href="{{ url_for('people') }}" class="btn btn-secondary">Clear</a>
+                    <button type="submit" class="btn btn-maroon">Apply Filters</button>
+                </div>
+            </div>
+        </form>
     </div>
 
     <!-- Incoming Connection Requests -->
@@ -68,12 +89,73 @@
     </div>
     {% endif %}
 
+    <!-- Recommended Peers -->
+    {% if recommended_peers and recommended_peers|length > 0 %}
+    <div class="card" style="margin-bottom: 28px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Recommended for you</h3>
+        <div class="steps-grid">
+            {% for peer in recommended_peers %}
+            <div class="step-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div
+                            style="width: 48px; height: 48px; background: linear-gradient(135deg, #8B1538, #A91D3A); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 600;">
+                            {{ peer.display_name[0].upper() if peer.display_name else '?' }}
+                        </div>
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary);">{{
+                                peer.display_name }}
+                            </h3>
+                            {% if peer.is_international_freshman %}
+                            <span
+                                style="font-size: 12px; background: var(--pink-light); color: var(--primary-maroon); padding: 2px 8px; border-radius: 12px;">International
+                                Freshman</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span
+                        style="font-size: 12px; padding: 6px 10px; border-radius: 999px; background: #FFF1F2; color: var(--primary-maroon); font-weight: 600;">{{
+                        peer.match_score }}% · {{ peer.match_label }}</span>
+                </div>
+
+                {% if peer.languages and peer.languages|length > 0 %}
+                <p style="font-size: 14px; color: var(--text-secondary); margin: 12px 0 8px;">
+                    🌐 Languages: {{ peer.languages|join(', ') }}
+                </p>
+                {% elif peer.preferred_language %}
+                <p style="font-size: 14px; color: var(--text-secondary); margin: 12px 0 8px;">
+                    🌐 Speaks {{ peer.preferred_language }}
+                </p>
+                {% endif %}
+
+                {% if peer.public_topics %}
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;">
+                    {% for topic in peer.public_topics[:4] %}
+                    <span
+                        style="font-size: 12px; background: #F3F4F6; color: var(--text-secondary); padding: 4px 10px; border-radius: 12px;">
+                        {{ support_topic_index.get(topic, {}).get('label', topic) }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <button onclick="connectWithPeer('{{ peer.user_id }}', '{{ peer.display_name }}')"
+                    class="btn btn-outline" style="width: 100%; margin-top: 16px;">
+                    Connect
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Peers Grid -->
     {% if peers and peers|length > 0 %}
     <div class="steps-grid">
         {% for peer in peers %}
         <div class="step-card">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <div
+                style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
                 <div
                     style="width: 48px; height: 48px; background: linear-gradient(135deg, #8B1538, #A91D3A); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 600;">
                     {{ peer.display_name[0].upper() if peer.display_name else '?' }}
@@ -87,23 +169,28 @@
                         Freshman</span>
                     {% endif %}
                 </div>
+                <span
+                    style="font-size: 12px; padding: 6px 10px; border-radius: 999px; background: #F9FAFB; color: var(--text-secondary); font-weight: 600;">{{
+                    peer.match_score }}% · {{ peer.match_label }}</span>
             </div>
 
-            {% if peer.preferred_language %}
+            {% if peer.languages and peer.languages|length > 0 %}
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">
+                🌐 Languages: {{ peer.languages|join(', ') }}
+            </p>
+            {% elif peer.preferred_language %}
             <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">
                 🌐 Speaks {{ peer.preferred_language }}
             </p>
             {% endif %}
 
-            {% if peer.primary_challenge %}
+            {% if peer.public_topics %}
             <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;">
-                {% for challenge in peer.primary_challenge.split(',')[:3] %}
-                {% if challenge.strip() %}
+                {% for topic in peer.public_topics[:4] %}
                 <span
                     style="font-size: 12px; background: #F3F4F6; color: var(--text-secondary); padding: 4px 10px; border-radius: 12px;">
-                    {{ challenge.strip() }}
+                    {{ support_topic_index.get(topic, {}).get('label', topic) }}
                 </span>
-                {% endif %}
                 {% endfor %}
             </div>
             {% endif %}
@@ -175,5 +262,106 @@
             closeConnectModal();
         }
     });
+
+    // Toast notification system
+    function showToast(message, type) {
+        // Remove existing toast
+        const existingToast = document.getElementById('toast-notification');
+        if (existingToast) existingToast.remove();
+
+        const toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            ${type === 'success' ? 'background: #D1FAE5; color: #065F46;' :
+                type === 'error' ? 'background: #FEE2E2; color: #991B1B;' :
+                    'background: #FEF3C7; color: #92400E;'}
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    // AJAX form submission for connect
+    document.getElementById('connectForm')?.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Sending...';
+        submitBtn.disabled = true;
+
+        fetch('{{ url_for("connect") }}', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                closeConnectModal();
+                if (data.success) {
+                    showToast('Connection request sent to ' + selectedPeerName + '!', 'success');
+                    // Update button state
+                    const btn = document.querySelector(`button[onclick*="'${selectedPeerId}'"]`);
+                    if (btn) {
+                        btn.textContent = 'Request Pending';
+                        btn.disabled = true;
+                        btn.classList.remove('btn-outline');
+                        btn.classList.add('btn-secondary');
+                        btn.style.opacity = '0.7';
+                    }
+                } else {
+                    if (data.error === 'Request already sent') {
+                        showToast("You've already requested to connect with this peer", 'warning');
+                    } else {
+                        showToast(data.error || 'Could not send request', 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                closeConnectModal();
+                showToast('Something went wrong. Please try again.', 'error');
+            })
+            .finally(() => {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+    });
 </script>
+<style>
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+</style>
 {% endblock %}
