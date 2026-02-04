@@ -7,9 +7,10 @@ import os
 import re
 import secrets
 import sqlite3
+from urllib.parse import unquote
 from datetime import datetime
 from functools import wraps
-from flask import Flask, render_template, request, session, redirect, url_for, jsonify, g
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify, g, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -69,6 +70,7 @@ def init_db():
                 primary_challenge TEXT DEFAULT '',
                 support_style TEXT DEFAULT 'mixed',
                 support_topics TEXT DEFAULT '',
+                private_topics TEXT DEFAULT '',
                 languages TEXT DEFAULT '',
                 cultural_background TEXT DEFAULT '',
                 onboarding_complete INTEGER DEFAULT 0,
@@ -78,6 +80,10 @@ def init_db():
         # Migrate existing tables to add new columns if they don't exist
         try:
             db.execute('ALTER TABLE profiles ADD COLUMN support_topics TEXT DEFAULT ""')
+        except:
+            pass
+        try:
+            db.execute('ALTER TABLE profiles ADD COLUMN private_topics TEXT DEFAULT ""')
         except:
             pass
         try:
@@ -100,12 +106,13 @@ def save_profile_to_db(user_id, profile_dict):
     db = get_db()
     challenges = ','.join(profile_dict.get('primary_challenge', []))
     support_topics = ','.join(profile_dict.get('support_topics', []))
+    private_topics = ','.join(profile_dict.get('private_topics', []))
     languages = ','.join(profile_dict.get('languages', []))
     cultural_background = ','.join(profile_dict.get('cultural_background', []))
     db.execute('''
         INSERT OR REPLACE INTO profiles 
-        (user_id, display_name, is_international_freshman, preferred_language, primary_challenge, support_style, support_topics, languages, cultural_background, onboarding_complete)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (user_id, display_name, is_international_freshman, preferred_language, primary_challenge, support_style, support_topics, private_topics, languages, cultural_background, onboarding_complete)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         user_id,
         profile_dict.get('display_name', ''),
@@ -114,6 +121,7 @@ def save_profile_to_db(user_id, profile_dict):
         challenges,
         profile_dict.get('support_style', 'mixed'),
         support_topics,
+        private_topics,
         languages,
         cultural_background,
         1 if profile_dict.get('onboarding_complete') else 0
@@ -129,11 +137,13 @@ def load_profile_from_db(user_id):
         challenges = row['primary_challenge'].split(',') if row['primary_challenge'] else []
         # Handle new columns that might not exist in older databases
         support_topics = []
+        private_topics = []
         languages = []
         cultural_background = []
         onboarding_complete = False
         try:
             support_topics = row['support_topics'].split(',') if row['support_topics'] else []
+            private_topics = row['private_topics'].split(',') if row['private_topics'] else []
             languages = row['languages'].split(',') if row['languages'] else []
             cultural_background = row['cultural_background'].split(',') if row['cultural_background'] else []
             onboarding_complete = bool(row['onboarding_complete'])
@@ -146,6 +156,7 @@ def load_profile_from_db(user_id):
             'primary_challenge': challenges,
             'support_style': row['support_style'] or 'mixed',
             'support_topics': support_topics,
+            'private_topics': private_topics,
             'languages': languages,
             'cultural_background': cultural_background,
             'onboarding_complete': onboarding_complete
@@ -168,8 +179,109 @@ def login_required(f):
 # In-Memory Storage
 # -----------------------------------------------------------------------------
 
-# Preset topic groups
+# Support topics taxonomy (used across onboarding, profile, filters, and groups)
+SUPPORT_TOPIC_CATEGORIES = [
+    (
+        "Mental Health & Crisis",
+        [
+            ("suicide_self_harm", "🆘", "Suicide / self-harm"),
+            ("crisis_panic", "🚨", "Crisis / panic attack"),
+            ("depression", "🌧", "Depression"),
+            ("anxiety", "😰", "Anxiety"),
+            ("social_anxiety", "😳", "Social anxiety"),
+            ("stress", "⚡", "Stress"),
+            ("burnout", "🔥", "Burnout"),
+            ("sleep_insomnia", "🌙", "Sleep problems / insomnia"),
+            ("eating_disorders", "🍽", "Eating disorders / disordered eating"),
+            ("body_image", "🪞", "Body image concerns"),
+            ("trauma_ptsd", "🧩", "Trauma / PTSD"),
+            ("grief_loss", "🕯", "Grief & loss"),
+            ("anger_management", "🌋", "Anger management"),
+            ("ocd", "🌀", "OCD"),
+            ("phobias", "🕸", "Phobias"),
+            ("bipolar", "⚖", "Bipolar disorder"),
+            ("psychosis", "🧠", "Psychosis / schizophrenia-spectrum concerns"),
+            ("substance_use", "🍺", "Substance use (alcohol/drugs)"),
+            ("addiction", "🔗", "Addiction / dependence"),
+            ("adhd", "🎯", "ADHD / attention & focus problems"),
+            ("autism", "🧩", "Autism spectrum / neurodiversity support"),
+        ],
+    ),
+    (
+        "Relationships & Social",
+        [
+            ("relationship_issues", "💞", "Relationship issues"),
+            ("breakups", "💔", "Breakups"),
+            ("family_problems", "🏠", "Family problems"),
+            ("roommate_conflict", "🛏", "Roommate conflict"),
+            ("loneliness_isolation", "🌫", "Loneliness / isolation"),
+            ("homesickness", "🧳", "Homesickness"),
+            ("culture_shock", "🌍", "Culture shock / adjustment issues"),
+            ("discrimination_bias", "⚠", "Discrimination / bias experiences"),
+            ("identity_concerns", "🪪", "Identity concerns (sexuality / gender / faith)"),
+            ("sexual_assault", "🛡", "Sexual assault / harassment"),
+            ("dating_violence", "🧯", "Domestic/dating violence"),
+            ("safety_concerns", "🚧", "Safety concerns / violence risk"),
+        ],
+    ),
+    (
+        "Academic & Career",
+        [
+            ("academic_problems", "📚", "Academic problems"),
+            ("test_anxiety", "📝", "Test anxiety"),
+            ("time_management", "⏰", "Time management / procrastination"),
+            ("motivation_focus", "🧠", "Motivation / concentration problems"),
+            ("career_stress", "🧭", "Career stress / \"no direction\""),
+            ("financial_stress", "💰", "Financial stress"),
+        ],
+    ),
+]
+
+SUPPORT_TOPIC_INDEX = {
+    topic_id: {"icon": icon, "label": label, "category": category}
+    for category, topics in SUPPORT_TOPIC_CATEGORIES
+    for topic_id, icon, label in topics
+}
+
+def normalize_topic_ids(topic_ids):
+    """Return a clean list of topic ids."""
+    legacy_map = {
+        "loneliness": "loneliness_isolation",
+        "academics": "academic_problems",
+        "relationships": "relationship_issues",
+        "identity": "identity_concerns",
+        "finances": "financial_stress",
+    }
+    normalized = []
+    for raw in topic_ids:
+        if not raw:
+            continue
+        topic = raw.strip()
+        topic = legacy_map.get(topic, topic)
+        if topic in SUPPORT_TOPIC_INDEX:
+            normalized.append(topic)
+    return normalized
+
+def get_topic_label(topic_id):
+    """Get display label for a topic id."""
+    info = SUPPORT_TOPIC_INDEX.get(topic_id)
+    if info and info.get("label"):
+        return info["label"]
+    return str(topic_id) if topic_id else ""
+
+def get_topic_labels(topic_ids):
+    """Map topic ids to display labels."""
+    return [label for label in (get_topic_label(t) for t in normalize_topic_ids(topic_ids)) if label]
+
+# -----------------------------------------------------------------------------
+# Preset Support Groups
+# These are the default peer support groups available to all users.
+# Groups are organized by category: core emotional, safety/higher-risk, 
+# daily functioning, and identity-based communities.
+# Each group has associated metadata (description, topics) defined in seed_group_meta().
+# -----------------------------------------------------------------------------
 PRESET_GROUPS = [
+    # Existing groups
     "Homesickness and Family",
     "Academic Pressure",
     "Making Friends",
@@ -178,13 +290,155 @@ PRESET_GROUPS = [
     "Financial Stress",
     "Health and Wellness",
     "Career and Internships",
+    # New core emotional/academic/connection groups
+    "Anxiety & Overthinking",
+    "Depression & Low Mood",
+    "Loneliness & Making Friends",
+    "Identity & Direction",
+    "Sleep Problems & Insomnia",
+    "Check-In & General Support",
+    # Safety / higher-risk topics (with clear non-crisis framing)
+    "Coping with Difficult Thoughts",
+    "Trauma & Survivor Support",
+    "Substance Use & Cutting Back",
+    # Daily functioning / study-life groups
+    "Focus, ADHD & Procrastination",
+    "Burnout & Overload",
+    "Money & Financial Stress",
+    # Identity groups
+    "International Students & Culture Shock",
+    "LGBTQ+ Students",
+    "Students of Color & Bias",
+    "Chronic Health & Disability",
 ]
 
 # In-memory groups: { "topic": [ {"timestamp": str, "display_name": str, "text": str}, ... ] }
 groups = {topic: [] for topic in PRESET_GROUPS}
 
+# Group metadata
+GROUP_TYPES = ["Peer Support", "Study/Accountability", "Identity/Community", "Social"]
+group_meta = {}
+group_members = {}
+group_requests = {}
+
+def seed_group_meta():
+    """Seed group metadata for preset groups."""
+    # Unique descriptions for each preset group
+    group_descriptions = {
+        # Existing groups
+        "Homesickness and Family": "Missing home or loved ones? Connect with others who understand the challenges of being far from family and find comfort together.",
+        "Academic Pressure": "Struggling with coursework, exams, or academic expectations? Share strategies, support, and encouragement with fellow students.",
+        "Making Friends": "Looking to build meaningful friendships on campus? Meet others who are also seeking connections and social opportunities.",
+        "Cultural Adjustment": "Navigating life in a new culture can be challenging. Share experiences and tips for adapting to American campus life.",
+        "Language Barriers": "Building confidence in English or navigating communication challenges? Practice and support each other in a judgment-free space.",
+        "Financial Stress": "Dealing with money worries, budgeting, or financial aid questions? Find support and share resources with peers facing similar challenges.",
+        "Health and Wellness": "Prioritizing your physical and mental health? Discuss self-care, wellness tips, and support each other's health journeys.",
+        "Career and Internships": "Preparing for internships, jobs, or career planning? Network with peers and share advice on professional development.",
+        # New core emotional/academic/connection groups
+        "Anxiety & Overthinking": "A space for students dealing with anxiety, overthinking, or constant worry. Share coping strategies and feel less alone.",
+        "Depression & Low Mood": "For students experiencing sadness, low energy, or feeling down. Connect with others who understand and support each other.",
+        "Loneliness & Making Friends": "If you're feeling lonely or like you don't quite fit in yet, this group is for you. Talk, share, and connect with others looking for community.",
+        "Identity & Direction": "A space to talk about purpose, direction, and identity - academic, career, cultural, or personal. You don't need to have it all figured out.",
+        "Sleep Problems & Insomnia": "Struggling to fall asleep, stay asleep, or rest well? Share tips and routines and feel supported around your sleep challenges.",
+        "Check-In & General Support": "A gentle space to share how you're doing - good, bad, or in-between - and get support from peers.",
+        # Safety / higher-risk topics (with clear non-crisis framing)
+        "Coping with Difficult Thoughts": "For talking about urges and staying safe, not for emergencies. If you're in immediate danger, use the 24/7 crisis resources at the top of the page.",
+        "Trauma & Survivor Support": "A trauma-aware space for students living with the impact of past trauma or assault. Focus on coping, grounding, and not feeling alone.",
+        "Substance Use & Cutting Back": "For students who want to talk about alcohol or substance use, cutting back, or finding healthier coping strategies.",
+        # Daily functioning / study-life groups
+        "Focus, ADHD & Procrastination": "Trouble focusing, starting tasks, or finishing assignments? Connect with others navigating ADHD, attention, and procrastination.",
+        "Burnout & Overload": "Feeling exhausted, drained, or overloaded by school and life? Share experiences and small steps to prevent or recover from burnout.",
+        "Money & Financial Stress": "Talk about budgeting, financial aid, work hours, and money stress with peers who get it.",
+        # Identity groups
+        "International Students & Culture Shock": "A supportive space for international students navigating cultural transitions, visa concerns, and feeling at home abroad.",
+        "LGBTQ+ Students": "A safe, affirming space for LGBTQ+ students to connect, share experiences, and find community.",
+        "Students of Color & Bias": "A space for students of color to discuss experiences with bias, discrimination, and finding solidarity and support.",
+        "Chronic Health & Disability": "For students managing chronic health conditions or disabilities. Share coping strategies and connect with others who understand.",
+    }
+    
+    # Map group names to their associated topic IDs for filtering
+    group_topics = {
+        # Existing groups
+        "Homesickness and Family": ["homesickness", "family_problems", "loneliness_isolation"],
+        "Academic Pressure": ["academic_problems", "test_anxiety", "stress", "burnout", "motivation_focus", "time_management"],
+        "Making Friends": ["loneliness_isolation", "social_anxiety"],
+        "Cultural Adjustment": ["culture_shock", "discrimination_bias", "identity_concerns"],
+        "Language Barriers": ["culture_shock", "stress"],
+        "Financial Stress": ["financial_stress", "stress"],
+        "Health and Wellness": ["stress", "burnout", "sleep_insomnia", "anxiety", "depression", "body_image", "eating_disorders"],
+        "Career and Internships": ["career_stress", "stress", "time_management"],
+        # New core emotional/academic/connection groups
+        "Anxiety & Overthinking": ["anxiety", "social_anxiety", "stress"],
+        "Depression & Low Mood": ["depression", "motivation_focus", "loneliness_isolation"],
+        "Loneliness & Making Friends": ["loneliness_isolation", "social_anxiety", "homesickness"],
+        "Identity & Direction": ["identity_concerns", "career_stress", "academic_problems"],
+        "Sleep Problems & Insomnia": ["sleep_insomnia", "stress", "anxiety"],
+        "Check-In & General Support": ["stress", "loneliness_isolation", "anxiety"],
+        # Safety / higher-risk topics
+        "Coping with Difficult Thoughts": ["suicide_self_harm", "depression", "crisis_panic"],
+        "Trauma & Survivor Support": ["trauma_ptsd", "sexual_assault", "dating_violence"],
+        "Substance Use & Cutting Back": ["substance_use", "addiction", "safety_concerns"],
+        # Daily functioning / study-life groups
+        "Focus, ADHD & Procrastination": ["adhd", "time_management", "motivation_focus"],
+        "Burnout & Overload": ["burnout", "stress", "academic_problems"],
+        "Money & Financial Stress": ["financial_stress", "stress", "career_stress"],
+        # Identity groups
+        "International Students & Culture Shock": ["culture_shock", "homesickness", "discrimination_bias"],
+        "LGBTQ+ Students": ["identity_concerns", "discrimination_bias", "loneliness_isolation"],
+        "Students of Color & Bias": ["discrimination_bias", "identity_concerns", "stress"],
+        "Chronic Health & Disability": ["stress", "anxiety", "depression", "identity_concerns"],
+    }
+    
+    for name in PRESET_GROUPS:
+        if name not in group_meta:
+            group_meta[name] = {
+                "name": name,
+                "description": group_descriptions.get(name, "A supportive space to connect with peers around this topic."),
+                "topics": group_topics.get(name, []),
+                "group_type": "Peer Support",
+                "is_private": False,
+                "owner_id": None,
+                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            group_members[name] = set()
+        else:
+            # Update existing groups with topics if missing
+            if not group_meta[name].get("topics"):
+                group_meta[name]["topics"] = group_topics.get(name, [])
+
+seed_group_meta()
+
+
+def ensure_group_exists(group_name):
+    """Ensure a group exists in in-memory stores."""
+    if group_name not in groups:
+        groups[group_name] = []
+    if group_name not in group_meta:
+        group_meta[group_name] = {
+            "name": group_name,
+            "description": "A supportive space to connect with peers.",
+            "topics": [],
+            "group_type": "Peer Support",
+            "is_private": False,
+            "owner_id": None,
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+    if group_name not in group_members:
+        group_members[group_name] = set()
+    if group_name not in group_requests:
+        group_requests[group_name] = set()
+
+def get_group_topics_labels(topic_ids):
+    return get_topic_labels(topic_ids)
+
 # Connection requests: { recipient_user_id: [ {sender_id, sender_display_name, message, timestamp}, ... ] }
 pending_requests = {}
+
+# Outgoing requests: { sender_user_id: [ {recipient_id, recipient_display_name, timestamp}, ... ] }
+outgoing_requests = {}
+
+# Accepted peer connections: { user_id: set() of connected user_ids }
+peer_connections = {}
 
 # User profiles cache for display: { user_id: {display_name, profile_summary} }
 user_profiles = {}
@@ -247,9 +501,12 @@ def build_profile_text(profile_dict):
     if profile_dict.get("is_international_freshman"):
         parts.append("I am an international freshman student.")
 
-    challenges = profile_dict.get("primary_challenge", [])
-    if challenges:
-        challenge_text = ", ".join(challenges)
+    challenges = normalize_topic_ids(profile_dict.get("primary_challenge", []))
+    support_topics = normalize_topic_ids(profile_dict.get("support_topics", []))
+    private_topics = normalize_topic_ids(profile_dict.get("private_topics", []))
+    combined_topics = list(dict.fromkeys(challenges + support_topics + private_topics))
+    if combined_topics:
+        challenge_text = ", ".join(get_topic_labels(combined_topics))
         parts.append(f"My main challenges are: {challenge_text}.")
 
     language = profile_dict.get("preferred_language")
@@ -900,6 +1157,10 @@ def get_profile_dict():
         "preferred_language": session.get("preferred_language", ""),
         "primary_challenge": session.get("primary_challenge", []),
         "support_style": session.get("support_style", "mixed"),
+        "support_topics": session.get("support_topics", []),
+        "private_topics": session.get("private_topics", []),
+        "languages": session.get("languages", []),
+        "cultural_background": session.get("cultural_background", []),
     }
 
 
@@ -974,6 +1235,7 @@ def login():
                     session["primary_challenge"] = profile["primary_challenge"]
                     session["support_style"] = profile["support_style"]
                     session["support_topics"] = profile.get("support_topics", [])
+                    session["private_topics"] = profile.get("private_topics", [])
                     session["languages"] = profile.get("languages", [])
                     session["cultural_background"] = profile.get("cultural_background", [])
                     session["onboarding_complete"] = profile.get("onboarding_complete", False)
@@ -1091,6 +1353,7 @@ def onboarding_submit():
         "primary_challenge": support_topics,
         "support_style": support_style,
         "support_topics": support_topics,
+        "private_topics": [],
         "languages": languages,
         "cultural_background": cultural_background,
         "onboarding_complete": True
@@ -1106,6 +1369,7 @@ def onboarding_submit():
     session["primary_challenge"] = support_topics
     session["support_style"] = support_style
     session["support_topics"] = support_topics
+    session["private_topics"] = []
     session["languages"] = languages
     session["cultural_background"] = cultural_background
     session["onboarding_complete"] = True
@@ -1136,6 +1400,8 @@ def profile():
         
         # Get multi-select fields
         support_topics = request.form.getlist("support_topics")
+        private_topics = request.form.getlist("private_topics")
+        private_topics = [t for t in private_topics if t in support_topics]
         languages = request.form.getlist("languages")
         cultural_background = request.form.getlist("cultural_background")
         
@@ -1144,6 +1410,7 @@ def profile():
         session["is_international_freshman"] = is_freshman
         session["support_style"] = support_style
         session["support_topics"] = support_topics
+        session["private_topics"] = private_topics
         session["languages"] = languages
         session["preferred_language"] = languages[0] if languages else ""
         session["cultural_background"] = cultural_background
@@ -1157,6 +1424,7 @@ def profile():
             "primary_challenge": support_topics,
             "support_style": support_style,
             "support_topics": support_topics,
+            "private_topics": private_topics,
             "languages": languages,
             "cultural_background": cultural_background,
             "onboarding_complete": True
@@ -1183,13 +1451,16 @@ def profile():
             "primary_challenge": session.get("primary_challenge", []),
             "support_style": session.get("support_style", "mixed"),
             "support_topics": session.get("support_topics", []),
+            "private_topics": session.get("private_topics", []),
             "languages": session.get("languages", []),
             "cultural_background": session.get("cultural_background", [])
         }
     
     return render_template("profile.html", 
                          profile=existing_profile,
-                         username=session.get("username"))
+                         username=session.get("username"),
+                         support_topic_categories=SUPPORT_TOPIC_CATEGORIES,
+                         support_topic_index=SUPPORT_TOPIC_INDEX)
 
 
 @app.route("/issue", methods=["GET", "POST"])
@@ -1206,7 +1477,11 @@ def issue():
             session["followup_count"] = 0
             return redirect(url_for("resources"))
 
-    return render_template("issue.html", username=session.get("username"))
+    return render_template(
+        "issue.html",
+        username=session.get("username"),
+        support_topic_categories=SUPPORT_TOPIC_CATEGORIES
+    )
 
 
 @app.route("/resources", methods=["GET", "POST"])
@@ -1227,14 +1502,12 @@ def resources():
     followup_count = session.get("followup_count", 0)
     followup_question = None
     followup_response = None
-    limit_reached = followup_count >= 5
 
-    if request.method == "POST" and not limit_reached:
+    if request.method == "POST":
         followup_question = request.form.get("followup_question", "").strip()
         if followup_question:
             session["followup_count"] = followup_count + 1
             followup_count = session["followup_count"]
-            limit_reached = followup_count >= 5
 
             # Generate AI response
             profile_dict = get_profile_dict()
@@ -1277,7 +1550,6 @@ def resources():
         recommended_groups=combined_groups,
         disclaimer=ai_result.get("safe_disclaimer", ""),
         followup_count=followup_count,
-        limit_reached=limit_reached,
         followup_question=followup_question,
         followup_response=followup_response,
         followup_history=session.get("followup_history", [])[:-1] if followup_question else session.get("followup_history", []),
@@ -1340,6 +1612,374 @@ def decision():
     )
 
 
+@app.route("/groups", methods=["GET"])
+@login_required
+def groups_page():
+    """Group discovery and creation page."""
+    if not session.get("display_name"):
+        return redirect(url_for("profile"))
+
+    user_id = session.get("user_id")
+    username = session.get("username")
+    search_query = request.args.get("q", "").strip().lower()
+    selected_topics = normalize_topic_ids(request.args.getlist("topics"))
+    sort_by = request.args.get("sort", "best")  # best, members, newest, a_z
+
+    # Load current user's profile for match scoring
+    current_profile = load_profile_from_db(user_id) if user_id else None
+    if not current_profile:
+        current_profile = get_profile_dict()
+    
+    # Get user's last issue text from session for better matching
+    last_issue_text = session.get("last_issue_text", "")
+
+    # Get user's joined groups
+    joined_groups = []
+    for name, members in group_members.items():
+        if username in members or user_id in members:
+            meta = group_meta.get(name, {})
+            match_score = calculate_group_match_score(current_profile, meta, last_issue_text)
+            match_label = "Best Fit" if match_score >= 70 else ("Good Fit" if match_score >= 40 else "")
+            joined_groups.append({
+                "name": name,
+                "description": meta.get("description", ""),
+                "topics": normalize_topic_ids(meta.get("topics", [])),
+                "topic_labels": get_group_topics_labels(normalize_topic_ids(meta.get("topics", []))),
+                "group_type": meta.get("group_type", "Peer Support"),
+                "is_private": bool(meta.get("is_private")),
+                "member_count": len(members),
+                "owner_id": meta.get("owner_id"),
+                "match_score": match_score,
+                "match_label": match_label,
+            })
+
+    available = []
+    for name, meta in group_meta.items():
+        topics = normalize_topic_ids(meta.get("topics", []))
+        is_private = bool(meta.get("is_private"))
+
+        # Topic filter with relevance-based OR logic
+        if selected_topics:
+            # Check 1: Direct topic ID match
+            has_topic_match = bool(set(selected_topics) & set(topics))
+            
+            # Check 2: Topic label appears in group name or description (relevance matching)
+            group_text = (name + " " + meta.get("description", "")).lower()
+            has_relevance_match = False
+            for topic_id in selected_topics:
+                topic_info = SUPPORT_TOPIC_INDEX.get(topic_id, {})
+                topic_label = topic_info.get("label", "").lower()
+                # Check if any significant word from the label appears in group text
+                label_words = [w for w in topic_label.split() if len(w) > 3]
+                for word in label_words:
+                    if word in group_text:
+                        has_relevance_match = True
+                        break
+                if has_relevance_match:
+                    break
+            
+            # Show group if either match type succeeds
+            if not has_topic_match and not has_relevance_match:
+                continue
+
+        if search_query:
+            # Build searchable text from name, description, AND topic labels
+            topic_labels = " ".join(get_topic_labels(topics))
+            searchable = " ".join([name, meta.get("description", ""), topic_labels]).lower()
+            if search_query not in searchable:
+                continue
+
+        # Calculate match score for this group
+        match_score = calculate_group_match_score(current_profile, meta, last_issue_text)
+        if match_score >= 70:
+            match_label = "Best Fit"
+        elif match_score >= 40:
+            match_label = "Good Fit"
+        else:
+            match_label = "New Group"
+
+        available.append({
+            "name": name,
+            "description": meta.get("description", ""),
+            "topics": topics,
+            "topic_labels": get_group_topics_labels(topics),
+            "group_type": meta.get("group_type", "Peer Support"),
+            "is_private": is_private,
+            "member_count": len(group_members.get(name, set())),
+            "owner_id": meta.get("owner_id"),
+            "created_at": meta.get("created_at", "2024-01-01"),
+            "match_score": match_score,
+            "match_label": match_label,
+        })
+
+    # Apply sorting
+    if sort_by == "newest":
+        available.sort(key=lambda g: g.get("created_at", ""), reverse=True)
+    elif sort_by == "a_z":
+        available.sort(key=lambda g: g.get("name", "").lower())
+    elif sort_by == "members":
+        available.sort(key=lambda g: g.get("member_count", 0), reverse=True)
+    else:  # best (default)
+        available.sort(key=lambda g: g.get("match_score", 0), reverse=True)
+
+    return render_template(
+        "groups.html",
+        groups=available,
+        joined_groups=joined_groups,
+        support_topic_categories=SUPPORT_TOPIC_CATEGORIES,
+        selected_topics=selected_topics,
+        search_query=search_query,
+        sort_by=sort_by,
+        group_types=GROUP_TYPES,
+        username=session.get("username")
+    )
+
+
+@app.route("/groups/create", methods=["POST"])
+@login_required
+def create_group_full():
+    """Create a new group with full metadata."""
+    if not session.get("display_name"):
+        return redirect(url_for("profile"))
+
+    name = request.form.get("group_name", "").strip()[:60]
+    description = request.form.get("group_description", "").strip()[:300]
+    topics = normalize_topic_ids(request.form.getlist("group_topics"))
+    group_type = request.form.get("group_type", "Peer Support")
+    is_private = request.form.get("group_visibility") == "private"
+    
+    # New duration fields
+    duration = request.form.get("group_duration", "ongoing")
+    end_date = request.form.get("group_end_date", "")
+
+    if not name or not description or not topics:
+        flash("Please provide a group name, description, and topics.", "error")
+        return redirect(url_for("groups_page"))
+
+    if check_profanity(name):
+        flash("Please choose a different group name.", "error")
+        return redirect(url_for("groups_page"))
+
+    if name in group_meta:
+        flash("A group with that name already exists.", "error")
+        return redirect(url_for("groups_page"))
+
+    ensure_group_exists(name)
+    group_meta[name].update({
+        "name": name,
+        "description": description,
+        "topics": topics,
+        "group_type": group_type if group_type in GROUP_TYPES else "Peer Support",
+        "is_private": is_private,
+        "owner_id": session.get("user_id"),
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "duration": duration,
+        "end_date": end_date if duration == "temporary" and end_date else None,
+    })
+
+    group_members[name].add(session.get("user_id"))
+    store_group_embedding(name)
+    flash("Group created successfully!", "success")
+    return redirect(url_for("group_detail", group_name=name))
+
+
+@app.route("/groups/join", methods=["POST"])
+@login_required
+def join_group_full():
+    """Join or request access to a group."""
+    group_name = request.form.get("group_name", "").strip()
+    group_name = unquote(group_name)
+    if not group_name or group_name not in group_meta:
+        flash("Group not found.", "error")
+        return redirect(url_for("groups_page"))
+
+    ensure_group_exists(group_name)
+    user_id = session.get("user_id")
+    if group_meta[group_name].get("is_private"):
+        group_requests.setdefault(group_name, set()).add(user_id)
+        flash("Request sent. The group owner will review your request.", "success")
+        return redirect(url_for("groups_page"))
+
+    group_members[group_name].add(user_id)
+    session["current_group"] = group_name
+    return redirect(url_for("group_detail", group_name=group_name))
+
+
+@app.route("/groups/<path:group_name>", methods=["GET"])
+@login_required
+def group_detail(group_name):
+    """Group detail page."""
+    group_name = unquote(group_name)
+    if group_name not in group_meta:
+        flash("Group not found.", "error")
+        return redirect(url_for("groups_page"))
+
+    ensure_group_exists(group_name)
+    meta = group_meta[group_name]
+    user_id = session.get("user_id")
+    is_owner = meta.get("owner_id") == user_id
+    is_member = user_id in group_members.get(group_name, set())
+    pending_requests = []
+    if is_owner:
+        for requester_id in group_requests.get(group_name, set()):
+            profile = load_profile_from_db(requester_id)
+            if profile:
+                pending_requests.append({
+                    "user_id": requester_id,
+                    "display_name": profile.get("display_name") or "Anonymous",
+                })
+
+    members = []
+    for member_id in group_members.get(group_name, set()):
+        profile = load_profile_from_db(member_id)
+        if profile:
+            members.append(profile.get("display_name") or "Anonymous")
+
+    recent_messages = []
+    for msg in groups.get(group_name, [])[-5:]:
+        recent_messages.append({
+            "display_name": msg.get("display_name", "Anonymous"),
+            "text": msg.get("text", ""),
+            "timestamp": format_human_timestamp(msg.get("timestamp", ""))
+        })
+
+    return render_template(
+        "group_detail.html",
+        group=meta,
+        group_topics=get_group_topics_labels(meta.get("topics", [])),
+        member_count=len(group_members.get(group_name, set())),
+        members=members,
+        recent_messages=recent_messages,
+        is_owner=is_owner,
+        is_member=is_member,
+        pending_requests=pending_requests,
+        username=session.get("username")
+    )
+
+
+@app.route("/groups/<path:group_name>/leave", methods=["POST"])
+@login_required
+def group_leave(group_name):
+    group_name = unquote(group_name)
+    if group_name in group_members:
+        group_members[group_name].discard(session.get("user_id"))
+    if session.get("current_group") == group_name:
+        session["current_group"] = None
+    flash("You have left the group.", "success")
+    return redirect(url_for("groups_page"))
+
+
+@app.route("/groups/<path:group_name>/visibility", methods=["POST"])
+@login_required
+def group_toggle_visibility(group_name):
+    group_name = unquote(group_name)
+    meta = group_meta.get(group_name)
+    if not meta:
+        flash("Group not found.", "error")
+        return redirect(url_for("groups_page"))
+    if meta.get("owner_id") != session.get("user_id"):
+        flash("Only the group owner can change visibility.", "error")
+        return redirect(url_for("group_detail", group_name=group_name))
+
+    new_visibility = request.form.get("visibility")
+    meta["is_private"] = new_visibility == "private"
+    flash("Group visibility updated.", "success")
+    return redirect(url_for("group_detail", group_name=group_name))
+
+
+@app.route("/groups/<path:group_name>/requests/approve", methods=["POST"])
+@login_required
+def group_request_approve(group_name):
+    group_name = unquote(group_name)
+    meta = group_meta.get(group_name)
+    if not meta or meta.get("owner_id") != session.get("user_id"):
+        flash("Not authorized.", "error")
+        return redirect(url_for("group_detail", group_name=group_name))
+
+    requester_id = request.form.get("requester_id")
+    if not requester_id:
+        flash("Invalid request.", "error")
+        return redirect(url_for("group_detail", group_name=group_name))
+    try:
+        requester_id = int(requester_id)
+    except Exception:
+        flash("Invalid request.", "error")
+        return redirect(url_for("group_detail", group_name=group_name))
+
+    if requester_id in group_requests.get(group_name, set()):
+        group_requests[group_name].discard(requester_id)
+        group_members[group_name].add(requester_id)
+        flash("Request approved.", "success")
+    return redirect(url_for("group_detail", group_name=group_name))
+
+
+@app.route("/groups/<path:group_name>/invite", methods=["GET"])
+@login_required
+def group_invite(group_name):
+    """Invite people to a group with AI-inspired recommendations."""
+    group_name = unquote(group_name)
+    meta = group_meta.get(group_name)
+    if not meta:
+        flash("Group not found.", "error")
+        return redirect(url_for("groups_page"))
+
+    topics = normalize_topic_ids(meta.get("topics", []))
+    search_query = request.args.get("q", "").strip().lower()
+
+    db = get_db()
+    all_profiles = db.execute('''
+        SELECT p.*, u.username FROM profiles p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.display_name IS NOT NULL AND p.display_name != ''
+    ''').fetchall()
+
+    benefit = []
+    support = []
+    for row in all_profiles:
+        if row['user_id'] in group_members.get(group_name, set()):
+            continue
+        challenges = normalize_topic_ids((row['primary_challenge'] or '').split(','))
+        supports = normalize_topic_ids((row['support_topics'] or '').split(','))
+        privates = normalize_topic_ids((row['private_topics'] or '').split(','))
+
+        if search_query:
+            searchable = " ".join([
+                row['display_name'] or '',
+                row['username'] or '',
+                ",".join(challenges + supports)
+            ]).lower()
+            if search_query not in searchable:
+                continue
+
+        benefit_overlap = len(set(challenges + privates) & set(topics))
+        support_overlap = len(set(supports + privates) & set(topics))
+
+        if benefit_overlap > 0:
+            label = "High relevance" if benefit_overlap >= 2 else "Good fit"
+            benefit.append({
+                "user_id": row['user_id'],
+                "display_name": row['display_name'],
+                "match_label": label
+            })
+
+        if support_overlap > 0:
+            label = "High relevance" if support_overlap >= 2 else "Good fit"
+            support.append({
+                "user_id": row['user_id'],
+                "display_name": row['display_name'],
+                "match_label": label
+            })
+
+    return render_template(
+        "group_invite.html",
+        group=meta,
+        benefit_candidates=benefit[:10],
+        support_candidates=support[:10],
+        search_query=search_query,
+        username=session.get("username")
+    )
+
+
 @app.route("/join_group", methods=["POST"])
 @login_required
 def join_group():
@@ -1348,7 +1988,9 @@ def join_group():
         return redirect(url_for("profile"))
 
     group_topic = request.form.get("group_topic", "").strip()
-    if group_topic in groups:
+    if group_topic in groups or group_topic in group_meta:
+        ensure_group_exists(group_topic)
+        group_members[group_topic].add(session.get("user_id"))
         session["current_group"] = group_topic
         return redirect(url_for("chat"))
 
@@ -1375,8 +2017,10 @@ def create_group():
         session["current_group"] = relevant
         return redirect(url_for("chat"))
 
-    groups[new_topic] = []
+    ensure_group_exists(new_topic)
     store_group_embedding(new_topic)  # Store embedding for semantic matching
+    group_meta[new_topic]["description"] = "A supportive space to connect with peers around this topic."
+    group_members[new_topic].add(session.get("user_id"))
     session["current_group"] = new_topic
     return redirect(url_for("chat"))
 
@@ -1550,9 +2194,12 @@ def get_profile_summary(profile_dict):
     if profile_dict.get("is_international_freshman"):
         parts.append("International freshman")
     
-    challenges = profile_dict.get("primary_challenge", [])
-    if challenges:
-        parts.append(f"Facing: {', '.join(challenges[:2])}")
+    challenges = normalize_topic_ids(profile_dict.get("primary_challenge", []))
+    support_topics = normalize_topic_ids(profile_dict.get("support_topics", []))
+    private_topics = set(normalize_topic_ids(profile_dict.get("private_topics", [])))
+    public_topics = [t for t in (challenges + support_topics) if t not in private_topics]
+    if public_topics:
+        parts.append(f"Facing: {', '.join(get_topic_labels(public_topics[:2]))}")
     
     language = profile_dict.get("preferred_language")
     if language:
@@ -1565,7 +2212,14 @@ def cache_user_profile(user_id, display_name, profile_dict):
     """Cache user profile for peer display."""
     user_profiles[user_id] = {
         "display_name": display_name,
-        "profile_summary": get_profile_summary(profile_dict)
+        "profile_summary": get_profile_summary(profile_dict),
+        "is_international_freshman": profile_dict.get("is_international_freshman", False),
+        "preferred_language": profile_dict.get("preferred_language", ""),
+        "support_topics": profile_dict.get("support_topics", []),
+        "private_topics": profile_dict.get("private_topics", []),
+        "languages": profile_dict.get("languages", []),
+        "cultural_background": profile_dict.get("cultural_background", []),
+        "support_style": profile_dict.get("support_style", "mixed"),
     }
 
 
@@ -1574,8 +2228,102 @@ def get_pending_requests_for_user(user_id):
     return pending_requests.get(user_id, [])
 
 
+def calculate_match_score(current_profile, peer_profile):
+    """Calculate a simple match score between two profiles."""
+    current_topics = normalize_topic_ids(
+        (current_profile.get("primary_challenge", []) or [])
+        + (current_profile.get("support_topics", []) or [])
+        + (current_profile.get("private_topics", []) or [])
+    )
+    peer_topics = normalize_topic_ids(
+        (peer_profile.get("support_topics", []) or [])
+        + (peer_profile.get("primary_challenge", []) or [])
+        + (peer_profile.get("private_topics", []) or [])
+    )
+
+    topic_overlap = len(set(current_topics) & set(peer_topics))
+    topic_union = len(set(current_topics) | set(peer_topics))
+    topic_score = (topic_overlap / topic_union) if topic_union else 0.0
+
+    lang_score = 0.0
+    current_langs = set(current_profile.get("languages", []) or [])
+    peer_langs = set(peer_profile.get("languages", []) or [])
+    if current_profile.get("preferred_language"):
+        current_langs.add(current_profile.get("preferred_language"))
+    if peer_profile.get("preferred_language"):
+        peer_langs.add(peer_profile.get("preferred_language"))
+    if current_langs & peer_langs:
+        lang_score = 1.0
+
+    culture_score = 0.0
+    current_cultures = set(current_profile.get("cultural_background", []) or [])
+    peer_cultures = set(peer_profile.get("cultural_background", []) or [])
+    if current_cultures & peer_cultures:
+        culture_score = 1.0
+
+    freshman_score = 1.0 if current_profile.get("is_international_freshman") == peer_profile.get("is_international_freshman") else 0.0
+
+    score = (topic_score * 70) + (lang_score * 10) + (culture_score * 10) + (freshman_score * 10)
+    return int(round(score))
+
+
+def calculate_group_match_score(user_profile, group_meta_dict, last_issue_text=None):
+    """
+    Calculate how well a group matches a user's profile.
+    Returns a score from 0-100.
+    """
+    score = 0.0
+    
+    # Get user's topics (all types combined)
+    user_topics = normalize_topic_ids(
+        (user_profile.get("primary_challenge", []) or [])
+        + (user_profile.get("support_topics", []) or [])
+        + (user_profile.get("private_topics", []) or [])
+    )
+    
+    # Get group's topics
+    group_topics = normalize_topic_ids(group_meta_dict.get("topics", []) or [])
+    
+    # Topic overlap score (up to 50 points)
+    if user_topics and group_topics:
+        overlap = len(set(user_topics) & set(group_topics))
+        max_possible = min(len(user_topics), len(group_topics))
+        if max_possible > 0:
+            score += (overlap / max_possible) * 50
+    
+    # Group name/description keyword matching against user profile (up to 30 points)
+    group_text = (group_meta_dict.get("name", "") + " " + group_meta_dict.get("description", "")).lower()
+    user_topic_labels = [get_topic_label(t).lower() for t in user_topics if get_topic_label(t)]
+    
+    keyword_matches = 0
+    for label in user_topic_labels:
+        # Check if any word from the label appears in group text
+        label_words = label.split()
+        for word in label_words:
+            if len(word) > 3 and word in group_text:
+                keyword_matches += 1
+                break
+    
+    if user_topic_labels:
+        score += (min(keyword_matches, 3) / 3) * 30
+    
+    # Issue text matching (up to 20 points) if available
+    if last_issue_text:
+        issue_lower = last_issue_text.lower()
+        # Check if group name keywords appear in issue
+        group_name_words = group_meta_dict.get("name", "").lower().split()
+        name_matches = sum(1 for w in group_name_words if len(w) > 3 and w in issue_lower)
+        if group_name_words:
+            score += (min(name_matches, 2) / 2) * 20
+    else:
+        # If no issue text, give partial points based on profile completeness
+        if user_topics:
+            score += 10
+    
+    return int(round(min(score, 100)))
+
 def add_connection_request(sender_id, sender_display_name, recipient_id, message):
-    """Add a connection request to pending requests."""
+    """Add a connection request to pending requests and track outgoing."""
     if recipient_id not in pending_requests:
         pending_requests[recipient_id] = []
     
@@ -1584,12 +2332,32 @@ def add_connection_request(sender_id, sender_display_name, recipient_id, message
         if req["sender_id"] == sender_id:
             return False  # Already sent
     
+    # Get recipient display name for outgoing tracking
+    recipient_display_name = "User"
+    if recipient_id in user_profiles:
+        recipient_display_name = user_profiles[recipient_id].get("display_name", "User")
+    else:
+        db = get_db()
+        row = db.execute('SELECT display_name FROM profiles WHERE user_id = ?', (recipient_id,)).fetchone()
+        if row and row['display_name']:
+            recipient_display_name = row['display_name']
+    
     pending_requests[recipient_id].append({
         "sender_id": sender_id,
         "sender_display_name": sender_display_name,
         "message": message,
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
+    
+    # Track outgoing request for sender
+    if sender_id not in outgoing_requests:
+        outgoing_requests[sender_id] = []
+    outgoing_requests[sender_id].append({
+        "recipient_id": recipient_id,
+        "recipient_display_name": recipient_display_name,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+    
     return True
 
 
@@ -1610,7 +2378,15 @@ def people():
         return redirect(url_for("onboarding"))
     
     user_id = session.get("user_id")
+    search_query = request.args.get("q", "").strip().lower()
+    selected_topics = request.args.getlist("topics")
+    sort_by = request.args.get("sort", "best")
     filter_challenge = request.args.get("filter", "")
+    selected_topics = normalize_topic_ids(selected_topics)
+    
+    current_profile = load_profile_from_db(user_id) if user_id else None
+    if not current_profile:
+        current_profile = get_profile_dict()
     
     # Get all profiles from database
     db = get_db()
@@ -1622,34 +2398,74 @@ def people():
     
     peers = []
     for row in all_profiles:
-        challenges = row['primary_challenge'] or ''
-        support_topics = row['support_topics'] or ''
-        all_challenges = challenges + ',' + support_topics
-        
-        # Apply filter if specified
+        challenges = normalize_topic_ids((row['primary_challenge'] or '').split(','))
+        support_topics = normalize_topic_ids((row['support_topics'] or '').split(','))
+        private_topics = set(normalize_topic_ids((row['private_topics'] or '').split(',')))
+        peer_topics = list(dict.fromkeys(challenges + support_topics))
+        public_topics = [t for t in peer_topics if t not in private_topics]
+
+        peer_profile = {
+            "display_name": row['display_name'] or 'Anonymous',
+            "is_international_freshman": bool(row['is_international_freshman']),
+            "preferred_language": row['preferred_language'] or '',
+            "primary_challenge": challenges,
+            "support_topics": support_topics,
+            "private_topics": list(private_topics),
+            "languages": (row['languages'] or '').split(',') if row['languages'] else [],
+            "cultural_background": (row['cultural_background'] or '').split(',') if row['cultural_background'] else [],
+            "support_style": row['support_style'] or 'mixed'
+        }
+
+        # Apply topic filter if specified
+        if selected_topics:
+            if not set(selected_topics) & set(peer_topics):
+                continue
+
+        # Backward-compatible filter pills
         if filter_challenge:
             filter_lower = filter_challenge.lower()
-            all_challenges_lower = all_challenges.lower()
+            all_challenges_lower = ",".join(peer_topics).lower()
             if filter_lower not in all_challenges_lower:
-                # Check for category matches
                 if filter_lower == 'homesickness' and 'homesickness' not in all_challenges_lower:
                     continue
                 elif filter_lower == 'academic' and 'academic' not in all_challenges_lower:
                     continue
-                elif filter_lower == 'social' and 'loneliness' not in all_challenges_lower and 'relationships' not in all_challenges_lower:
+                elif filter_lower == 'social' and 'loneliness' not in all_challenges_lower and 'relationship' not in all_challenges_lower:
                     continue
                 elif filter_lower == 'cultural' and 'culture' not in all_challenges_lower:
                     continue
                 elif filter_lower == 'language' and 'language' not in all_challenges_lower:
                     continue
-        
+
+        # Apply search query
+        if search_query:
+            searchable = " ".join([
+                row['display_name'] or '',
+                row['preferred_language'] or '',
+                ",".join(peer_topics),
+            ]).lower()
+            if search_query not in searchable:
+                continue
+
+        match_score = calculate_match_score(current_profile, peer_profile)
+        if match_score >= 80:
+            match_label = "Best Fit"
+        elif match_score >= 60:
+            match_label = "Good Fit"
+        else:
+            match_label = "New Peer"
+
         peers.append({
             "user_id": row['user_id'],
             "display_name": row['display_name'] or 'Anonymous',
             "is_international_freshman": bool(row['is_international_freshman']),
             "preferred_language": row['preferred_language'] or '',
-            "primary_challenge": row['primary_challenge'] or '',
-            "support_style": row['support_style'] or 'mixed'
+            "primary_challenge": ",".join(peer_topics),
+            "public_topics": public_topics,
+            "support_style": row['support_style'] or 'mixed',
+            "languages": peer_profile.get("languages", []),
+            "match_score": match_score,
+            "match_label": match_label
         })
     
     # Also add from in-memory cache for real-time peers
@@ -1658,24 +2474,50 @@ def people():
         for peer_id, score in similar:
             peer_profile = user_profiles.get(peer_id)
             if peer_profile and not any(p['user_id'] == peer_id for p in peers):
+                match_score = int(round(score * 100))
+                if match_score >= 80:
+                    match_label = "Best Fit"
+                elif match_score >= 60:
+                    match_label = "Good Fit"
+                else:
+                    match_label = "New Peer"
                 peers.append({
                     "user_id": peer_id,
                     "display_name": peer_profile.get("display_name", "Anonymous"),
                     "is_international_freshman": peer_profile.get("is_international_freshman", False),
                     "preferred_language": peer_profile.get("preferred_language", ""),
-                    "primary_challenge": ",".join(peer_profile.get("primary_challenge", [])),
-                    "support_style": peer_profile.get("support_style", "mixed")
+                    "primary_challenge": ",".join(peer_profile.get("support_topics", [])),
+                    "public_topics": [t for t in peer_profile.get("support_topics", []) if t not in peer_profile.get("private_topics", [])],
+                    "support_style": peer_profile.get("support_style", "mixed"),
+                    "languages": peer_profile.get("languages", []),
+                    "match_score": match_score,
+                    "match_label": match_label
                 })
     
     # Get pending requests for current user
     incoming_requests = get_pending_requests_for_user(user_id)
     
+    if sort_by == "alpha":
+        peers.sort(key=lambda p: p.get("display_name", ""))
+    elif sort_by == "recent":
+        peers.sort(key=lambda p: p.get("user_id", 0), reverse=True)
+    else:
+        peers.sort(key=lambda p: p.get("match_score", 0), reverse=True)
+
+    recommended_peers = peers[:3]
+
     return render_template(
         "people.html",
         peers=peers,
+        recommended_peers=recommended_peers,
         filter=filter_challenge,
         incoming_requests=incoming_requests,
-        username=session.get("username")
+        username=session.get("username"),
+        support_topic_categories=SUPPORT_TOPIC_CATEGORIES,
+        support_topic_index=SUPPORT_TOPIC_INDEX,
+        selected_topics=selected_topics,
+        search_query=search_query,
+        sort_by=sort_by
     )
 
 
@@ -1788,6 +2630,214 @@ def connect_ignore():
     
     flash("Request removed", "info")
     return redirect(url_for("people"))
+
+
+# -----------------------------------------------------------------------------
+# Peers Page Routes
+# -----------------------------------------------------------------------------
+
+def get_connected_peers(user_id):
+    """Get list of connected peers for a user."""
+    connected_ids = peer_connections.get(user_id, set())
+    peers = []
+    for peer_id in connected_ids:
+        peer_profile = user_profiles.get(peer_id)
+        if peer_profile:
+            peers.append({
+                "user_id": peer_id,
+                "display_name": peer_profile.get("display_name", "Anonymous"),
+                "match_reason": peer_profile.get("profile_summary", "")
+            })
+        else:
+            # Try to load from DB
+            db = get_db()
+            row = db.execute('SELECT display_name FROM profiles WHERE user_id = ?', (peer_id,)).fetchone()
+            if row:
+                peers.append({
+                    "user_id": peer_id,
+                    "display_name": row['display_name'] or "Anonymous",
+                    "match_reason": ""
+                })
+    return peers
+
+def get_outgoing_requests(user_id):
+    """Get list of outgoing connection requests for a user."""
+    return outgoing_requests.get(user_id, [])
+
+def add_peer_connection(user_a_id, user_b_id):
+    """Add a mutual peer connection."""
+    if user_a_id not in peer_connections:
+        peer_connections[user_a_id] = set()
+    if user_b_id not in peer_connections:
+        peer_connections[user_b_id] = set()
+    peer_connections[user_a_id].add(user_b_id)
+    peer_connections[user_b_id].add(user_a_id)
+
+def remove_outgoing_request(sender_id, recipient_id):
+    """Remove an outgoing connection request."""
+    if sender_id in outgoing_requests:
+        outgoing_requests[sender_id] = [
+            req for req in outgoing_requests[sender_id]
+            if req["recipient_id"] != recipient_id
+        ]
+
+
+@app.route("/peers", methods=["GET"])
+@login_required
+def peers_page():
+    """Peers page showing connected peers, pending requests, and suggestions."""
+    if not session.get("display_name"):
+        return redirect(url_for("profile"))
+    
+    user_id = session.get("user_id")
+    
+    # Get connected peers
+    connected_peers = get_connected_peers(user_id)
+    
+    # Get incoming requests
+    incoming_requests = get_pending_requests_for_user(user_id)
+    
+    # Get outgoing requests
+    outgoing_reqs = get_outgoing_requests(user_id)
+    
+    # Get suggested peers using semantic matching
+    suggested_peers = []
+    if user_id:
+        similar = get_similar_users(user_id, top_n=6, threshold=0.3)
+        connected_ids = peer_connections.get(user_id, set())
+        for peer_id, score in similar:
+            # Skip already connected peers
+            if peer_id in connected_ids:
+                continue
+            # Skip peers with pending requests
+            has_pending = any(req["sender_id"] == peer_id for req in incoming_requests)
+            if has_pending:
+                continue
+            has_outgoing = any(req["recipient_id"] == peer_id for req in outgoing_reqs)
+            if has_outgoing:
+                continue
+            
+            peer_profile = user_profiles.get(peer_id)
+            if peer_profile:
+                current_profile = load_profile_from_db(user_id)
+                common_topics = []
+                if current_profile and peer_profile:
+                    my_topics = set(normalize_topic_ids(current_profile.get("support_topics", [])))
+                    peer_topics_list = normalize_topic_ids(peer_profile.get("support_topics", []))
+                    common = my_topics & set(peer_topics_list)
+                    common_topics = get_topic_labels(list(common)[:3])
+                
+                suggested_peers.append({
+                    "user_id": peer_id,
+                    "display_name": peer_profile.get("display_name", "Anonymous"),
+                    "match_score": score,
+                    "common_topics": common_topics
+                })
+    
+    return render_template(
+        "peers.html",
+        connected_peers=connected_peers,
+        incoming_requests=incoming_requests,
+        outgoing_requests=outgoing_reqs,
+        suggested_peers=suggested_peers[:5],
+        username=session.get("username")
+    )
+
+
+@app.route("/peers/accept", methods=["POST"])
+@login_required
+def accept_connection():
+    """Accept a peer connection request."""
+    user_id = session.get("user_id")
+    sender_id = request.form.get("sender_id")
+    
+    if not sender_id:
+        flash("Sender required", "error")
+        return redirect(url_for("peers_page"))
+    
+    try:
+        sender_id = int(sender_id)
+    except ValueError:
+        flash("Invalid sender", "error")
+        return redirect(url_for("peers_page"))
+    
+    # Find the request
+    requests_list = get_pending_requests_for_user(user_id)
+    request_found = None
+    for req in requests_list:
+        if req["sender_id"] == sender_id:
+            request_found = req
+            break
+    
+    if not request_found:
+        flash("Request not found", "error")
+        return redirect(url_for("peers_page"))
+    
+    # Create the connection
+    add_peer_connection(user_id, sender_id)
+    
+    # Remove the pending request
+    remove_connection_request(user_id, sender_id)
+    
+    # Remove from sender's outgoing requests
+    remove_outgoing_request(sender_id, user_id)
+    
+    flash(f"Connected with {request_found['sender_display_name']}!", "success")
+    return redirect(url_for("peers_page"))
+
+
+@app.route("/peers/decline", methods=["POST"])
+@login_required
+def decline_connection():
+    """Decline a peer connection request."""
+    user_id = session.get("user_id")
+    sender_id = request.form.get("sender_id")
+    
+    if not sender_id:
+        flash("Sender required", "error")
+        return redirect(url_for("peers_page"))
+    
+    try:
+        sender_id = int(sender_id)
+    except ValueError:
+        flash("Invalid sender", "error")
+        return redirect(url_for("peers_page"))
+    
+    # Remove the request
+    remove_connection_request(user_id, sender_id)
+    
+    # Remove from sender's outgoing requests
+    remove_outgoing_request(sender_id, user_id)
+    
+    flash("Request declined", "info")
+    return redirect(url_for("peers_page"))
+
+
+@app.route("/peers/cancel", methods=["POST"])
+@login_required
+def cancel_connection():
+    """Cancel an outgoing connection request."""
+    user_id = session.get("user_id")
+    recipient_id = request.form.get("recipient_id")
+    
+    if not recipient_id:
+        flash("Recipient required", "error")
+        return redirect(url_for("peers_page"))
+    
+    try:
+        recipient_id = int(recipient_id)
+    except ValueError:
+        flash("Invalid recipient", "error")
+        return redirect(url_for("peers_page"))
+    
+    # Remove from outgoing requests
+    remove_outgoing_request(user_id, recipient_id)
+    
+    # Remove from recipient's pending requests
+    remove_connection_request(recipient_id, user_id)
+    
+    flash("Request cancelled", "info")
+    return redirect(url_for("peers_page"))
 
 
 # -----------------------------------------------------------------------------
