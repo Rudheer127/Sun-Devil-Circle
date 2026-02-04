@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }} - Groups{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 160px; padding-bottom: 80px; max-width: 900px;">
+    <nav style="margin-bottom: 24px;">
+        <a href="{{ url_for('groups_page') }}" style="color: var(--text-secondary); font-size: 14px;">← Groups</a>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div style="margin-bottom: 24px;">
+        {% for category, message in messages %}
+        <div
+            style="margin-bottom: 12px; padding: 14px 18px; border-radius: 12px; background: {{ '#D1FAE5' if category == 'success' else '#FEE2E2' }}; color: {{ '#065F46' if category == 'success' else '#991B1B' }};">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="card" style="margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+            <div>
+                <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary);">{{ group.name }}</h1>
+                <p style="color: var(--text-secondary); margin-top: 8px;">{{ group.description }}</p>
+                <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
+                    {% for label in group_topics %}
+                    <span
+                        style="font-size: 12px; background: #F3F4F6; color: var(--text-secondary); padding: 4px 10px; border-radius: 12px;">{{ label }}</span>
+                    {% endfor %}
+                </div>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px;">{{ member_count }} members ·
+                    {{ group.group_type }} · {{ 'Private' if group.is_private else 'Public' }}</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                {% if is_member %}
+                <form method="POST" action="{{ url_for('join_group') }}">
+                    <input type="hidden" name="group_topic" value="{{ group.name }}">
+                    <button type="submit" class="btn btn-maroon">Open Group Chat</button>
+                </form>
+                <form method="POST" action="{{ url_for('group_leave', group_name=group.name) }}">
+                    <button type="submit" class="btn btn-outline">Leave Group</button>
+                </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('join_group_full') }}">
+                    <input type="hidden" name="group_name" value="{{ group.name }}">
+                    <button type="submit" class="btn btn-maroon">{{ 'Request Access' if group.is_private else 'Join Group' }}</button>
+                </form>
+                {% endif %}
+                {% if is_owner %}
+                <a href="{{ url_for('group_invite', group_name=group.name) }}" class="btn btn-outline">Invite People</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div class="card">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Members</h3>
+            {% if members %}
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for member in members %}
+                <div style="background: #F9FAFB; padding: 12px 14px; border-radius: 12px;">{{ member }}</div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: var(--text-secondary);">No members yet.</p>
+            {% endif %}
+        </div>
+
+        {% if is_owner %}
+        <div class="card">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Group Settings</h3>
+            <form method="POST" action="{{ url_for('group_toggle_visibility', group_name=group.name) }}"
+                onsubmit="return confirmVisibilityChange();">
+                <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Visibility</label>
+                <select name="visibility" class="form-input">
+                    <option value="public" {{ 'selected' if not group.is_private else '' }}>Public</option>
+                    <option value="private" {{ 'selected' if group.is_private else '' }}>Private</option>
+                </select>
+                <button type="submit" class="btn btn-outline" style="margin-top: 12px;">Save Settings</button>
+            </form>
+
+            <div style="margin-top: 20px;">
+                <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Pending Requests</h4>
+                {% if pending_requests %}
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    {% for request in pending_requests %}
+                    <form method="POST" action="{{ url_for('group_request_approve', group_name=group.name) }}"
+                        style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                        <span>{{ request.display_name }}</span>
+                        <input type="hidden" name="requester_id" value="{{ request.user_id }}">
+                        <button type="submit" class="btn btn-maroon" style="padding: 6px 12px; font-size: 12px;">Approve</button>
+                    </form>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: var(--text-secondary); font-size: 13px;">No pending requests.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Group Highlights</h3>
+            <p style="color: var(--text-secondary);">Start a conversation in the group chat or invite a friend to join.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card" style="margin-top: 24px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Recent Messages</h3>
+        {% if recent_messages %}
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for message in recent_messages %}
+            <div style="background: #F9FAFB; padding: 12px 14px; border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
+                    <strong style="color: var(--text-primary);">{{ message.display_name }}</strong>
+                    <span style="font-size: 12px; color: var(--text-secondary);">{{ message.timestamp }}</span>
+                </div>
+                <p style="color: var(--text-secondary); margin: 0;">{{ message.text }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary);">No messages yet. Start the conversation in group chat.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function confirmVisibilityChange() {
+        const select = document.querySelector('select[name="visibility"]');
+        if (select && select.value === 'public') {
+            return confirm('This will make your group discoverable. Are you sure?');
+        }
+        return true;
+    }
+</script>
+{% endblock %}

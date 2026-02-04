@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}Groups - SunDevil Circle{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 160px; padding-bottom: 80px; max-width: 1400px;">
+    <div style="margin-bottom: 32px;">
+        <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary);">Groups</h1>
+        <p style="color: var(--text-secondary); margin-top: 8px; font-size: 18px;">Find or create a peer support group
+            that fits your needs.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div style="margin-bottom: 24px;">
+        {% for category, message in messages %}
+        <div
+            style="margin-bottom: 12px; padding: 14px 18px; border-radius: 12px; background: {{ '#D1FAE5' if category == 'success' else '#FEE2E2' }}; color: {{ '#065F46' if category == 'success' else '#991B1B' }};">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+        <div>
+            <div class="card" style="margin-bottom: 24px;">
+                <form method="GET" action="{{ url_for('groups_page') }}">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Search
+                                groups</label>
+                            <input type="text" name="q" class="form-input" placeholder="Name or description"
+                                value="{{ search_query }}">
+                        </div>
+                        <div>
+                            <label
+                                style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Support
+                                topics</label>
+                            <div class="topic-dropdown" style="position: relative;">
+                                <button type="button" class="form-input topic-dropdown-btn"
+                                    style="text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+                                    onclick="toggleTopicDropdown('filterTopics')">
+                                    <span id="filterTopicsLabel">Select topics...</span>
+                                    <span style="font-size: 10px;">▼</span>
+                                </button>
+                                <div id="filterTopics" class="topic-dropdown-menu"
+                                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 280px; overflow-y: auto; z-index: 100; margin-top: 4px;">
+                                    {% for category, topics in support_topic_categories %}
+                                    <div
+                                        style="padding: 8px 12px; background: #F9FAFB; font-weight: 600; font-size: 12px; color: var(--text-secondary); border-bottom: 1px solid #E5E7EB;">
+                                        {{ category }}</div>
+                                    {% for topic_id, icon, label in topics %}
+                                    <label
+                                        style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; transition: background 0.15s;"
+                                        onmouseover="this.style.background='#F3F4F6'"
+                                        onmouseout="this.style.background='transparent'">
+                                        <input type="checkbox" name="topics" value="{{ topic_id }}" {{ 'checked' if
+                                            topic_id in selected_topics else '' }}
+                                            style="accent-color: var(--primary-maroon); width: 16px; height: 16px;"
+                                            onchange="updateTopicLabel('filterTopics', 'filterTopicsLabel')">
+                                        <span style="font-size: 14px;">{{ icon }} {{ label }}</span>
+                                    </label>
+                                    {% endfor %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <label style="font-size: 13px; color: var(--text-secondary);">Sort by:</label>
+                            <select name="sort" class="form-input"
+                                style="width: auto; padding: 8px 12px; height: auto;">
+                                <option value="best" {{ 'selected' if sort_by=='best' else '' }}>Best Match</option>
+                                <option value="members" {{ 'selected' if sort_by=='members' else '' }}>Most members
+                                </option>
+                                <option value="newest" {{ 'selected' if sort_by=='newest' else '' }}>Newest</option>
+                                <option value="a_z" {{ 'selected' if sort_by=='a_z' else '' }}>A-Z</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="{{ url_for('groups_page') }}" class="btn btn-secondary">Clear</a>
+                            <button type="submit" class="btn btn-maroon">Apply</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Joined Groups Section -->
+            {% if joined_groups and joined_groups|length > 0 %}
+            <div style="margin-bottom: 24px;">
+                <h3
+                    style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 20px;">✅</span> Your Groups
+                    <span
+                        style="background: #D1FAE5; color: #065F46; font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: 600;">{{
+                        joined_groups|length }}</span>
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    {% for group in joined_groups %}
+                    <div class="card"
+                        style="padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="font-size: 15px; font-weight: 600; color: var(--text-primary);">{{ group.name }}
+                            </h4>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">{{
+                                group.member_count }} members · {{ group.group_type }}</p>
+                        </div>
+                        <a href="{{ url_for('group_detail', group_name=group.name) }}" class="btn btn-outline"
+                            style="padding: 8px 16px; font-size: 13px;">View</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- All Groups Section -->
+            <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">All Groups
+            </h3>
+            {% if groups and groups|length > 0 %}
+            <div class="steps-grid">
+                {% for group in groups %}
+                <div class="step-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary);">{{ group.name }}
+                            </h3>
+                            {% if group.match_score is defined and group.match_score > 0 %}
+                            <span
+                                style="display: inline-block; margin-top: 6px; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #FFF1F2; color: var(--primary-maroon); font-weight: 600;">{{
+                                group.match_score }}% · {{ group.match_label }}</span>
+                            {% endif %}
+                        </div>
+                        <span
+                            style="font-size: 11px; padding: 4px 8px; border-radius: 999px; background: {{ '#FDE68A' if group.is_private else '#D1FAE5' }}; color: {{ '#92400E' if group.is_private else '#065F46' }}; font-weight: 600; white-space: nowrap;">{{
+                            'Private' if group.is_private else 'Public' }}</span>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-top: 8px; font-size: 14px;">{{ group.description }}
+                    </p>
+                    {% if group.topic_labels %}
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;">
+                        {% for label in group.topic_labels[:4] %}
+                        <span
+                            style="font-size: 12px; background: #F3F4F6; color: var(--text-secondary); padding: 4px 10px; border-radius: 12px;">{{
+                            label }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                        <span style="font-size: 12px; color: var(--text-secondary);">{{ group.member_count }} members ·
+                            {{ group.group_type }}</span>
+                        <form method="POST" action="{{ url_for('join_group_full') }}">
+                            <input type="hidden" name="group_name" value="{{ group.name }}">
+                            <button type="submit" class="btn btn-outline" style="padding: 8px 16px;">
+                                {{ 'Request Access' if group.is_private else 'Join Group' }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card text-center" style="padding: 60px 20px;">
+                <p style="font-size: 48px; margin-bottom: 16px;">👥</p>
+                <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">No groups found</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">Try adjusting your filters or create a new
+                    group.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div>
+            <div class="card">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Create a New Group</h3>
+                <form method="POST" action="{{ url_for('create_group_full') }}">
+                    <div class="form-group">
+                        <label class="form-label">Group name</label>
+                        <input type="text" name="group_name" class="form-input" placeholder="Group name" required>
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label class="form-label">Description</label>
+                        <textarea name="group_description" rows="3" class="form-input" placeholder="Describe your group"
+                            required></textarea>
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label class="form-label">Primary support topics</label>
+                        <div class="topic-dropdown" style="position: relative;">
+                            <button type="button" class="form-input topic-dropdown-btn"
+                                style="text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-height: 46px;"
+                                onclick="toggleTopicDropdown('createTopics')">
+                                <span id="createTopicsLabel">Select topics...</span>
+                                <span style="font-size: 10px;">▼</span>
+                            </button>
+                            <div id="createTopics" class="topic-dropdown-menu"
+                                style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 240px; overflow-y: auto; z-index: 100; margin-top: 4px;">
+                                {% for category, topics in support_topic_categories %}
+                                <div
+                                    style="padding: 8px 12px; background: #F9FAFB; font-weight: 600; font-size: 12px; color: var(--text-secondary); border-bottom: 1px solid #E5E7EB;">
+                                    {{ category }}</div>
+                                {% for topic_id, icon, label in topics %}
+                                <label
+                                    style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; transition: background 0.15s;"
+                                    onmouseover="this.style.background='#F3F4F6'"
+                                    onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="group_topics" value="{{ topic_id }}"
+                                        style="accent-color: var(--primary-maroon); width: 16px; height: 16px;"
+                                        onchange="updateTopicLabel('createTopics', 'createTopicsLabel')">
+                                    <span style="font-size: 14px;">{{ icon }} {{ label }}</span>
+                                </label>
+                                {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label class="form-label">Group type</label>
+                        <select name="group_type" class="form-input">
+                            {% for gt in group_types %}
+                            <option value="{{ gt }}">{{ gt }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label class="form-label">Visibility</label>
+                        <select name="group_visibility" class="form-input">
+                            <option value="public">Public</option>
+                            <option value="private">Private</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label class="form-label">Group Duration</label>
+                        <div style="display: flex; gap: 12px; margin-top: 8px;">
+                            <label
+                                style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 400;">
+                                <input type="radio" name="group_duration" value="ongoing" checked
+                                    style="accent-color: var(--primary-maroon);">
+                                <span>Ongoing</span>
+                            </label>
+                            <label
+                                style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 400;">
+                                <input type="radio" name="group_duration" value="temporary"
+                                    style="accent-color: var(--primary-maroon);">
+                                <span>Temporary</span>
+                            </label>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">Temporary groups have
+                            an end date and can be extended by the owner.</p>
+                    </div>
+                    <div class="form-group" id="endDateGroup" style="margin-top: 12px; display: none;">
+                        <label class="form-label">End Date (for temporary groups)</label>
+                        <input type="date" name="group_end_date" class="form-input" id="groupEndDate">
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">You can extend this
+                            date later if needed.</p>
+                    </div>
+                    <button type="submit" class="btn btn-maroon" style="width: 100%; margin-top: 16px;">Create
+                        Group</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Toggle end date field visibility based on duration selection
+    document.querySelectorAll('input[name="group_duration"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+            const endDateGroup = document.getElementById('endDateGroup');
+            const endDateInput = document.getElementById('groupEndDate');
+            if (this.value === 'temporary') {
+                endDateGroup.style.display = 'block';
+                // Set minimum date to tomorrow
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                endDateInput.min = tomorrow.toISOString().split('T')[0];
+            } else {
+                endDateGroup.style.display = 'none';
+                endDateInput.value = '';
+            }
+        });
+    });
+
+    // Topic dropdown functions
+    function toggleTopicDropdown(id) {
+        const dropdown = document.getElementById(id);
+        const isVisible = dropdown.style.display === 'block';
+
+        // Close all dropdowns first
+        document.querySelectorAll('.topic-dropdown-menu').forEach(d => d.style.display = 'none');
+
+        // Toggle this one
+        if (!isVisible) {
+            dropdown.style.display = 'block';
+        }
+    }
+
+    function updateTopicLabel(dropdownId, labelId) {
+        const dropdown = document.getElementById(dropdownId);
+        const label = document.getElementById(labelId);
+        const checked = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+
+        if (checked.length === 0) {
+            label.textContent = 'Select topics...';
+        } else if (checked.length === 1) {
+            const text = checked[0].nextElementSibling.textContent.trim();
+            label.textContent = text;
+        } else {
+            label.textContent = checked.length + ' topics selected';
+        }
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.topic-dropdown')) {
+            document.querySelectorAll('.topic-dropdown-menu').forEach(d => d.style.display = 'none');
+        }
+    });
+
+    // Initialize labels on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        updateTopicLabel('filterTopics', 'filterTopicsLabel');
+        if (document.getElementById('createTopics')) {
+            updateTopicLabel('createTopics', 'createTopicsLabel');
+        }
+    });
+</script>
+{% endblock %}
