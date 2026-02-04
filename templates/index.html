@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}SunDevil Circles - Peer Support for ASU Students{% endblock %}
+{% block title %}SunDevilCircles - Peer Support for ASU Students{% endblock %}
 {% block meta_description %}Connect with peer supporters who understand your journey. Safe, confidential, and
 culturally-aware support for ASU international students.{% endblock %}
 
@@ -221,7 +221,7 @@ culturally-aware support for ASU international students.{% endblock %}
 <!-- CTA Section -->
 <section class="section text-center cta-section">
     <h2 class="section-title">Ready to find your circle?</h2>
-    <p class="section-subtitle mb-8">Join hundreds of ASU students who've found support through SunDevil Circles.</p>
+    <p class="section-subtitle mb-8">Join hundreds of ASU students who've found support through SunDevilCircles.</p>
     <div class="hero-cta">
         {% if session.get('user_id') and session.get('display_name') %}
         <a href="{{ url_for('decision') }}" class="btn-hero-primary">
@@ -272,14 +272,14 @@ culturally-aware support for ASU international students.{% endblock %}
 
     <!-- Consent Message -->
     <div class="footer-consent">
-        <p>💬 By using SunDevil Circles, you consent to receiving peer support messages from student supporters. You can
+        <p>💬 By using SunDevilCircles, you consent to receiving peer support messages from student supporters. You can
             end conversations at any time.</p>
         <p>⚠️ <strong>Important:</strong> This is peer support, not professional therapy. If you're in crisis, please
             call 988 or contact ASU Counseling.</p>
     </div>
 
     <div class="footer-bottom">
-        <p>© 2026 SunDevil Circles. This is a peer support platform and does not provide professional mental health
+        <p>© 2026 SunDevilCircles. This is a peer support platform and does not provide professional mental health
             services.</p>
         <p>If you're in crisis, please call 988 or contact ASU Counseling Services.</p>
     </div>
