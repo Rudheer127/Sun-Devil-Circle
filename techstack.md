@@ -59,7 +59,7 @@ Flask sessions are used for:
 
 display_name
 
-is_international_freshman
+gender
 
 preferred_language (optional)
 

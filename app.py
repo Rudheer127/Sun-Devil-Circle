@@ -1,5 +1,5 @@
 """
-Sun Devil Circle - Peer Support Platform for International Freshman Students at ASU
+Sun Devil Circles - Peer Support Platform for ASU Students
 Flask backend with in-memory storage, AI abstraction, and safety moderation.
 """
 
@@ -65,7 +65,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS profiles (
                 user_id INTEGER PRIMARY KEY,
                 display_name TEXT,
-                is_international_freshman INTEGER DEFAULT 0,
+                gender TEXT DEFAULT '',
                 preferred_language TEXT DEFAULT '',
                 primary_challenge TEXT DEFAULT '',
                 support_style TEXT DEFAULT 'mixed',
@@ -106,6 +106,10 @@ def init_db():
             db.execute('ALTER TABLE profiles ADD COLUMN degree_program TEXT DEFAULT ""')
         except:
             pass
+        try:
+            db.execute('ALTER TABLE profiles ADD COLUMN gender TEXT DEFAULT ""')
+        except:
+            pass
         db.commit()
 
 
@@ -119,12 +123,12 @@ def save_profile_to_db(user_id, profile_dict):
     cultural_background = ','.join(profile_dict.get('cultural_background', []))
     db.execute('''
         INSERT OR REPLACE INTO profiles 
-        (user_id, display_name, is_international_freshman, preferred_language, primary_challenge, support_style, support_topics, private_topics, languages, cultural_background, onboarding_complete, graduation_year, degree_program)
+        (user_id, display_name, gender, preferred_language, primary_challenge, support_style, support_topics, private_topics, languages, cultural_background, onboarding_complete, graduation_year, degree_program)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         user_id,
         profile_dict.get('display_name', ''),
-        1 if profile_dict.get('is_international_freshman') else 0,
+        profile_dict.get('gender', ''),
         profile_dict.get('preferred_language', ''),
         challenges,
         profile_dict.get('support_style', 'mixed'),
@@ -166,9 +170,15 @@ def load_profile_from_db(user_id):
             degree_program = row['degree_program'] or ''
         except:
             pass
+        # Try to get gender field (may not exist in older databases)
+        gender = ''
+        try:
+            gender = row['gender'] or ''
+        except:
+            pass
         return {
             'display_name': row['display_name'] or '',
-            'is_international_freshman': bool(row['is_international_freshman']),
+            'gender': gender,
             'preferred_language': row['preferred_language'] or '',
             'primary_challenge': challenges,
             'support_style': row['support_style'] or 'mixed',
@@ -558,8 +568,14 @@ def build_profile_text(profile_dict):
     """Build a readable text block from profile fields for embedding."""
     parts = []
 
-    if profile_dict.get("is_international_freshman"):
-        parts.append("I am an international freshman student.")
+    gender = profile_dict.get("gender", "")
+    if gender:
+        parts.append(f"I identify as {gender}.")
+
+    cultural_bg = profile_dict.get("cultural_background", [])
+    if cultural_bg:
+        bg_text = ", ".join(cultural_bg) if isinstance(cultural_bg, list) else cultural_bg
+        parts.append(f"My cultural background is {bg_text}.")
 
     challenges = normalize_topic_ids(profile_dict.get("primary_challenge", []))
     support_topics = normalize_topic_ids(profile_dict.get("support_topics", []))
@@ -599,7 +615,7 @@ def build_profile_text(profile_dict):
     if display_name:
         parts.insert(0, f"My name is {display_name}.")
 
-    return " ".join(parts) if parts else "International student looking for peer support."
+    return " ".join(parts) if parts else "ASU student looking for peer support."
 
 
 def embed_text(text):
@@ -1222,7 +1238,7 @@ def get_profile_dict():
     """Extract profile fields from session."""
     return {
         "display_name": session.get("display_name", ""),
-        "is_international_freshman": session.get("is_international_freshman", False),
+        "gender": session.get("gender", ""),
         "preferred_language": session.get("preferred_language", ""),
         "primary_challenge": session.get("primary_challenge", []),
         "support_style": session.get("support_style", "mixed"),
@@ -1301,7 +1317,7 @@ def login():
                 profile = load_profile_from_db(user["id"])
                 if profile:
                     session["display_name"] = profile["display_name"]
-                    session["is_international_freshman"] = profile["is_international_freshman"]
+                    session["gender"] = profile.get("gender", "")
                     session["preferred_language"] = profile["preferred_language"]
                     session["primary_challenge"] = profile["primary_challenge"]
                     session["support_style"] = profile["support_style"]
@@ -1413,7 +1429,7 @@ def onboarding_submit():
     cultural_background = request.form.get("cultural_background", "").split(",")
     cultural_background = [c.strip() for c in cultural_background if c.strip()]
     
-    is_freshman = request.form.get("is_international_freshman") == "1"
+    gender = request.form.get("gender", "").strip()
     display_name = request.form.get("display_name", "").strip()[:50]
     graduation_year = request.form.get("graduation_year", "").strip()
     degree_program = request.form.get("degree_program", "").strip()
@@ -1421,7 +1437,7 @@ def onboarding_submit():
     # Build profile dict
     profile_dict = {
         "display_name": display_name,
-        "is_international_freshman": is_freshman,
+        "gender": gender,
         "preferred_language": languages[0] if languages else "",
         "primary_challenge": support_topics,
         "support_style": support_style,
@@ -1439,7 +1455,7 @@ def onboarding_submit():
     
     # Store in session for quick access
     session["display_name"] = display_name
-    session["is_international_freshman"] = is_freshman
+    session["gender"] = gender
     session["preferred_language"] = languages[0] if languages else ""
     session["primary_challenge"] = support_topics
     session["support_style"] = support_style
@@ -1468,7 +1484,7 @@ def profile():
     if request.method == "POST":
         # Get form data
         display_name = request.form.get("display_name", "").strip()[:30]
-        is_freshman = request.form.get("is_international_freshman") == "yes"
+        gender = request.form.get("gender", "").strip()
         support_style = request.form.get("support_style", "mixed")
         if support_style not in ["listening", "advice", "mixed"]:
             support_style = "mixed"
@@ -1484,7 +1500,7 @@ def profile():
         
         # Update session
         session["display_name"] = display_name
-        session["is_international_freshman"] = is_freshman
+        session["gender"] = gender
         session["support_style"] = support_style
         session["support_topics"] = support_topics
         session["private_topics"] = private_topics
@@ -1498,7 +1514,7 @@ def profile():
         # Build profile dict
         profile_dict = {
             "display_name": display_name,
-            "is_international_freshman": is_freshman,
+            "gender": gender,
             "preferred_language": languages[0] if languages else "",
             "primary_challenge": support_topics,
             "support_style": support_style,
@@ -1527,7 +1543,7 @@ def profile():
     if not existing_profile:
         existing_profile = {
             "display_name": session.get("display_name", ""),
-            "is_international_freshman": session.get("is_international_freshman", False),
+            "gender": session.get("gender", ""),
             "preferred_language": session.get("preferred_language", ""),
             "primary_challenge": session.get("primary_challenge", []),
             "support_style": session.get("support_style", "mixed"),
@@ -2041,6 +2057,11 @@ def group_invite(group_name):
         # Skip users already in the group
         if row['user_id'] in group_members.get(group_name, set()):
             continue
+        
+        # Skip users already invited to this group
+        user_invites = group_invitations.get(row['user_id'], [])
+        if any(inv.get("group_name") == group_name for inv in user_invites):
+            continue
             
         challenges = normalize_topic_ids((row['primary_challenge'] or '').split(','))
         supports = normalize_topic_ids((row['support_topics'] or '').split(','))
@@ -2068,7 +2089,7 @@ def group_invite(group_name):
         # Build peer profile for match scoring
         peer_profile = {
             "display_name": row['display_name'] or 'Anonymous',
-            "is_international_freshman": bool(row['is_international_freshman']),
+            "gender": row['gender'] if 'gender' in row.keys() else '',
             "preferred_language": row['preferred_language'] or '',
             "primary_challenge": challenges,
             "support_topics": supports,
@@ -2135,6 +2156,57 @@ def group_invite(group_name):
         search_query=search_query,
         username=session.get("username")
     )
+
+
+@app.route("/groups/<path:group_name>/invite", methods=["POST"])
+@login_required
+def send_group_invite(group_name):
+    """Send an invitation to a user to join the group."""
+    group_name = unquote(group_name)
+    meta = group_meta.get(group_name)
+    if not meta:
+        flash("Group not found.", "error")
+        return redirect(url_for("groups_page"))
+    
+    user_id = request.form.get("user_id")
+    if not user_id:
+        flash("Invalid user.", "error")
+        return redirect(url_for("group_invite", group_name=group_name))
+    
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        flash("Invalid user.", "error")
+        return redirect(url_for("group_invite", group_name=group_name))
+    
+    # Check if user is already in the group
+    if user_id in group_members.get(group_name, set()):
+        flash("User is already a member of this group.", "info")
+        return redirect(url_for("group_invite", group_name=group_name))
+    
+    # Add invitation
+    if user_id not in group_invitations:
+        group_invitations[user_id] = []
+    
+    # Check if already invited
+    already_invited = any(inv.get("group_name") == group_name for inv in group_invitations[user_id])
+    if already_invited:
+        flash("User has already been invited to this group.", "info")
+        return redirect(url_for("group_invite", group_name=group_name))
+    
+    # Add the invitation
+    group_invitations[user_id].append({
+        "group_name": group_name,
+        "inviter_id": session.get("user_id"),
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+    
+    # Get user name for flash message
+    invitee_profile = load_profile_from_db(user_id)
+    invitee_name = invitee_profile.get("display_name", "User") if invitee_profile else "User"
+    
+    flash(f"Invitation sent to {invitee_name}!", "success")
+    return redirect(url_for("group_invite", group_name=group_name))
 
 
 @app.route("/join_group", methods=["POST"])
@@ -2348,8 +2420,9 @@ def get_profile_summary(profile_dict):
     """Generate a short profile summary for display."""
     parts = []
     
-    if profile_dict.get("is_international_freshman"):
-        parts.append("International freshman")
+    gender = profile_dict.get("gender", "")
+    if gender and gender != "prefer-not-to-say":
+        parts.append(gender.title())
     
     challenges = normalize_topic_ids(profile_dict.get("primary_challenge", []))
     support_topics = normalize_topic_ids(profile_dict.get("support_topics", []))
@@ -2370,7 +2443,7 @@ def cache_user_profile(user_id, display_name, profile_dict):
     user_profiles[user_id] = {
         "display_name": display_name,
         "profile_summary": get_profile_summary(profile_dict),
-        "is_international_freshman": profile_dict.get("is_international_freshman", False),
+        "gender": profile_dict.get("gender", ""),
         "preferred_language": profile_dict.get("preferred_language", ""),
         "support_topics": profile_dict.get("support_topics", []),
         "private_topics": profile_dict.get("private_topics", []),
@@ -2418,7 +2491,12 @@ def calculate_match_score(current_profile, peer_profile):
     if current_cultures & peer_cultures:
         culture_score = 1.0
 
-    freshman_score = 1.0 if current_profile.get("is_international_freshman") == peer_profile.get("is_international_freshman") else 0.0
+    # Gender matching (optional - only if both specify)
+    gender_score = 0.0
+    current_gender = current_profile.get("gender", "")
+    peer_gender = peer_profile.get("gender", "")
+    if current_gender and peer_gender and current_gender == peer_gender and current_gender != "prefer-not-to-say":
+        gender_score = 1.0
     
     # Graduation year matching (within 1 year counts as match)
     grad_year_score = 0.0
@@ -2440,7 +2518,7 @@ def calculate_match_score(current_profile, peer_profile):
     if current_degree and peer_degree and current_degree == peer_degree:
         degree_score = 1.0
 
-    score = (topic_score * 60) + (lang_score * 10) + (culture_score * 10) + (freshman_score * 10) + (grad_year_score * 5) + (degree_score * 5)
+    score = (topic_score * 60) + (lang_score * 10) + (culture_score * 10) + (gender_score * 10) + (grad_year_score * 5) + (degree_score * 5)
     return int(round(score))
 
 
@@ -2583,7 +2661,7 @@ def people():
 
         peer_profile = {
             "display_name": row['display_name'] or 'Anonymous',
-            "is_international_freshman": bool(row['is_international_freshman']),
+            "gender": row['gender'] if 'gender' in row.keys() else '',
             "preferred_language": row['preferred_language'] or '',
             "primary_challenge": challenges,
             "support_topics": support_topics,
@@ -2635,7 +2713,7 @@ def people():
         peers.append({
             "user_id": row['user_id'],
             "display_name": row['display_name'] or 'Anonymous',
-            "is_international_freshman": bool(row['is_international_freshman']),
+            "gender": row['gender'] if 'gender' in row.keys() else '',
             "preferred_language": row['preferred_language'] or '',
             "primary_challenge": ",".join(peer_topics),
             "public_topics": public_topics,
@@ -2661,7 +2739,7 @@ def people():
                 peers.append({
                     "user_id": peer_id,
                     "display_name": peer_profile.get("display_name", "Anonymous"),
-                    "is_international_freshman": peer_profile.get("is_international_freshman", False),
+                    "gender": peer_profile.get("gender", ""),
                     "preferred_language": peer_profile.get("preferred_language", ""),
                     "primary_challenge": ",".join(peer_profile.get("support_topics", [])),
                     "public_topics": [t for t in peer_profile.get("support_topics", []) if t not in peer_profile.get("private_topics", [])],

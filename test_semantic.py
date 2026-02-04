@@ -24,16 +24,17 @@ def test_semantic_functions():
     # Test build_profile_text
     profile = {
         "display_name": "John",
-        "is_international_freshman": True,
-        "primary_challenge": ["academic", "social"],
+        "gender": "male",
+        "cultural_background": ["South Asia"],
+        "primary_challenge": ["academic_problems", "loneliness_isolation"],
         "preferred_language": "Spanish",
         "support_style": "mixed"
     }
     text = build_profile_text(profile)
     print(f"Profile text: {text[:100]}...")
     assert "John" in text
-    assert "international" in text
-    assert "academic" in text or "challenges" in text
+    assert "male" in text or "Male" in text
+    assert "cultural" in text.lower() or "South Asia" in text
     print("build_profile_text: OK")
     
     # Test cosine_similarity
@@ -86,8 +87,9 @@ def test_semantic_functions():
     # Test get_similar_users with multiple users
     profile2 = {
         "display_name": "Maria",
-        "is_international_freshman": True,
-        "primary_challenge": ["academic"],
+        "gender": "female",
+        "cultural_background": ["Latin America"],
+        "primary_challenge": ["academic_problems"],
         "preferred_language": "Spanish",
         "support_style": "sharing"
     }
@@ -95,8 +97,9 @@ def test_semantic_functions():
     
     profile3 = {
         "display_name": "Alex",
-        "is_international_freshman": False,
-        "primary_challenge": ["financial"],
+        "gender": "non-binary",
+        "cultural_background": ["North America"],
+        "primary_challenge": ["financial_stress"],
         "preferred_language": "English",
         "support_style": "listening"
     }

@@ -4,7 +4,7 @@ import requests
 BASE_URL = "http://127.0.0.1:5000"
 
 def test_all_routes():
-    print("Testing Sun Devil Circle Routes...")
+    print("Testing Sun Devil Circles Routes...")
     print("=" * 60)
 
     # Test login/signup
@@ -40,7 +40,7 @@ def test_all_routes():
     # Submit profile
     profile_data = {
         "display_name": "Test User",
-        "is_international_freshman": "yes",
+        "gender": "male",
         "preferred_language": "Spanish",
         "primary_challenge": ["academic", "social"],
         "support_style": "mixed"

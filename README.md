@@ -1,6 +1,6 @@
-# Sun Devil Circle ☀️😈
+# Sun Devil Circles ☀️😈
 
-A peer support platform for international freshman students at ASU, featuring AI-powered personalized suggestions and empathetic support.
+A peer support platform for ASU students, featuring AI-powered personalized suggestions and empathetic support.
 
 ## Features
 - **Semantic Matching**: Connects students with peers and groups based on shared challenges, interests, and profile compatibility.

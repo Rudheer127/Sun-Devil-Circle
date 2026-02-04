@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Complete your profile - SunDevil Circle">
-    <title>Find Your Support - SunDevil Circle</title>
+    <meta name="description" content="Complete your profile - SunDevil Circles">
+    <title>Find Your Support - SunDevil Circles</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         /* Onboarding specific styles */
@@ -723,15 +723,23 @@
                 </div>
             </div>
 
-            <label class="section-label">Are you an international freshman?</label>
-            <div class="radio-cards" id="freshmanCards">
-                <div class="radio-card" data-freshman="yes">
-                    <h4>Yes, I am</h4>
-                    <p>I'm a first-year international student</p>
+            <label class="section-label">Gender (optional)</label>
+            <div class="radio-cards" id="genderCards">
+                <div class="radio-card" data-gender="male">
+                    <h4>Male</h4>
+                    <p>I identify as male</p>
                 </div>
-                <div class="radio-card" data-freshman="no">
-                    <h4>No</h4>
-                    <p>I'm not an international freshman</p>
+                <div class="radio-card" data-gender="female">
+                    <h4>Female</h4>
+                    <p>I identify as female</p>
+                </div>
+                <div class="radio-card" data-gender="non-binary">
+                    <h4>Non-binary</h4>
+                    <p>I identify as non-binary</p>
+                </div>
+                <div class="radio-card" data-gender="prefer-not-to-say">
+                    <h4>Prefer not to say</h4>
+                    <p>I'd rather not disclose</p>
                 </div>
             </div>
         </div>
@@ -840,7 +848,7 @@
         <input type="hidden" name="languages" id="formLanguages">
         <input type="hidden" name="support_style" id="formSupportStyle">
         <input type="hidden" name="cultural_background" id="formCulture">
-        <input type="hidden" name="is_international_freshman" id="formFreshman">
+        <input type="hidden" name="gender" id="formGender">
         <input type="hidden" name="graduation_year" id="formGradYear">
         <input type="hidden" name="degree_program" id="formDegree">
         <input type="hidden" name="display_name" id="formDisplayName">
@@ -856,7 +864,7 @@
         let selectedCultures = [];
         let selectedGradYear = '';
         let selectedDegreeProgram = '';
-        let isFreshman = '';
+        let selectedGender = '';
         let displayName = '';
 
         // Elements
@@ -939,12 +947,12 @@
             });
         });
 
-        // Freshman cards
-        document.querySelectorAll('#freshmanCards .radio-card').forEach(card => {
+        // Gender cards
+        document.querySelectorAll('#genderCards .radio-card').forEach(card => {
             card.addEventListener('click', () => {
-                document.querySelectorAll('#freshmanCards .radio-card').forEach(c => c.classList.remove('selected'));
+                document.querySelectorAll('#genderCards .radio-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
-                isFreshman = card.dataset.freshman;
+                selectedGender = card.dataset.gender;
             });
         });
 
@@ -1036,7 +1044,7 @@
             document.getElementById('formLanguages').value = selectedLanguages.join(',');
             document.getElementById('formSupportStyle').value = selectedStyle;
             document.getElementById('formCulture').value = selectedCultures.join(',');
-            document.getElementById('formFreshman').value = isFreshman === 'yes' ? '1' : '0';
+            document.getElementById('formGender').value = selectedGender;
             document.getElementById('formGradYear').value = selectedGradYear;
             document.getElementById('formDegree').value = selectedDegreeProgram;
             document.getElementById('formDisplayName').value = displayName;

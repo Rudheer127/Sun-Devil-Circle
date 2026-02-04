@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Profile Settings - SunDevil Circle{% endblock %}
+{% block title %}Profile Settings - SunDevil Circles{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 140px; padding-bottom: 80px; max-width: 800px;">
+<div class="container" style="padding-top: 140px; padding-bottom: 80px; max-width: 1200px;">
 
     <!-- Breadcrumb -->
     <nav style="margin-bottom: 24px;">
@@ -90,7 +90,8 @@
             </h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">What would you like to
                 discuss? Select all that apply.</p>
-            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">Private topics help us match you
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">Private topics help us match
+                you
                 with the right peers, but won’t be shown publicly on your profile.</p>
 
             {% for category, topics in support_topic_categories %}
@@ -103,10 +104,11 @@
                     <div class="topic-card"
                         style="padding: 14px 16px; background: #FAFAFA; border-radius: 12px; border: 2px solid transparent; transition: all 200ms;">
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <input type="checkbox" id="topic-{{ value }}" name="support_topics" value="{{ value }}" {{
-                                'checked' if profile and value in (profile.support_topics or []) else '' }}
+                            <input type="checkbox" id="topic-{{ value }}" name="support_topics" value="{{ value }}"
+                                {{ 'checked' if profile and value in (profile.support_topics or []) else '' }}
                                 style="width: 18px; height: 18px; accent-color: var(--primary-maroon);">
-                            <label for="topic-{{ value }}" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <label for="topic-{{ value }}"
+                                style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                                 <span style="font-size: 20px;">{{ icon }}</span>
                                 <span style="font-weight: 500;">{{ label }}</span>
                             </label>
@@ -200,20 +202,18 @@
             </div>
 
             <div class="form-group" style="margin-top: 24px;">
-                <label class="form-label">Are you an international freshman?</label>
-                <div style="display: flex; gap: 16px; margin-top: 8px;">
+                <label class="form-label">Gender (optional)</label>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
+                    {% set genders = [('male', 'Male'), ('female', 'Female'), ('non-binary', 'Non-binary'),
+                    ('prefer-not-to-say', 'Prefer not to say')] %}
+                    {% for value, label in genders %}
                     <label
                         style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 20px; background: #FAFAFA; border-radius: 8px;">
-                        <input type="radio" name="is_international_freshman" value="yes" {{ 'checked' if profile and
-                            profile.is_international_freshman else '' }} style="accent-color: var(--primary-maroon);">
-                        <span>Yes</span>
+                        <input type="radio" name="gender" value="{{ value }}" {{ 'checked' if profile and
+                            profile.gender==value else '' }} style="accent-color: var(--primary-maroon);">
+                        <span>{{ label }}</span>
                     </label>
-                    <label
-                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 20px; background: #FAFAFA; border-radius: 8px;">
-                        <input type="radio" name="is_international_freshman" value="no" {{ 'checked' if profile and not
-                            profile.is_international_freshman else '' }} style="accent-color: var(--primary-maroon);">
-                        <span>No</span>
-                    </label>
+                    {% endfor %}
                 </div>
             </div>
         </div>

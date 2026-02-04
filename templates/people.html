@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Connect with Peer Supporters - SunDevil Circle{% endblock %}
+{% block title %}Connect with Peer Supporters - SunDevil Circles{% endblock %}
 
 {% block content %}
 <div class="container" style="padding-top: 180px; padding-bottom: 80px;">
@@ -123,10 +123,10 @@
                             <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary);">{{
                                 peer.display_name }}
                             </h3>
-                            {% if peer.is_international_freshman %}
+                            {% if peer.gender %}
                             <span
-                                style="font-size: 12px; background: var(--pink-light); color: var(--primary-maroon); padding: 2px 8px; border-radius: 12px;">International
-                                Freshman</span>
+                                style="font-size: 12px; background: var(--pink-light); color: var(--primary-maroon); padding: 2px 8px; border-radius: 12px;">{{
+                                peer.gender|title }}</span>
                             {% endif %}
                         </div>
                     </div>
@@ -180,10 +180,10 @@
                 <div>
                     <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary);">{{ peer.display_name }}
                     </h3>
-                    {% if peer.is_international_freshman %}
+                    {% if peer.gender %}
                     <span
-                        style="font-size: 12px; background: var(--pink-light); color: var(--primary-maroon); padding: 2px 8px; border-radius: 12px;">International
-                        Freshman</span>
+                        style="font-size: 12px; background: var(--pink-light); color: var(--primary-maroon); padding: 2px 8px; border-radius: 12px;">{{
+                        peer.gender|title }}</span>
                     {% endif %}
                 </div>
                 <span

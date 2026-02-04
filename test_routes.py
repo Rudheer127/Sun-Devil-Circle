@@ -4,7 +4,7 @@ import requests
 BASE_URL = "http://127.0.0.1:5000"
 
 def test_routes():
-    print("Testing Sun Devil Circle Routes...")
+    print("Testing Sun Devil Circles Routes...")
     print("=" * 50)
     
     # Test / (should redirect to login)
