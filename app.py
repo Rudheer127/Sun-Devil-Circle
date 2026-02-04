@@ -23,8 +23,15 @@ if not os.environ.get("CEREBRAS_API_KEY"):
 if not os.environ.get("LIVE_AI"):
     os.environ["LIVE_AI"] = "1"
 
+# Detect if running on Vercel (serverless) - use in-memory storage instead of SQLite
+IS_VERCEL = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV") is not None
 
 DATABASE = "auth.db"
+
+# In-memory user storage for Vercel (serverless can't use SQLite files)
+memory_users = {}  # {username: {id, username, password_hash, created_at}}
+memory_profiles = {}  # {user_id: profile_dict}
+memory_user_counter = 1  # Auto-increment ID
 
 
 
@@ -114,7 +121,13 @@ def init_db():
 
 
 def save_profile_to_db(user_id, profile_dict):
-    """Save profile to database."""
+    """Save profile to database or in-memory storage."""
+    if IS_VERCEL:
+        # Use in-memory storage on Vercel
+        memory_profiles[user_id] = profile_dict.copy()
+        return
+    
+    # Use SQLite locally
     db = get_db()
     challenges = ','.join(profile_dict.get('primary_challenge', []))
     support_topics = ','.join(profile_dict.get('support_topics', []))
@@ -144,7 +157,12 @@ def save_profile_to_db(user_id, profile_dict):
 
 
 def load_profile_from_db(user_id):
-    """Load profile from database and return dict."""
+    """Load profile from database or in-memory storage."""
+    if IS_VERCEL:
+        # Use in-memory storage on Vercel
+        return memory_profiles.get(user_id)
+    
+    # Use SQLite locally
     db = get_db()
     row = db.execute('SELECT * FROM profiles WHERE user_id = ?', (user_id,)).fetchone()
     if row:
@@ -1304,12 +1322,22 @@ def login():
         if not username or not password:
             error = "Username and password are required."
         else:
-            db = get_db()
-            user = db.execute(
-                "SELECT * FROM users WHERE username = ?", (username,)
-            ).fetchone()
+            user = None
+            if IS_VERCEL:
+                # Use in-memory storage on Vercel
+                user_data = memory_users.get(username)
+                if user_data and check_password_hash(user_data["password_hash"], password):
+                    user = user_data
+            else:
+                # Use SQLite locally
+                db = get_db()
+                user_row = db.execute(
+                    "SELECT * FROM users WHERE username = ?", (username,)
+                ).fetchone()
+                if user_row and check_password_hash(user_row["password_hash"], password):
+                    user = {"id": user_row["id"], "username": user_row["username"]}
 
-            if user and check_password_hash(user["password_hash"], password):
+            if user:
                 session["user_id"] = user["id"]
                 session["username"] = user["username"]
 
@@ -1344,6 +1372,7 @@ def login():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     """Signup page."""
+    global memory_user_counter
     if session.get("user_id"):
         return redirect(url_for("profile"))
 
@@ -1362,27 +1391,50 @@ def signup():
         elif len(username) > 50:
             error = "Username must be 50 characters or less."
         else:
-            db = get_db()
-            existing = db.execute(
-                "SELECT id FROM users WHERE username = ?", (username,)
-            ).fetchone()
+            existing = None
+            if IS_VERCEL:
+                # Use in-memory storage on Vercel
+                existing = memory_users.get(username)
+            else:
+                # Use SQLite locally
+                db = get_db()
+                existing = db.execute(
+                    "SELECT id FROM users WHERE username = ?", (username,)
+                ).fetchone()
 
             if existing:
                 error = "Username already exists. Please choose another."
             else:
                 password_hash = generate_password_hash(password)
                 created_at = datetime.now().isoformat()
-                db.execute(
-                    "INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)",
-                    (username, password_hash, created_at)
-                )
-                db.commit()
+                
+                if IS_VERCEL:
+                    # Store in memory on Vercel
+                    user_id = memory_user_counter
+                    memory_user_counter += 1
+                    memory_users[username] = {
+                        "id": user_id,
+                        "username": username,
+                        "password_hash": password_hash,
+                        "created_at": created_at
+                    }
+                    session["user_id"] = user_id
+                    session["username"] = username
+                else:
+                    # Store in SQLite locally
+                    db = get_db()
+                    db.execute(
+                        "INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)",
+                        (username, password_hash, created_at)
+                    )
+                    db.commit()
 
-                user = db.execute(
-                    "SELECT * FROM users WHERE username = ?", (username,)
-                ).fetchone()
-                session["user_id"] = user["id"]
-                session["username"] = user["username"]
+                    user = db.execute(
+                        "SELECT * FROM users WHERE username = ?", (username,)
+                    ).fetchone()
+                    session["user_id"] = user["id"]
+                    session["username"] = user["username"]
+                
                 return redirect(url_for("onboarding"))
 
     return render_template("signup.html", error=error)
