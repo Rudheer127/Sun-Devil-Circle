@@ -29,43 +29,104 @@
         </svg>
     </div>
 
-    <!-- Crisis Resources Panel -->
+    <!-- Crisis Resources Panel - EXPANDED with all 7 resources -->
     <div class="crisis-panel" id="crisisPanel">
-        <div class="crisis-grid">
+        <div class="crisis-panel-header">
+            <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Crisis
+                Resources</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                SunDevil Circle is not an emergency service. For urgent safety or life-threatening situations, use the
+                resources below.
+            </p>
+        </div>
+        <div class="crisis-grid expanded">
+            <!-- 911 Emergency -->
+            <div class="crisis-card emergency">
+                <div class="crisis-card-header">
+                    <span class="crisis-icon-emoji">🚨</span>
+                    <span class="crisis-tag emergency">Emergency</span>
+                </div>
+                <h4 class="crisis-card-title">911 Emergency</h4>
+                <p class="crisis-card-desc">Immediate danger, medical emergency, or someone is at risk right now. 24/7.
+                </p>
+                <a href="tel:911" class="crisis-card-action btn-emergency">Call 911 →</a>
+            </div>
+
+            <!-- 988 Suicide & Crisis Lifeline -->
             <div class="crisis-card pink">
-                <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2">
-                    <path
-                        d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-                </svg>
+                <div class="crisis-card-header">
+                    <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2">
+                        <path
+                            d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+                    </svg>
+                </div>
                 <h4 class="crisis-card-title">988 Suicide & Crisis Lifeline</h4>
-                <p class="crisis-card-desc">Free, confidential 24/7 support</p>
-                <a href="tel:988" class="crisis-card-action">Call or text 988 →</a>
+                <p class="crisis-card-desc">Free, confidential support for mental health/substance-use crises. 24/7/365.
+                </p>
+                <div class="crisis-actions">
+                    <a href="tel:988" class="crisis-card-action">Call 988</a>
+                    <a href="sms:988" class="crisis-card-action">Text 988</a>
+                    <a href="https://988lifeline.org/chat" target="_blank" rel="noopener"
+                        class="crisis-card-action">Chat →</a>
+                </div>
             </div>
+
+            <!-- ASU/EMPACT Crisis Line -->
             <div class="crisis-card green">
-                <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2">
-                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                </svg>
-                <h4 class="crisis-card-title">ASU Counseling Services</h4>
-                <p class="crisis-card-desc">Free mental health support for students</p>
-                <a href="tel:4809656146" class="crisis-card-action">Call (480) 965-6146 →</a>
+                <div class="crisis-card-header">
+                    <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                    </svg>
+                </div>
+                <h4 class="crisis-card-title">ASU/EMPACT 24-Hour Crisis Line</h4>
+                <p class="crisis-card-desc">ASU-dedicated urgent behavioral/mental health crisis support. 24/7.</p>
+                <a href="tel:+14809211006" class="crisis-card-action">Call (480) 921-1006 →</a>
             </div>
+
+            <!-- ASU TELUS Health -->
+            <div class="crisis-card gold">
+                <div class="crisis-card-header">
+                    <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                    </svg>
+                </div>
+                <h4 class="crisis-card-title">ASU Open Call & Chat (TELUS Health)</h4>
+                <p class="crisis-card-desc">ASU student counseling support by phone/chat. 24/7/365, anywhere in the
+                    world.</p>
+                <div class="crisis-actions">
+                    <a href="tel:+18772587429" class="crisis-card-action">Call 1-877-258-7429</a>
+                    <a href="https://www.asu.edu/counseling-services/services/open-call-open-chat" target="_blank"
+                        rel="noopener" class="crisis-card-action">Chat →</a>
+                </div>
+            </div>
+
+            <!-- Crisis Text Line -->
             <div class="crisis-card pink">
-                <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2">
-                    <path
-                        d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
-                </svg>
+                <div class="crisis-card-header">
+                    <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2">
+                        <path
+                            d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+                    </svg>
+                </div>
                 <h4 class="crisis-card-title">Crisis Text Line</h4>
-                <p class="crisis-card-desc">Text-based crisis support</p>
+                <p class="crisis-card-desc">Free, confidential crisis support via text. 24/7.</p>
                 <a href="sms:741741?body=HOME" class="crisis-card-action">Text HOME to 741741 →</a>
             </div>
-            <div class="crisis-card pink">
-                <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2">
-                    <path
-                        d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-                </svg>
-                <h4 class="crisis-card-title">ASU Campus Police</h4>
-                <p class="crisis-card-desc">For immediate safety concerns</p>
-                <a href="tel:4809653456" class="crisis-card-action">Call (480) 965-3456 →</a>
+
+            <!-- ASU Counseling Services -->
+            <div class="crisis-card green">
+                <div class="crisis-card-header">
+                    <svg class="crisis-card-icon" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                </div>
+                <h4 class="crisis-card-title">ASU Counseling Services</h4>
+                <p class="crisis-card-desc">Free mental health support for all ASU students.</p>
+                <a href="tel:4809656146" class="crisis-card-action">Call (480) 965-6146 →</a>
             </div>
         </div>
     </div>
@@ -83,7 +144,7 @@
             <div class="nav-links">
                 <a href="#how-it-works">How It Works</a>
                 <a href="#safety">Safety</a>
-                <a href="{{ url_for('resources') if session.get('user_id') else '#' }}">Resources</a>
+                <a href="{{ url_for('resources_hub') if session.get('user_id') else '#' }}">Resources</a>
             </div>
 
             <div class="nav-actions">

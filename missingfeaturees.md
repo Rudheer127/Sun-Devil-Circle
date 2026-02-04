@@ -1,418 +1,465 @@
-Based on my thorough exploration of the SunDevil Circle website, let me provide you with a comprehensive analysis of which features from your handwritten list exist and which are missing:
-
-***
-
-# **FEATURE AUDIT: EXISTING vs MISSING**
-
-## **✅ EXISTING FEATURES (Already Implemented)**
-
-### **1. Create Account** ✅
-- **Status**: EXISTS
-- **Current Implementation**: 
-  - Modal popup with email and password fields
-  - Email field with placeholder "your.email@asu.edu"
-  - Password field with show/hide toggle
-  - "Create Account" button
-  - Link to sign in for existing users
-  - Note: "ASU email addresses are recommended but not required"
-
-### **2. Your Preferences** ✅ (PARTIAL)
-- **Status**: EXISTS but could be enhanced
-- **Current Implementation**:
-  - Step 1: Support topics selection (Homesickness, Loneliness, Anxiety, Culture Shock, Academics, Relationships, Identity, Finances, Time Management)
-  - Step 2: Language preferences (English, Spanish, Mandarin, Hindi, Arabic, Portuguese, French, Korean, Japanese, Vietnamese, Tagalog, Other)
-  - Step 2: Communication style (Just listening, Advice welcome, Mixed approach)
-  - Step 3: Cultural background selection (East Asia, South Asia, Southeast Asia, Middle East, Africa, Latin America, Europe, North America, Oceania, Prefer not to say)
-  - Step 3: Gender preference for supporter (No preference, Same as mine, Different)
-  - Step 3: Availability time slots (Morning, Afternoon, Evening, Late Night)
-
-### **3. Consent Info** ✅
-- **Status**: EXISTS
-- **Current Implementation**: 
-  - Step 4 of onboarding: "Boundaries & Consent"
-  - Three consent cards with checkmarks:
-    1. "This is peer support" - explains supporter is trained student, not therapist
-    2. "Not for emergencies" - directs to 988 Lifeline or ASU Counseling
-    3. "You're in control" - can end conversations anytime, privacy protected
-
-### **4. Generate Name** ✅
-- **Status**: EXISTS
-- **Current Implementation**:
-  - Step 5: "Choose your identity" with subtitle "Stay anonymous or share your name"
-  - Input field: "Enter a nickname"
-  - Button: "✨ Generate a random nickname"
-  - Note: "You can reveal your real name to your match later if you choose"
-
-### **5. Profile Loads to Same Page** ✅
-- **Status**: EXISTS
-- **Current Implementation**:
-  - Bottom navigation with "Profile" tab
-  - Clicking Profile shows profile card on same page
-  - Displays email, role badge ("seeker"), and Sign Out button
-  - No separate page navigation required
-
-### **8. How It Works Needs Update** ✅
-- **Status**: EXISTS (content present but you want updates)
-- **Current Implementation**:
-  - 4-step process shown on homepage
-  - Steps: Create Profile → Browse Matches → Start Chatting → Feel Heard
-
-### **9. Peer Support Not Therapy** ✅
-- **Status**: EXISTS
-- **Current Implementation**:
-  - Prominent section on homepage: "This is peer support, not therapy"
-  - Explanation text and student testimonial
-  - Repeated in onboarding consent flow
-
-### **11. Crisis Support Banner** ✅
-- **Status**: EXISTS on all pages
-- **Current Implementation**:
-  - Green banner at top: "Need immediate support? Tap to see crisis resources available 24/7"
-  - Expandable to show 4 crisis resources
-  - Present on homepage and dashboard
-
-***
-
-## **❌ MISSING FEATURES (Need to Be Built)**
-
-### **6. Separate Profile Menu Page with Edit Capabilities** ❌
-- **Status**: MISSING
-- **Current State**: Profile is a simple card overlay, not a separate page
-- **Required Implementation**:
-
-```
-FEATURE: Dedicated Profile Management Page
-
-URL: /profile or /settings
-
-LAYOUT:
-┌─────────────────────────────────────┐
-│  Profile Settings                    │
-├─────────────────────────────────────┤
-│  📸 Profile Picture/Avatar          │
-│     [Upload Photo] [Remove]         │
-├─────────────────────────────────────┤
-│  Display Name                        │
-│  [SunnyDevil        ] [Edit]        │
-├─────────────────────────────────────┤
-│  Email                               │
-│  testuser@asu.edu                    │
-│  [Change Email]                      │
-├─────────────────────────────────────┤
-│  About Me / Bio                      │
-│  [Text area for bio - 250 chars]    │
-│  [Save Changes]                      │
-├─────────────────────────────────────┤
-│  My Interests & Support Topics       │
-│  [☑] Homesickness                   │
-│  [☑] Culture Shock                  │
-│  [ ] Anxiety                         │
-│  [Edit All Preferences]              │
-├─────────────────────────────────────┤
-│  Languages                           │
-│  English, Spanish                    │
-│  [Edit Languages]                    │
-├─────────────────────────────────────┤
-│  Availability                        │
-│  Afternoon (12pm-6pm)                │
-│  [Edit Availability]                 │
-├─────────────────────────────────────┤
-│  Resources & Saved Content           │
-│  [View Saved Resources]              │
-│  [View Recommended Articles]         │
-├─────────────────────────────────────┤
-│  Account Settings                    │
-│  [Change Password]                   │
-│  [Privacy Settings]                  │
-│  [Notification Settings]             │
-├─────────────────────────────────────┤
-│  [Save All Changes]  [Cancel]        │
-└─────────────────────────────────────┘
-
-FEATURES:
-1. Inline editing for each field
-2. Real-time save indicators
-3. Validation for each field
-4. "Unsaved changes" warning if user navigates away
-5. Success/error toast notifications
-6. Breadcrumb: Dashboard > Profile
-
-NAVIGATION:
-- Accessible from bottom nav "Profile" button
-- Should be a full page, not an overlay
-- Back button returns to previous page
-```
-
-***
-
-### **7. Remove Message Limits & Group Joining** ❌
-- **Status**: UNCLEAR (messaging system not fully visible in exploration)
-- **Required Implementation**:
-
-```
-FEATURE: Unlimited Messaging & Group Features
-
-CURRENT LIMITATION TO REMOVE:
-- If there's a message quota system, remove it
-- Allow unlimited messages between matched users
-
-NEW GROUP FEATURES TO ADD:
-
-1. GROUP CHAT CREATION:
-   Location: Community tab or Messages tab
-   
-   UI:
-   [+ Create New Group]
-   
-   Modal:
-   ┌────────────────────────────────┐
-   │  Create a Support Group         │
-   ├────────────────────────────────┤
-   │  Group Name:                    │
-   │  [_________________________]   │
-   │                                 │
-   │  Group Topic:                   │
-   │  [☐] Homesickness              │
-   │  [☐] Anxiety                   │
-   │  [☐] Culture Shock             │
-   │  ...                           │
-   │                                 │
-   │  Group Type:                    │
-   │  ⚪ Public (anyone can join)   │
-   │  ⚪ Private (invite only)      │
-   │                                 │
-   │  Description:                   │
-   │  [Text area 500 chars]         │
-   │                                 │
-   │  [Cancel]  [Create Group]      │
-   └────────────────────────────────┘
-
-2. GROUP DISCOVERY:
-   Location: Community tab
-   
-   Grid of group cards:
-   ┌─────────────────────┐
-   │  🏠 Homesick Souls  │
-   │  24 members         │
-   │  "Supporting each   │
-   │   other through..." │
-   │  [Join Group]       │
-   └─────────────────────┘
-
-3. GROUP MESSAGING:
-   - Same chat interface as 1-on-1
-   - Member list sidebar
-   - @ mentions
-   - Group admin controls
-   - Leave group option
-
-4. MESSAGE QUOTA REMOVAL:
-   - Remove any daily/weekly message limits
-   - Allow unlimited messages in both 1-on-1 and groups
-   - Keep rate limiting only for spam prevention (e.g., max 5 messages per second)
-
-DATABASE SCHEMA ADDITIONS:
-- groups table
-- group_members table  
-- group_messages table
-- Remove any message_quota or usage_limit columns
-```
-
-***
-
-### **10. "Made with Love" Message & Consent at Bottom** ❌
-- **Status**: PARTIAL (has "Made with ❤️ for ASU students" but no consent message)
-- **Required Implementation**:
-
-```
-FEATURE: Enhanced Footer with Consent Message
-
-CURRENT FOOTER:
-"Made with ❤️ for ASU students"
-
-ENHANCED FOOTER (Add below existing):
-
-┌──────────────────────────────────────────────┐
-│  Made with ❤️ for ASU students               │
-│                                               │
-│  💬 By using SunDevil Circle, you consent to │
-│  receiving peer support messages from        │
-│  trained student supporters. You can end     │
-│  conversations at any time.                   │
-│                                               │
-│  ⚠️ Important: This is peer support, not    │
-│  professional therapy. If you're in crisis,   │
-│  please call 988 or contact ASU Counseling.  │
-│                                               │
-│  © 2025 SunDevil Circle...                   │
-└──────────────────────────────────────────────┘
-
-STYLING:
-- Background: Light pink (#FFF5F5)
-- Padding: 40px
-- Font-size: 14px
-- Color: #6B7280
-- Border-top: 1px solid #E5E7EB
-- Max-width: 800px, centered
-- Line-height: 1.6
-
-PLACEMENT:
-- After all main content
-- Before final copyright line
-- Visible on all pages
-- Not sticky (scrolls with page)
-```
-
-***
-
-### **12. Remove Emdashes & "Trained Peers"** ❌
-- **Status**: PARTIALLY COMPLETE (some emdashes remain)
-- **Required Changes**:
-
-```
-TEXT CLEANUP REQUIREMENTS:
-
-1. REMOVE ALL EMDASHES (—):
-   
-   CURRENT:
-   "Safe, confidential, and culturally-aware support — made for international students"
-   
-   CHANGE TO:
-   "Safe, confidential, and culturally-aware support for international students"
-   
-   FIND ALL: "—" or " — "
-   REPLACE WITH: appropriate connector or remove
-
-2. REMOVE "Trained Peers" REFERENCES:
-   
-   LOCATIONS TO UPDATE:
-   
-   a) Homepage Hero Pills:
-      REMOVE: "Trained Peers" pill
-      KEEP: "Privacy-First", "Culturally-Aware"
-   
-   b) Safety Section Cards:
-      CURRENT: "Trained Supporters - All peer supporters complete training..."
-      CHANGE TO: "Experienced Supporters - All supporters complete training..."
-      OR REMOVE CARD ENTIRELY
-   
-   c) Any other mentions of "trained peers" in copy
-   
-3. ALTERNATIVE TERMINOLOGY:
-   - Use "peer supporters" or "student supporters"
-   - Use "experienced supporters"
-   - Use "fellow students"
-   - Avoid emphasis on "trained" qualification
-
-IMPLEMENTATION:
-- Global find/replace in codebase
-- Update all text constants
-- Check database seed data
-- Update any marketing materials
-```
-
-***
-
-### **13. Add Sticky Note Details** ❌
-- **Status**: MISSING (no sticky notes anywhere)
-- **Required Implementation**:
-
-```
-FEATURE: Contextual Sticky Notes / Tooltips
-
-PURPOSE:
-Provide helpful hints and explanations throughout the interface
-
-IMPLEMENTATION OPTIONS:
-
-OPTION 1: Tooltip Sticky Notes
-┌─────────────────┐
-│ 📝 Tip:         │
-│ You can change  │
-│ your nickname   │
-│ anytime!        │
-└─────────────────┘
-  ▼
-[Nickname Field]
-
-OPTION 2: Info Icons with Popover
-[Nickname] ⓘ ← Click reveals sticky note
-
-OPTION 3: Persistent Mini Sticky Notes
-Floating yellow sticky notes in corners of sections
-
-LOCATIONS TO ADD STICKY NOTES:
-
-1. ONBOARDING FLOW:
-   - Step 1: "💡 Select topics you're comfortable discussing"
-   - Step 2: "💡 You can speak your native language here"
-   - Step 3: "💡 These preferences help us find your best match"
-   - Step 4: "💡 You're always in control of your conversations"
-   - Step 5: "💡 Your real identity stays hidden until you choose to share"
-
-2. DASHBOARD:
-   - Empty matches: "💡 New supporters join daily - check back soon!"
-   - Messages tab: "💡 Messages are private and encrypted"
-   - Profile: "💡 Keep your profile updated for better matches"
-
-3. CHAT INTERFACE:
-   - First message: "💡 Start with a friendly greeting"
-   - Match card: "💡 Swipe right to connect, left to pass"
-
-STYLING:
-Background: #FEF3C7 (soft yellow)
-Border: 2px solid #FBBF24
-Border-radius: 8px
-Padding: 12px 16px
-Font-size: 14px
-Box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1)
-Position: Absolute or inline
-Animation: Gentle bounce on first appearance
-Dismissible: [×] button top-right
-
-BEHAVIOR:
-- Show on first visit to each page
-- Can be dismissed permanently
-- Store dismissed state in localStorage
-- Show again if user is stuck (no action for 30 seconds)
-- Admin can create custom notes for announcements
-```
-
-***
-
-## **📊 SUMMARY**
-
-### **Features Existing: 7/13 (54%)**
-- ✅ Account creation  
-- ✅ Preferences collection (partial)
-- ✅ Consent info
-- ✅ Name generation
-- ✅ Profile on same page
-- ✅ How It Works section
-- ✅ Peer support messaging
-- ✅ Crisis support banner
-
-### **Features Missing: 6/13 (46%)**
-- ❌ Separate profile menu page with full edit capabilities
-- ❌ Unlimited messaging & group joining
-- ❌ Enhanced footer consent message
-- ❌ Complete emdash & "trained peers" removal
-- ❌ Sticky note system
-
-***
-
-## **🎯 PRIORITY IMPLEMENTATION ORDER**
-
-### **HIGH PRIORITY (Must Have)**
-1. **Separate Profile Edit Page** - Users need to manage their info
-2. **Group Messaging** - Core social feature missing
-3. **Consent Message in Footer** - Legal/compliance requirement
-
-### **MEDIUM PRIORITY (Should Have)**  
-4. **Sticky Notes/Tooltips** - Improves UX significantly
-5. **Remove Emdashes** - Polish and consistency
-
-### **LOW PRIORITY (Nice to Have)**
-6. **Message Limit Removal** - Only if limits currently exist
-
-Would you like me to provide detailed technical specifications for implementing any of these missing features?
+MASTER IMPLEMENTATION PROMPT: SunDevil Circle Complete Overhaul
+You are redesigning and implementing critical updates to the SunDevil Circle web application for ASU students. This is a mental health peer support platform that requires immediate attention to safety, comprehensiveness, and user experience.
+
+CRITICAL INSTRUCTION: All changes must remain visually and structurally consistent with the existing UI design system (colors, fonts, spacing, card styles, button styles, layout patterns). Do not redesign the visual aesthetic — only implement the functional gaps and content improvements outlined below.
+
+🚨 PRIORITY 1: FIX CRISIS RESOURCES BANNER (LIFE-CRITICAL)
+Current Issue: The crisis banner only shows 4 resources and is missing critical emergency contacts including 911.
+
+Required Implementation:
+
+Create a prominent, always-visible crisis banner at the top of all pages (Dashboard, Explore/Connect Peers, Resources, Groups, Share Support Need). The banner must:
+
+Display this exact list in this order:
+
+Emergency: 911
+
+Text: "Immediate danger, medical emergency, or someone is at risk right now (anywhere in the U.S.), 24/7."
+
+Link behavior: tel:911 (clickable on mobile)
+
+988 Suicide & Crisis Lifeline
+
+Text: "Free, confidential support for mental health/substance-use crises; call, text, or chat 24/7/365 (U.S.)."
+
+Call link: tel:988
+
+Text link: sms:988
+
+Chat link: https://988lifeline.org/chat (opens in new tab)
+
+ASU/EMPACT 24-Hour Crisis Line: (480) 921-1006
+
+Text: "ASU-dedicated urgent behavioral/mental health crisis support for students; 24/7."
+
+Call link: tel:+14809211006
+
+ASU Open Call & Open Chat (TELUS Health): 1-877-258-7429
+
+Text: "ASU student counseling support by phone/chat; 24/7/365, usable from anywhere in the world."
+
+Call link: tel:+18772587429
+
+Add a "Chat" button linking to the ASU TELUS Health chat page
+
+Crisis Text Line: Text HOME to 741741
+
+Text: "Free, confidential crisis support via text in the U.S.; 24/7."
+
+Link behavior: sms:741741?body=HOME (pre-fills SMS on mobile)
+
+Add disclaimer text:
+"SunDevil Circle is not an emergency service. For urgent safety or life-threatening situations, use the resources above."
+
+Visual consistency: Use the existing banner design pattern (light mint/teal background, shield icon). Ensure all links are clearly clickable and work on both desktop and mobile.
+
+📋 PRIORITY 2: EXPAND SUPPORT TOPICS TO FULL MENTAL HEALTH SPECTRUM
+Current Issue: Only 9 generic topics exist (Homesickness, Academic Stress, Making Friends, Culture Shock, Language Barriers, Loneliness, Anxiety, Finances). This excludes critical mental health issues.
+
+Required Implementation:
+
+Replace the limited topic list with this complete 43-topic taxonomy across all interfaces (Share Support Need page, profile settings, Explore/Connect Peers filters, group creation):
+
+Mental Health & Crisis
+
+Suicide / self-harm
+
+Crisis / panic attack
+
+Depression
+
+Anxiety
+
+Social anxiety
+
+Stress
+
+Burnout
+
+Sleep problems / insomnia
+
+Eating disorders / disordered eating
+
+Body image concerns
+
+Trauma / PTSD
+
+Grief & loss
+
+Anger management
+
+OCD
+
+Phobias
+
+Bipolar disorder
+
+Psychosis / schizophrenia-spectrum concerns
+
+Substance use (alcohol/drugs)
+
+Addiction / dependence
+
+ADHD / attention & focus problems
+
+Autism spectrum / neurodiversity support
+
+Relationships & Social
+
+Relationship issues
+
+Breakups
+
+Family problems
+
+Roommate conflict
+
+Loneliness / isolation
+
+Homesickness
+
+Culture shock / adjustment issues
+
+Discrimination / bias experiences
+
+Identity concerns (sexuality / gender / faith)
+
+Sexual assault / harassment
+
+Domestic/dating violence
+
+Safety concerns / violence risk
+
+Academic & Career
+
+Academic problems
+
+Test anxiety
+
+Time management / procrastination
+
+Motivation / concentration problems
+
+Career stress / "no direction"
+
+Financial stress
+
+Implementation notes:
+
+Make these available as checkboxes in profile settings (multi-select)
+
+Present as clickable topic buttons on "Share Your Support Need" page (the page currently called "Share Your Challenge")
+
+Use in dropdown filter on Connect with Peers page (see Priority 3)
+
+Enable for group topic tagging when creating groups
+
+🔒 PRIORITY 3: ADD PRIVACY CONTROLS FOR SENSITIVE TOPICS
+Current Issue: Profile topics are either public or not selected at all. No way to mark sensitive topics as "use for matching but hide from public profile."
+
+Required Implementation:
+
+On the Profile Settings page, for each support topic checkbox:
+
+Add a secondary toggle/checkbox labeled: "Hide from my public profile" or "Private (for matching only)"
+
+Behavior:
+
+When enabled: Topic is used by AI/matching algorithm but NOT displayed on the user's public profile card in Connect with Peers
+
+When disabled (default): Topic is visible on profile cards
+
+Add explanatory text: "Private topics help us match you with the right peers, but won't be shown publicly on your profile."
+
+Visual consistency: Use the existing checkbox/toggle design pattern from the current profile page
+
+🤖 PRIORITY 4: IMPLEMENT AI-POWERED PEER MATCHING
+Current Issue: "Explore Peers" page has basic filters (5 pills) with no intelligence, search, or matching. No AI despite claims.
+
+Required Implementation:
+
+Rename "Explore Peer Supporters" to "Connect with Peer Supporters" everywhere (nav, buttons, page title).
+
+On the Connect with Peers page:
+
+Replace the horizontal pill filter bar with:
+
+A multi-select dropdown for support topics (using the 43-topic list from Priority 2)
+
+A search bar for searching by name, major, interests, or keywords
+
+Keep visual design consistent with existing filters (same colors/styling)
+
+Add AI-powered matching and sorting:
+
+Default view: "Recommended for you" section at the top
+
+Calculate match scores (0-100 or "High/Good/Fair Match") based on:
+
+Overlap between user's "topics I'm experiencing" and peers' "topics I can support with"
+
+Shared major, year, role (e.g., international student, transfer)
+
+Shared languages
+
+Shared communities/identities (if opted in)
+
+Shared interests/hobbies
+
+Display match indicator on each peer card: "95% Match" or "Best Fit" / "Good Fit" / "New Peer"
+
+Sort by match score descending by default
+
+Allow manual re-sorting: "Best Match" / "Recently Active" / "Alphabetical"
+
+Respect privacy:
+
+Never display topics marked "Hide from my public profile"
+
+Use hidden topics internally for matching only
+
+Peer cards show:
+
+Name/nickname
+
+Role (e.g., "International Freshman")
+
+Languages spoken
+
+Non-private support topics (as tags)
+
+Match label (e.g., "Best Fit for you")
+
+"Connect" button
+
+Visual consistency: Maintain the existing card design, typography, and button styles. Only add the match indicator and reorganize filtering UI.
+
+👥 PRIORITY 5: BUILD COMPLETE GROUPS SYSTEM
+Current Issue: Groups page returns 404. Feature is completely missing despite being mentioned throughout the app.
+
+Required Implementation:
+
+Create /groups page with full functionality:
+
+A. Group Discovery/Browse Page
+
+List of all public groups (searchable/filterable)
+
+Each group card shows:
+
+Group name
+
+Short description
+
+Primary support topics (as tags)
+
+Visibility badge: "Public" or "Private"
+
+Member count
+
+"Join" button (for public) or "Request Access" (for private)
+
+Search bar and topic filter dropdown (using 43-topic list)
+
+B. Group Creation Flow
+
+Button: "Create New Group"
+
+Form fields:
+
+Group name (required)
+
+Description (required)
+
+Primary support topics: Multi-select from 43-topic list (required)
+
+Group type: Dropdown (e.g., "Peer Support", "Study/Accountability", "Identity/Community", "Social")
+
+Visibility toggle: Public (discoverable in groups list) or Private (invite-only, not listed)
+
+"Create Group" button
+
+C. Invite People to Group (AI-powered recommendations)
+
+In group settings, "Invite People" button opens modal/page
+
+Show recommended people to invite based on:
+
+Match between group's topics and people's "topics I'm experiencing" or "topics I can support with"
+
+Profile similarity (major, year, interests)
+
+Display sections:
+
+"People who may benefit from this group" (their topics align with group's topics)
+
+"People who can support this group" (they marked group topics as "can support with")
+
+Include search bar for manual invite by name/email/username
+
+Show match strength indicator (e.g., "High relevance", "Good fit")
+
+D. Group Privacy Toggle
+
+Group owner can switch Public ↔ Private anytime in settings
+
+Confirmation prompt when switching to Public: "This will make your group discoverable. Are you sure?"
+
+Switching to Private removes from public discovery but keeps existing members
+
+E. Group Page View
+
+Shows members, posts/messages, group description, topics
+
+"Leave Group" button
+
+Owner sees "Settings" and "Invite People" buttons
+
+Visual consistency: Use the existing card design system, color palette, and button styles. Groups should feel like a natural extension of the current UI.
+
+🗑️ PRIORITY 6: REMOVE GAMIFICATION METRICS
+Current Issue: Dashboard shows "0/5 Follow-up questions used", "0 Groups joined", "0 Messages sent" — these feel like achievements/scores rather than support-focused metrics. The 5-question limit is artificial and harmful.
+
+Required Changes:
+
+Remove these three counters entirely from the dashboard:
+
+"Follow-up questions used"
+
+"Groups joined"
+
+"Messages sent"
+
+Remove the 5-question limit on AI follow-up questions:
+
+Allow unlimited follow-up questions
+
+Remove the "0/5 questions used" counter from the "Ask AI for More Help" section
+
+This is a support tool, not a game — there should be no artificial scarcity
+
+Keep the dashboard clean and supportive:
+
+Focus on action cards: "Share Your Support Need", "Browse Resources", "Connect with Peer Supporters"
+
+Show personalized recommendations: "Recommended peers for you", "Suggested groups"
+
+Remove any numeric counters or progress bars that feel like gamification
+
+Rationale: Students seeking mental health support should not feel like they're "using up" resources or being tracked/scored. The focus must be on care and accessibility, not metrics.
+
+📝 PRIORITY 7: RENAME & REFRAME CALL-TO-ACTION BUTTONS
+Current Issue: "Share Another Challenge" sounds too enthusiastic and achievement-oriented. "Explore Peer Supporters" is passive/clinical.
+
+Required Changes:
+
+"Share Another Challenge" → "Need help with something else?"
+
+Alternative: "How else can we support you?"
+
+Alternative: "Share another concern"
+
+Tone: Gentle, caring, open-ended inquiry (not "Share another challenge!" which feels forced)
+
+"Explore Peer Supporters" → "Connect with Peer Supporters"
+
+More action-oriented and supportive than "explore"
+
+Use consistently across nav, dashboard, buttons, page titles
+
+"Share Your Challenge" (page title) → "Share Your Support Need" or "Tell Us How We Can Help"
+
+Less clinical, more person-centered
+
+Update page title, breadcrumb, and any references
+
+"Get Personalized Support" (submit button) → Keep as-is (this is good)
+
+Visual consistency: Buttons maintain the same styling (maroon primary buttons, white secondary buttons), only text changes.
+
+✅ ADDITIONAL FIXES FROM DETAILED ASSESSMENT
+A. Navigation Confusion
+
+"Resources" link in nav currently redirects to /issue (Share Your Challenge page) — this is broken
+
+Fix: "Resources" should go to /resources-hub consistently
+
+B. Crisis Banner Interactivity
+
+Ensure ALL phone/text links work correctly on both desktop and mobile
+
+Test click behavior: tel: links on mobile, sms: with pre-filled body, external links open in new tabs
+
+C. Profile Page Topic Checkboxes
+
+Currently shows 8 topics (Homesickness, Loneliness, Anxiety, Culture Shock, Academics, Relationships, Identity, Finances)
+
+Expand to full 43-topic list with categorized sections (use collapsible accordions if needed to avoid overwhelming users)
+
+Add privacy toggle to each (see Priority 3)
+
+📐 DESIGN SYSTEM CONSISTENCY REQUIREMENTS
+YOU MUST:
+
+Use existing maroon/burgundy (#8B1538 or similar) for primary buttons and brand elements
+
+Use existing mint/teal background for crisis banner
+
+Maintain current card style: white background, subtle shadow, rounded corners
+
+Keep existing typography (font families, sizes, weights)
+
+Use existing icon style (emoji-based icons for topics, UI icons for nav)
+
+Match existing spacing/padding patterns
+
+Use existing button styles: solid maroon primary, outlined secondary
+
+Keep existing form input styles (rounded, bordered)
+
+Maintain existing navigation bar design
+
+YOU MUST NOT:
+
+Change color palette
+
+Redesign card layouts
+
+Change typography system
+
+Add flashy animations or modern UI trends that clash with current design
+
+Alter logo or branding elements
+
+🎯 IMPLEMENTATION CHECKLIST
+When you are done implementing:
+
+✅ Crisis banner shows all 7 resources with working links (911, 988, EMPACT, TELUS, Crisis Text Line)
+✅ All 43 support topics are available in profile, Share Support Need, filters, and group creation
+✅ Profile settings allow marking topics as "Hide from public profile"
+✅ Connect with Peers page has dropdown filter + search bar (not horizontal pills)
+✅ Connect with Peers shows AI-recommended matches with match scores
+✅ Privacy-marked topics are used for matching but hidden from public profile cards
+✅ /groups page exists with full CRUD functionality
+✅ Group creation allows topic selection and public/private toggle
+✅ Group invite screen shows AI-recommended people based on topic match
+✅ "Follow-up questions used", "Groups joined", "Messages sent" counters are removed
+✅ 5-question limit on AI follow-up is removed
+✅ "Share Another Challenge" renamed to "Need help with something else?"
+✅ "Explore Peer Supporters" renamed to "Connect with Peer Supporters" everywhere
+✅ "Share Your Challenge" page renamed to "Share Your Support Need"
+✅ All navigation links work correctly (Resources → resources-hub)
+✅ All UI changes match existing design system (colors, fonts, spacing, components)
+
+🛡️ SAFETY & ETHICS NOTES
+Always keep the crisis banner visible and accessible
+
+Never hide or deprioritize emergency resources
+
+Treat sensitive topics (suicide, assault, trauma) with utmost care in UI language
+
+Ensure AI matching respects privacy: never expose private topics publicly
+
+Group recommendations must not expose private information
+
+All safety disclaimers ("This is peer

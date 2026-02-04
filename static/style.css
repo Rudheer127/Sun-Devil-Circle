@@ -241,10 +241,36 @@ img {
 
 .crisis-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     max-width: 1280px;
     margin: 0 auto;
+}
+
+.crisis-grid.expanded {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 1024px) {
+
+    .crisis-grid,
+    .crisis-grid.expanded {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+
+    .crisis-grid,
+    .crisis-grid.expanded {
+        grid-template-columns: 1fr;
+    }
+}
+
+.crisis-panel-header {
+    max-width: 1280px;
+    margin: 0 auto 16px;
+    text-align: center;
 }
 
 .crisis-card {
@@ -263,6 +289,40 @@ img {
     background: #F0FDF4;
 }
 
+.crisis-card.gold {
+    background: #FFFBEB;
+}
+
+.crisis-card.emergency {
+    background: #FEE2E2;
+    border: 2px solid #FCA5A5;
+}
+
+.crisis-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.crisis-icon-emoji {
+    font-size: 32px;
+}
+
+.crisis-tag {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.crisis-tag.emergency {
+    background: #991B1B;
+    color: white;
+}
+
 .crisis-card-icon {
     width: 32px;
     height: 32px;
@@ -278,18 +338,41 @@ img {
 .crisis-card-desc {
     font-size: var(--text-sm);
     color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.crisis-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
 }
 
 .crisis-card-action {
     font-size: var(--text-sm);
     font-weight: var(--font-semibold);
     color: var(--primary-maroon);
-    margin-top: auto;
-    transition: text-decoration 200ms ease;
+    transition: all 200ms ease;
+    padding: 6px 0;
 }
 
 .crisis-card-action:hover {
     text-decoration: underline;
+}
+
+.btn-emergency {
+    background: #DC2626;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-emergency:hover {
+    background: #B91C1C;
+    text-decoration: none;
 }
 
 /* ============================================
