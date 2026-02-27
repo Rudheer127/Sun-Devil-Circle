@@ -1,5 +1,7 @@
 # Sun Devil Circles ☀️😈
 
+**Live Platform**: [https://sun-devil-circle.vercel.app/](https://sun-devil-circle.vercel.app/)
+
 A peer support platform for ASU students, featuring AI-powered personalized suggestions and empathetic support.
 
 ## Features
@@ -11,55 +13,35 @@ A peer support platform for ASU students, featuring AI-powered personalized sugg
 - **Smart Search**: Search groups by name, description, or topic labels for easier discovery.
 - **Best Match Sorting**: Groups and peers are ranked by compatibility based on profile overlap, shared challenges, and semantic similarity.
 
-## 🚀 Running on macOS / Linux
+## 🚀 Quick Start
 
-Follow these steps to run the project on a new Mac or Linux system:
-
-### 1. Clone the Repository
-Open your Terminal and run:
-```bash
-git clone https://github.com/Rudheer127/Sun-Devil-Circle.git
-cd Sun-Devil-Circle
-```
-
-### 2. Set Up a Virtual Environment
-It's best practice to use a virtual environment to manage dependencies:
-```bash
-# Create the virtual environment
-python3 -m venv venv
-
-# Activate it (you'll see (venv) in your prompt)
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-Install the required Python packages:
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Run the Application
-Start the Flask server:
-```bash
-python app.py
-```
-
-### 5. Access the App
-Open your web browser and go to:
-[http://127.0.0.1:5000](http://127.0.0.1:5000)
+The platform is deployed and live at: **[https://sun-devil-circle.vercel.app/](https://sun-devil-circle.vercel.app/)**
 
 ---
 
-## 💻 Running on Windows
+## 💻 Local Development
 
-1. **Clone**: `git clone https://github.com/Rudheer127/Sun-Devil-Circle.git`
-2. **Virtual Env** (optional but recommended):
-   ```powershell
-   python -m venv venv
-   .\venv\Scripts\activate
+If you prefer to run the application locally for development:
+
+1. **Clone the repository**: 
+   ```bash
+   git clone https://github.com/Rudheer127/Sun-Devil-Circle.git
+   cd Sun-Devil-Circle
    ```
-3. **Install**: `pip install -r requirements.txt`
-4. **Run**: `python app.py`
+2. **Set up a virtual environment** (recommended):
+   ```bash
+   python -m venv venv
+   # macOS/Linux: source venv/bin/activate
+   # Windows: .\venv\Scripts\activate
+   ```
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Run the application**:
+   ```bash
+   python app.py
+   ```
 
 ## 🔑 AI Configuration
 
